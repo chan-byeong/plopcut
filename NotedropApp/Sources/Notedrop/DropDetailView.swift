@@ -67,7 +67,6 @@ struct InspectorView: View {
                 .padding(16).frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-        .navigationTitle(L10n.t("information"))
     }
 
     private func section(_ title: String, @ViewBuilder _ body: () -> some View) -> some View {
