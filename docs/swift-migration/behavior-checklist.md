@@ -7,48 +7,50 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 찾아볼 위치입니다. 함수 이름이 `테스트:`로 시작하면 레거시 테스트가 그 동작을 고정하고 있으므로 같은 시나리오를 Swift 테스트로
 옮기면 됩니다.
 
+체크 표시 ☑는 구현과 자동 테스트로 확인한 항목입니다(STA-41, `NotedropCore`). 일부만 확인한 항목은 ☐로 두고 아래에 이유를 적습니다.
+
 확인 방법 표기: **단위** = 자동 테스트, **픽스처** = `fixtures/`로 호환 확인, **수동** = 실제 앱·macOS 권한이 필요한 확인.
 
 ## S. 저장소 (호환성 계약)
 
 | ID | 동작 | 근거 | 확인 방법 | ☐ |
 | --- | --- | --- | --- | --- |
-| S-01 | `drop.json`을 2칸 들여쓰기 pretty JSON으로 쓰고, `text`, `note`, `imagePath`(텍스트)를 `null`로 쓴다. `imageDataUrl`은 쓰지 않는다. | `storage.rs` `write_drop_metadata` | 픽스처: 저장 후 파일이 `text-basic`과 같은 키 집합 | ☐ |
-| S-02 | 읽을 때 `source`, `tags`, `text`, `note`, `imagePath` 누락을 허용한다. `id`, `type`, `title`, `createdAt`, `updatedAt` 누락만 오류. | `models.rs` `#[serde(default)]` | 픽스처: `legacy-minimal-text` | ☐ |
-| S-03 | JSON이 깨진 Drop 폴더는 건너뛰고 경고(`drop_scan_skipped`)만 남기며 나머지 목록은 정상. | 테스트: `scan_sorts_newest_first_and_skips_corrupted_drop_folders` | 픽스처: `broken-json` 포함 스캔 | ☐ |
-| S-04 | 목록은 `createdAt` 내림차순(문자열 비교), 같으면 `id` 내림차순. | `scan_drops_from_root` | 단위 | ☐ |
-| S-05 | 시각은 UTC, 소수 9자리, `Z`. 소수 자리 수가 다르면 문자열 정렬이 틀어지므로 항상 9자리로 쓴다. Swift의 기본 ISO8601 포맷터는 밀리초만 쓴다. | `storage.rs` `current_timestamp` | 단위: 두 시각의 문자열 정렬 = 시간 정렬 | ☐ |
-| S-06 | ID는 `{날짜}_{HHMMSS}_{나노초9}_{slug}`, 충돌 시 `-2`, `-3`. | `unique_drop_id` | 단위: 같은 ID로 연속 저장 | ☐ |
-| S-07 | slug는 ASCII 영숫자만 남기고 48자에서 멈추며 한글만 있으면 `drop`. | `slugify` | 단위: `"한글 제목"`→`drop`, 긴 제목, 특수문자 연속 | ☐ |
-| S-08 | 제목 추론: 명시 → 윈도우 제목 → 앱 이름 → 본문 첫 줄 → `Untitled Drop`, 최대 80자. 이미지는 `Image Drop`. | `infer_title` | 단위 | ☐ |
-| S-09 | 본문은 끝의 `\r`/`\n`만 제거해 `content.md`에 저장. 공백뿐인 텍스트는 `empty_text`로 거부. | `save_text_drop_to_root` | 단위 | ☐ |
-| S-10 | 이미지 바이트가 비면 `empty_image`로 거부. | `save_image_drop_to_root` | 단위 | ☐ |
-| S-11 | 새 Drop은 `note.md`를 항상 만든다(비어 있어도). 노트 편집은 `note.md`를 항상 덮어쓴다. | `write_text_drop_files`, `update_text_drop_in_root` | 단위 | ☐ |
-| S-12 | 읽을 때 공백뿐인 `note.md`는 "노트 없음"으로 취급. | `read_drop_folder` | 단위 | ☐ |
-| S-13 | 수정은 제목(공백이면 `invalid_title`, **파일은 바뀌지 않음**), 태그, 노트, 본문, `updatedAt`만 바꾼다. `createdAt`은 유지. | 테스트: `update_text_drop_updates_metadata_note_content_tags_and_timestamp`, `update_text_drop_rejects_blank_title_and_leaves_files_unchanged` | 단위 | ☐ |
-| S-14 | 이미지 Drop도 제목·노트·태그를 수정할 수 있고 이미지 파일은 그대로 둔다. | 테스트: `update_image_drop_updates_metadata_note_tags_and_keeps_image` | 단위 | ☐ |
-| S-15 | Drop ID에 `/`, `\`, `..`가 있거나 비면 `invalid_drop_id`, 폴더가 없으면 `drop_not_found`. | `drop_folder_path` | 단위 | ☐ |
+| S-01 | `drop.json`을 2칸 들여쓰기 pretty JSON으로 쓰고, `text`, `note`, `imagePath`(텍스트)를 `null`로 쓴다. `imageDataUrl`은 쓰지 않는다. | `storage.rs` `write_drop_metadata` | 픽스처: 저장 후 파일이 `text-basic`과 같은 키 집합 | ☑ |
+| S-02 | 읽을 때 `source`, `tags`, `text`, `note`, `imagePath` 누락을 허용한다. `id`, `type`, `title`, `createdAt`, `updatedAt` 누락만 오류. | `models.rs` `#[serde(default)]` | 픽스처: `legacy-minimal-text` | ☑ |
+| S-03 | JSON이 깨진 Drop 폴더는 건너뛰고 경고(`drop_scan_skipped`)만 남기며 나머지 목록은 정상. | 테스트: `scan_sorts_newest_first_and_skips_corrupted_drop_folders` | 픽스처: `broken-json` 포함 스캔 | ☑ |
+| S-04 | 목록은 `createdAt` 내림차순(문자열 비교), 같으면 `id` 내림차순. | `scan_drops_from_root` | 단위 | ☑ |
+| S-05 | 시각은 UTC, 소수 9자리, `Z`. 소수 자리 수가 다르면 문자열 정렬이 틀어지므로 항상 9자리로 쓴다. Swift의 기본 ISO8601 포맷터는 밀리초만 쓴다. | `storage.rs` `current_timestamp` | 단위: 두 시각의 문자열 정렬 = 시간 정렬 | ☑ |
+| S-06 | ID는 `{날짜}_{HHMMSS}_{나노초9}_{slug}`, 충돌 시 `-2`, `-3`. | `unique_drop_id` | 단위: 같은 ID로 연속 저장 | ☑ |
+| S-07 | slug는 ASCII 영숫자만 남기고 48자에서 멈추며 한글만 있으면 `drop`. | `slugify` | 단위: `"한글 제목"`→`drop`, 긴 제목, 특수문자 연속 | ☑ |
+| S-08 | 제목 추론: 명시 → 윈도우 제목 → 앱 이름 → 본문 첫 줄 → `Untitled Drop`, 최대 80자. 이미지는 `Image Drop`. | `infer_title` | 단위 | ☑ |
+| S-09 | 본문은 끝의 `\r`/`\n`만 제거해 `content.md`에 저장. 공백뿐인 텍스트는 `empty_text`로 거부. | `save_text_drop_to_root` | 단위 | ☑ |
+| S-10 | 이미지 바이트가 비면 `empty_image`로 거부. | `save_image_drop_to_root` | 단위 | ☑ |
+| S-11 | 새 Drop은 `note.md`를 항상 만든다(비어 있어도). 노트 편집은 `note.md`를 항상 덮어쓴다. | `write_text_drop_files`, `update_text_drop_in_root` | 단위 | ☑ |
+| S-12 | 읽을 때 공백뿐인 `note.md`는 "노트 없음"으로 취급. | `read_drop_folder` | 단위 | ☑ |
+| S-13 | 수정은 제목(공백이면 `invalid_title`, **파일은 바뀌지 않음**), 태그, 노트, 본문, `updatedAt`만 바꾼다. `createdAt`은 유지. | 테스트: `update_text_drop_updates_metadata_note_content_tags_and_timestamp`, `update_text_drop_rejects_blank_title_and_leaves_files_unchanged` | 단위 | ☑ |
+| S-14 | 이미지 Drop도 제목·노트·태그를 수정할 수 있고 이미지 파일은 그대로 둔다. | 테스트: `update_image_drop_updates_metadata_note_tags_and_keeps_image` | 단위 | ☑ |
+| S-15 | Drop ID에 `/`, `\`, `..`가 있거나 비면 `invalid_drop_id`, 폴더가 없으면 `drop_not_found`. | `drop_folder_path` | 단위 | ☑ |
 | S-16 | 삭제는 폴더 전체를 휴지통으로 이동. 이동 후에도 폴더가 있으면 `delete_failed`이고 목록에 남는다. | 테스트: `delete_helper_removes_drop_from_scan_when_trash_mover_succeeds`, `delete_helper_leaves_drop_when_trash_mover_fails` | 단위(이동 동작 주입) + 수동 | ☐ |
-| S-17 | 저장 폴더 설정을 바꾸면 스캔과 저장이 새 폴더를 쓴다. | 테스트: `save_and_scan_use_configured_storage_root` | 단위 | ☐ |
-| S-18 | 읽는 중 `content.md`/이미지/`note.md` 하나가 실패해도 Drop은 남기고 해당 경고만 추가. | `read_drop_folder` | 단위 | ☐ |
-| S-19 | `drops/`가 없으면 빈 목록(오류 아님). 저장 시에는 `drops/`를 만든다. | `scan_drops_from_root` | 단위 | ☐ |
-| S-20 | 이미지 Drop은 `imagePath`가 없어도 `image.png`를 기본으로 본다. | `read_drop_folder` | 픽스처: `legacy-minimal-image` | ☐ |
+| S-17 | 저장 폴더 설정을 바꾸면 스캔과 저장이 새 폴더를 쓴다. | 테스트: `save_and_scan_use_configured_storage_root` | 단위 | ☑ |
+| S-18 | 읽는 중 `content.md`/이미지/`note.md` 하나가 실패해도 Drop은 남기고 해당 경고만 추가. | `read_drop_folder` | 단위 | ☑ |
+| S-19 | `drops/`가 없으면 빈 목록(오류 아님). 저장 시에는 `drops/`를 만든다. | `scan_drops_from_root` | 단위 | ☑ |
+| S-20 | 이미지 Drop은 `imagePath`가 없어도 `image.png`를 기본으로 본다. | `read_drop_folder` | 픽스처: `legacy-minimal-image` | ☑ |
 
 ## C. 설정
 
 | ID | 동작 | 근거 | 확인 방법 | ☐ |
 | --- | --- | --- | --- | --- |
 | C-01 | 설정 파일 경로는 고정(`~/Library/Application Support/Notedrop/settings.json`)이고 저장 폴더 설정과 무관. | `settings.rs` | 단위 | ☐ |
-| C-02 | 파일이 없으면 기본값을 만들어 저장. JSON이 깨지면 `settings_invalid`. | 테스트: `default_settings_use_default_storage_and_system_theme` | 단위·픽스처 | ☐ |
-| C-03 | 부분 갱신: 보낸 필드만 바꾸고 나머지는 유지, `updatedAt` 갱신. | 테스트: `updating_settings_persists_path_first_run_theme_and_updated_at`, `updating_settings_persists_shortcuts_without_changing_unrelated_fields` | 단위 | ☐ |
+| C-02 | 파일이 없으면 기본값을 만들어 저장. JSON이 깨지면 `settings_invalid`. | 테스트: `default_settings_use_default_storage_and_system_theme` | 단위·픽스처 | ☑ |
+| C-03 | 부분 갱신: 보낸 필드만 바꾸고 나머지는 유지, `updatedAt` 갱신. | 테스트: `updating_settings_persists_path_first_run_theme_and_updated_at`, `updating_settings_persists_shortcuts_without_changing_unrelated_fields` | 단위 | ☑ |
 | C-04 | `captureConfirmationMode` 키가 없으면 `modal`. 잘못된 값으로 갱신하면 거부. | 테스트: `missing_capture_confirmation_mode_defaults_to_modal`, `update_rejects_invalid_capture_confirmation_mode` | 단위 | ☐ |
-| C-05 | `paneWidths`는 읽고 쓸 때 180–320 / 300–560으로 고정, `recentTags`는 태그 규칙과 12개 제한. | 테스트: `updating_settings_persists_pane_widths_and_recent_tags` | 단위 | ☐ |
-| C-06 | 단축키 문자열은 Tauri 문법(`Shift+Cmd+K`)으로 저장. Swift가 이 문자열을 파싱해야 하며 파싱 불가면 저장 거부. 파일은 바뀌지 않아야 한다. | 테스트: `update_rejects_unparseable_selected_text_shortcut`, `update_rejecting_invalid_shortcut_leaves_persisted_settings_file_untouched` | 단위: 수식어(`Shift`, `Cmd`/`Command`, `Ctrl`/`Control`, `Alt`/`Option`)와 키 이름 | ☐ |
+| C-05 | `paneWidths`는 읽고 쓸 때 180–320 / 300–560으로 고정, `recentTags`는 태그 규칙과 12개 제한. | 테스트: `updating_settings_persists_pane_widths_and_recent_tags` | 단위 | ☑ |
+| C-06 | 단축키 문자열은 Tauri 문법(`Shift+Cmd+K`)으로 저장. Swift가 이 문자열을 파싱해야 하며 파싱 불가면 저장 거부. 파일은 바뀌지 않아야 한다. | 테스트: `update_rejects_unparseable_selected_text_shortcut`, `update_rejecting_invalid_shortcut_leaves_persisted_settings_file_untouched` | 단위: 수식어(`Shift`, `Cmd`/`Command`, `Ctrl`/`Control`, `Alt`/`Option`)와 키 이름 | ☑ |
 | C-07 | 원자적 쓰기(임시 파일 + 이름 변경)로 쓰고 쓰기 실패 시 임시 파일을 지운다. 동시 갱신은 직렬화. | `atomic_write_settings`, `SETTINGS_UPDATE_LOCK` | 단위 | ☐ |
 | C-08 | 단축키 변경 순서: 새 것 등록 → 이전 것 해제 → 설정 저장. 어느 단계가 실패해도 이전 단축키가 살아 있어야 한다. | 테스트: `changing_selected_text_shortcut_replaces_the_old_registration`, `failed_registration_keeps_the_previous_shortcut_active`, `persistence_failure_restores_the_previous_shortcut` | 단위(가짜 등록기) + 수동 | ☐ |
 | C-09 | 시작 시 저장된 단축키 하나만 등록(다른 단축키는 등록하지 않음). 등록 실패는 보관 오류와 메뉴 막대 `Error`로 알린다. | 테스트: `startup_registers_only_the_selected_text_shortcut` | 수동 | ☐ |
 | C-10 | `theme`가 `system`이면 앱 외형을 시스템에 맡기고, `light`/`dark`는 시스템을 덮어쓴다. | `useTheme.ts` | 수동 | ☐ |
-| C-11 | 읽은 `theme`이 잘못되면 `system`으로 보정, `storageFolderPath`가 공백이면 기본 폴더. | `read_app_settings_from_path` | 단위 | ☐ |
+| C-11 | 읽은 `theme`이 잘못되면 `system`으로 보정, `storageFolderPath`가 공백이면 기본 폴더. | `read_app_settings_from_path` | 단위 | ☑ |
 | C-12 | 번들 ID를 바꾸면 손쉬운 사용·자동화 권한을 새로 허용해야 한다. 설정과 Drop은 영향이 없다. | — | 수동 | ☐ |
 
 ## P. 캡처 (선택 텍스트)
@@ -104,10 +106,10 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 
 | ID | 동작 | 근거 | 확인 방법 | ☐ |
 | --- | --- | --- | --- | --- |
-| L-01 | 검색은 제목·본문·노트·이미지 경로·앱·윈도우·URL·태그의 부분 문자열(대소문자 무시). 이미지 경로(`image.png`)로도 검색된다. | `drop-utils.ts` `matchesDropSearch` | 단위 | ☐ |
-| L-02 | 기간 필터: 오늘은 같은 달력 날짜, 7·30일은 `createdAt ≥ 지금 − N일`. 날짜를 해석할 수 없는 Drop은 기간 필터에서 제외. | `matchesDateFilter` | 단위 | ☐ |
-| L-03 | 날짜 그룹: 오늘/어제/지난 7일(2~7일 전)/이전. 해석 불가한 날짜는 `이전`. 빈 그룹 숨김. | `drop-groups.ts` | 단위 | ☐ |
-| L-04 | 선택이 필터 결과에서 사라지면 첫 항목, 결과가 비면 선택 없음. | `useLibraryFilters.ts` | 단위 | ☐ |
+| L-01 | 검색은 제목·본문·노트·이미지 경로·앱·윈도우·URL·태그의 부분 문자열(대소문자 무시). 이미지 경로(`image.png`)로도 검색된다. | `drop-utils.ts` `matchesDropSearch` | 단위 | ☑ |
+| L-02 | 기간 필터: 오늘은 같은 달력 날짜, 7·30일은 `createdAt ≥ 지금 − N일`. 날짜를 해석할 수 없는 Drop은 기간 필터에서 제외. | `matchesDateFilter` | 단위 | ☑ |
+| L-03 | 날짜 그룹: 오늘/어제/지난 7일(2~7일 전)/이전. 해석 불가한 날짜는 `이전`. 빈 그룹 숨김. | `drop-groups.ts` | 단위 | ☑ |
+| L-04 | 선택이 필터 결과에서 사라지면 첫 항목, 결과가 비면 선택 없음. | `useLibraryFilters.ts` | 단위 | ☑ |
 | L-05 | 사이드바 선택은 항상 하나. 유형 선택은 태그 필터를 지우고 태그 선택은 유형을 `all`로 돌린다. 필터 지우기는 앱·기간만 지운다. | `Sidebar.tsx`, `useLibraryFilters.ts`(STA-37) | 단위 | ☐ |
 | L-06 | 사이드바 접힘은 Library↔Settings 전환과 창 크기 변경을 지나도 유지. 두 화면에서 사이드바 너비·모양이 같다. | `MainWindow.tsx`(STA-38) | 수동 | ☐ |
 | L-07 | 인스펙터 오버레이: 같은 토글 또는 Escape로 닫고 토글로 포커스 복귀. 검색 편집 중 Escape는 검색을 먼저 닫는다. | `docs/design/sta30-font-book/README.md` | 수동 | ☐ |
@@ -186,3 +188,10 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 3. 각 Drop을 수정하고 저장한 뒤 `drop.json`의 키 집합과 `null` 규칙(S-01)이 유지되는지 확인한다.
 4. 새 Drop을 저장해 ID, 시각, 파일 구성이 S-05~S-11을 만족하는지 확인한다.
 5. 실제 사용자 폴더로는 먼저 **복사본**에서 같은 확인을 반복한다. 원본 폴더를 처음부터 쓰지 않는다.
+
+## 부분 확인 (STA-41)
+
+- S-16: 휴지통 이동 주입으로 성공·실패 단위 테스트만 확인했습니다. 실제 `FileManager.trashItem` 동작은 수동 확인이 남아 있습니다.
+- C-01: 고정 경로 계산(`SettingsStore.defaultFileURL`)은 구현했지만 테스트하지 않았습니다.
+- C-04: 설정 갱신 API가 열거형이라 잘못된 값은 컴파일 단계에서 막힙니다. 읽을 때의 거부만 테스트했습니다.
+- C-07: `Data.write(.atomic)`(임시 파일 + 이름 변경)를 쓰며 fsync는 하지 않습니다. 쓰기 실패 시 임시 파일 정리는 테스트하지 않았습니다.
