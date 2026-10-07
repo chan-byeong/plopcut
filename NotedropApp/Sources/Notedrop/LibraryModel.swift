@@ -18,7 +18,7 @@ final class LibraryModel {
     var search = "" { didSet { reselect() } }
     var app: String? { didSet { reselect() } }
     var dateRange: DateRange = .all { didSet { reselect() } }
-    var selectedID: String?
+    var selectedID: String? { didSet { editor.show(selectedDrop) } }
 
     var sidebarVisible = true
     /// The user's choice for the inspector beside the body. Narrow windows show it as an overlay instead (spec 2.2).
@@ -31,11 +31,28 @@ final class LibraryModel {
     private let storageRoot: @Sendable () throws -> URL
 
     private let settings: SettingsStore?
+    private let trash: TrashMover
+    /// Edits of the selected drop live here, not in the views, so toggling the inspector never loses a draft (E-05).
+    private(set) var editor: DropEditor!
+    /// One-line confirmation (trash, export) shown briefly; `alertMessage` is an error the user must dismiss.
+    var notice: String?
+    var alertMessage: String?
+    /// The drop waiting for the "Move to Trash?" confirmation.
+    var pendingDeleteID: String?
 
-    init(storageRoot: @escaping @Sendable () throws -> URL = LibraryModel.defaultStorageRoot, settings: SettingsStore? = nil) {
+    init(
+        storageRoot: @escaping @Sendable () throws -> URL = LibraryModel.defaultStorageRoot,
+        settings: SettingsStore? = nil, trash: TrashMover = SystemTrashMover()
+    ) {
         self.storageRoot = storageRoot
         self.settings = settings
+        self.trash = trash
         paneWidths = (try? settings?.read().paneWidths) ?? .default
+        let trashMover = trash
+        editor = DropEditor(
+            save: { id, update in try DropStore(root: try storageRoot(), trash: trashMover).update(id: id, update) },
+            onSaved: { [weak self] in self?.apply($0) },
+            onBackgroundFailure: { [weak self] code in self?.alertMessage = ErrorText.message(forCode: code) })
     }
 
     /// `NOTEDROP_SETTINGS_FILE` keeps dev runs and screenshots away from the user's real settings.json.
@@ -113,6 +130,45 @@ final class LibraryModel {
             loadError = (error as? NotedropError)?.code ?? error.localizedDescription
         }
         reselect()
+        editor.show(selectedDrop)
+    }
+
+    /// A saved edit replaces the drop in the list; the selection stays on it.
+    private func apply(_ saved: Drop) {
+        guard let index = drops.firstIndex(where: { $0.id == saved.id }) else { return }
+        // The selection stays on the edited drop even if it no longer matches the filter (spec E-06).
+        drops[index] = saved
+    }
+
+    /// Moves the drop's folder to the Trash (spec 2.6). The drop stays in the list when the move fails.
+    func delete(id: String) async -> Bool {
+        let (root, trash) = (storageRoot, trash)
+        let result: Result<Void, Error> = await Task.detached {
+            Result { try DropStore(root: try root(), trash: trash).delete(id: id) }
+        }.value
+        switch result {
+        case .success:
+            editor.forget(id)
+            drops.removeAll { $0.id == id }
+            reselect()
+            editor.show(selectedDrop)
+            notice = L10n.t("trashSuccess")
+            return true
+        case .failure(let error):
+            alertMessage = ErrorText.message(for: error)
+            return false
+        }
+    }
+
+    func exportMarkdown(of drop: Drop, to url: URL) -> Bool {
+        do {
+            try Data(MarkdownExport.render(drop).utf8).write(to: url, options: .atomic)
+            notice = L10n.t("exportSuccess")
+            return true
+        } catch {
+            alertMessage = ErrorText.message(for: NotedropError("export_failed", detail: error.localizedDescription))
+            return false
+        }
     }
 
     /// Pane widths are a convenience; a failed write keeps the in-memory value and retries on the next drag.

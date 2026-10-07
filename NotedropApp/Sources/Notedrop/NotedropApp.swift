@@ -1,8 +1,10 @@
+import AppKit
 import SwiftUI
 
 @main
 struct NotedropApp: App {
     @State private var model = LibraryModel(settings: LibraryModel.defaultSettings)
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 
     init() {
         // settings.json owns the column widths (spec L-15). AppKit's own split autosave would restore widths that a
@@ -27,9 +29,43 @@ struct NotedropApp: App {
             MainWindow(model: model)
                 .frame(minWidth: 960, minHeight: 640)
                 .preferredColorScheme(Self.devColorScheme)
-                .task { await model.reload() }
+                .task {
+                    CompositionMonitor.shared.install()
+                    delegate.drain = { [model] in await model.editor.drain() }
+                    delegate.showSaveFailure = { [model] in model.alertMessage = L10n.t("saveFailed") }
+                    delegate.hasUnsavedEdits = { [model] in model.editor.hasUnsavedEdits }
+                    await model.reload()
+                }
         }
         .defaultSize(width: 1120, height: 720)
         .windowToolbarStyle(.unified)
+    }
+}
+
+/// Holds quitting until edits typed in the last moments have been written (the autosave debounce is 600 ms).
+/// If a write fails the first quit is cancelled and the user is told; asking to quit again quits anyway.
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    var drain: (() async -> Bool)?
+    var hasUnsavedEdits: (() -> Bool)?
+    var showSaveFailure: (() -> Void)?
+    /// When the failure warning was shown. Asking to quit again soon after quits anyway; an old warning does not count.
+    private var warnedAt: Date?
+    private static let warningWindow: TimeInterval = 15
+
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard let drain, hasUnsavedEdits?() == true else { return .terminateNow }
+        Task {
+            let saved = await drain()
+            let recentlyWarned = warnedAt.map { Date().timeIntervalSince($0) < Self.warningWindow } ?? false
+            if saved || recentlyWarned {
+                sender.reply(toApplicationShouldTerminate: true)
+            } else {
+                warnedAt = Date()
+                showSaveFailure?()
+                sender.reply(toApplicationShouldTerminate: false)
+            }
+        }
+        return .terminateLater
     }
 }

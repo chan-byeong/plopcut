@@ -30,7 +30,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | S-13 | 수정은 제목(공백이면 `invalid_title`, **파일은 바뀌지 않음**), 태그, 노트, 본문, `updatedAt`만 바꾼다. `createdAt`은 유지. | 테스트: `update_text_drop_updates_metadata_note_content_tags_and_timestamp`, `update_text_drop_rejects_blank_title_and_leaves_files_unchanged` | 단위 | ☑ |
 | S-14 | 이미지 Drop도 제목·노트·태그를 수정할 수 있고 이미지 파일은 그대로 둔다. | 테스트: `update_image_drop_updates_metadata_note_tags_and_keeps_image` | 단위 | ☑ |
 | S-15 | Drop ID에 `/`, `\`, `..`가 있거나 비면 `invalid_drop_id`, 폴더가 없으면 `drop_not_found`. | `drop_folder_path` | 단위 | ☑ |
-| S-16 | 삭제는 폴더 전체를 휴지통으로 이동. 이동 후에도 폴더가 있으면 `delete_failed`이고 목록에 남는다. | 테스트: `delete_helper_removes_drop_from_scan_when_trash_mover_succeeds`, `delete_helper_leaves_drop_when_trash_mover_fails` | 단위(이동 동작 주입) + 수동 | ☐ |
+| S-16 | 삭제는 폴더 전체를 휴지통으로 이동. 이동 후에도 폴더가 있으면 `delete_failed`이고 목록에 남는다. | 테스트: `delete_helper_removes_drop_from_scan_when_trash_mover_succeeds`, `delete_helper_leaves_drop_when_trash_mover_fails` | 단위(이동 동작 주입) + 수동 | ☑ |
 | S-17 | 저장 폴더 설정을 바꾸면 스캔과 저장이 새 폴더를 쓴다. | 테스트: `save_and_scan_use_configured_storage_root` | 단위 | ☑ |
 | S-18 | 읽는 중 `content.md`/이미지/`note.md` 하나가 실패해도 Drop은 남기고 해당 경고만 추가. | `read_drop_folder` | 단위 | ☑ |
 | S-19 | `drops/`가 없으면 빈 목록(오류 아님). 저장 시에는 `drops/`를 만든다. | `scan_drops_from_root` | 단위 | ☑ |
@@ -126,23 +126,23 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 
 | ID | 동작 | 근거 | 확인 방법 | ☐ |
 | --- | --- | --- | --- | --- |
-| E-01 | 편집 600 ms 후 자동 저장, 입력을 떠날 때 즉시 저장. | `useDropAutoSave.ts` | 단위(가짜 타이머) | ☐ |
-| E-02 | 저장 중에 더 새로운 편집이 들어오거나 다른 Drop으로 이동했으면 늦게 온 응답을 반영하지 않는다(편집 내용을 덮어쓰지 않음). | `useDropAutoSave.ts` revision/dropRef | 단위 | ☐ |
-| E-03 | 변경이 없으면 저장하지 않고 상태만 `saved`로 정리. | `useDropAutoSave.ts` | 단위 | ☐ |
-| E-04 | 제목이 공백이면 저장하지 않고 `blankTitle` 오류. 저장 실패 상태에서는 blur가 재시도하지 않고 `다시 시도` 버튼으로만 재시도. | `useDropAutoSave.ts`, `DropDetailPane.tsx` | 단위 | ☐ |
-| E-05 | 패널을 접거나 오버레이를 열고 닫아도 편집 중인 노트·태그 초안을 잃지 않는다(편집기를 다시 만들지 않는다). | `design-system.md` | 수동 | ☐ |
-| E-06 | 편집 후 목록에 즉시 반영하되 선택은 유지한다. | `useDropActions.ts` | 수동 | ☐ |
+| E-01 | 편집 600 ms 후 자동 저장, 입력을 떠날 때 즉시 저장. | `useDropAutoSave.ts` | 단위(가짜 타이머) | ☑ |
+| E-02 | 저장 중에 더 새로운 편집이 들어오거나 다른 Drop으로 이동했으면 늦게 온 응답을 반영하지 않는다(편집 내용을 덮어쓰지 않음). | `useDropAutoSave.ts` revision/dropRef | 단위 | ☑ |
+| E-03 | 변경이 없으면 저장하지 않고 상태만 `saved`로 정리. | `useDropAutoSave.ts` | 단위 | ☑ |
+| E-04 | 제목이 공백이면 저장하지 않고 `blankTitle` 오류. 저장 실패 상태에서는 blur가 재시도하지 않고 `다시 시도` 버튼으로만 재시도. | `useDropAutoSave.ts`, `DropDetailPane.tsx` | 단위 | ☑ |
+| E-05 | 패널을 접거나 오버레이를 열고 닫아도 편집 중인 노트·태그 초안을 잃지 않는다(편집기를 다시 만들지 않는다). | `design-system.md` | 수동 | ☑ |
+| E-06 | 편집 후 목록에 즉시 반영하되 선택은 유지한다. | `useDropActions.ts` | 수동 | ☑ |
 
 ## I. 입력
 
 | ID | 동작 | 근거 | 확인 방법 | ☐ |
 | --- | --- | --- | --- | --- |
-| I-01 | **한글 입력기 조합 중 Enter/쉼표로 태그를 등록하지 않는다.** | `DropDetailPane.tsx` `isComposingKey`, `SavePopover.tsx` | 수동: 한글로 태그 입력 후 Enter(조합 확정 Enter는 등록 아님) | ☐ |
-| I-02 | 태그 입력은 Enter 또는 쉼표로 등록, 여러 개를 쉼표로 한 번에. 이미 있는 태그는 안내(`tagAlreadyAdded`)하고 중복 추가 안 함. | `DropDetailPane.tsx` `registerTags` | 단위 | ☐ |
-| I-03 | 태그 칩 삭제 후 입력창에 포커스. | `removeTag` | 수동 | ☐ |
+| I-01 | **한글 입력기 조합 중 Enter/쉼표로 태그를 등록하지 않는다.** | `DropDetailPane.tsx` `isComposingKey`, `SavePopover.tsx` | 수동: 한글로 태그 입력 후 Enter(조합 확정 Enter는 등록 아님) | ☑ |
+| I-02 | 태그 입력은 Enter 또는 쉼표로 등록, 여러 개를 쉼표로 한 번에. 이미 있는 태그는 안내(`tagAlreadyAdded`)하고 중복 추가 안 함. | `DropDetailPane.tsx` `registerTags` | 단위 | ☑ |
+| I-03 | 태그 칩 삭제 후 입력창에 포커스. | `removeTag` | 수동 | ☑ |
 | I-04 | 팝업 `Cmd+Enter` 저장(저장 중이면 무시), Escape 취소. 레거시는 `Cmd+Enter`에서 입력기 조합 여부를 검사하지 않는다(조합 중에도 동작). | `SavePopover.tsx` | 수동 | ☐ |
 | I-05 | 포커스 링은 컨트롤 모양을 따르는 둥근 링이고 레이아웃을 밀지 않는다. 컨테이너에는 링이 없다. 목록 행은 안쪽 링. | STA-38 CSS(실제 앱 미검증) | 수동 | ☐ |
-| I-06 | 제목 인라인 이름 변경: Return 확정, Escape 되돌림, 둘 다 포커스를 목록에 돌린다. | STA-38(실제 앱 미검증) | 수동 | ☐ |
+| I-06 | 제목 인라인 이름 변경: Return 확정, Escape 되돌림, 둘 다 포커스를 목록에 돌린다. | STA-38(실제 앱 미검증) | 수동 | ☑ |
 
 ## T. 메뉴 막대
 
@@ -225,3 +225,13 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 - D-15 (`.inspector` 대신 HStack): 인스펙터는 고정 280 pt(design-system)이라 크기 조절 손실이 없다. 인스펙터 내용은 일반 SwiftUI 뷰라 접근성 트리와 Tab 이동은 같다. 잃는 것은 시스템 인스펙터의 전체 높이 열 배치와 기본 전환 애니메이션이며, 1176 pt 미만은 어차피 직접 만든 오버레이를 쓴다. 시작 시 종료 문제가 없는 현재 방식을 유지한다.
 - D-16 (Xcode 프로젝트): 지금은 만들지 않는다. SwiftPM + `make-app.sh`로 빌드·테스트·번들이 된다. 4단계에서 접근성 권한(TCC)을 쓰면, 빌드마다 바뀌는 ad-hoc 서명 때문에 권한이 초기화된다. 그때 고정 서명 ID나 Xcode 프로젝트 도입을 다시 판단한다.
 - 남음: `orca computer`의 접근성 누르기로 검색 지우기 버튼을 누르면 필드만 비고 결과가 남는다(실제 클릭은 정상). VoiceOver 사용자 경로라 4~6단계 접근성 점검 때 다시 본다.
+
+## 3단계 확인 결과 (STA-46)
+
+- 단위 테스트(`DropEditorTests`, `LibraryEditingTests`): 600 ms 디바운스, 필드를 떠날 때 즉시 저장, 변경 없으면 저장 안 함, 공백 제목 `blankTitle`, 실패 후 blur 재시도 없음·`다시 시도`·새 편집으로 재개, 늦게 온 응답 무시, Drop 전환 시 이전 편집 저장, 새로 고침 시 초안 유지, 태그 규칙·중복, 삭제 성공·실패(이동 실패와 폴더 잔존), 내보내기 내용·실패. 시계는 가짜 시계(`ManualClock`)다.
+- 실제 앱(저장소 복사본, 실제 키·마우스 이벤트): 노트 편집이 `note.md`에 저장되고 목록·사이드바 태그 목록이 즉시 갱신되며 선택이 유지됨(E-06). 태그 Return·쉼표 등록, 중복 시 `이미 추가됨`(I-02). 제목 Return 확정·Escape 되돌림·포커스는 목록으로(I-06). 삭제는 확인 시트 → 취소는 변경 없음, 확인은 폴더 이동·알림·다음 Drop 선택(S-16). 내보내기 저장 대화상자는 기본 파일명 `{slug}.md`이고 취소하면 쓰지 않는다. 오버레이를 닫았다 열어도 태그 입력 초안이 남는다(E-05).
+- I-01 (한글 입력기, 실제 한글 2벌식으로 확인): 조합 중인 글자 뒤의 첫 Return·쉼표는 조합만 확정하고 태그를 등록하지 않으며, 두 번째 Return에서 등록된다. 한글이 없는 입력("1" 다음 Return)은 바로 등록된다. 확정 뒤 남은 쉼표는 다음 글자를 삼키지 않는다. 한글 2벌식은 AppKit 필드에서 조합 중인 글자를 임시 텍스트로 두지 않고 직접 삽입하며 확정 Return을 앱에도 넘기므로 `hasMarkedText`로는 알 수 없다. 키 이벤트를 따라가는 `CompositionGuard`(확정 키 이후 글자를 입력했고 필드 끝이 한글이면 조합 중)로 구현했고 단위 테스트가 있다. 일본어·중국어 입력기는 확인하지 않았다(임시 텍스트를 쓰므로 `hasMarkedText` 경로가 처리할 것으로 본다).
+- 한계: 접근성 기능으로 값만 바꾸는 입력은 바인딩을 갱신하지 않아 실제 키 입력으로만 검증했다. 종료 직전 저장은 키 입력 직후 종료 요청으로 한 번 확인했고, 600 ms 디바운스만으로 저장된 경우와 구분하지는 못했다(단위 테스트의 `drain` 시나리오가 경로를 검증한다).
+- 구조: Drop마다 편집 슬롯(초안·저장본·상태·리비전)을 두고, 모든 쓰기를 하나의 순서 있는 큐로 보낸다. Drop을 바꿔도 편집은 백그라운드로 저장되고, 실패하면 슬롯이 남아 알림을 띄우며 다시 선택하면 복원된다. 종료 시 `applicationShouldTerminate`가 `drain`을 기다리고, 저장 실패면 첫 종료 요청은 취소하고 경고한다(15초 안에 다시 요청하면 종료).
+- 리뷰: Codex로 3회 진행했다. 1회차 7건(겹친 저장, 전환 시 실패 유실, 종료 직전 유실, 제목 입력 중 응답, 필터 중 선택 이동, 내보내기 오래된 값, 태그 blur 저장), 2회차 5건(슬롯 소유권 문제 전반, 종료·내보내기·제목 blur 재시도), 3회차 4건(전환 시 제목 유실, 오래된 종료 경고, 저장 중 대기한 blur의 재시도, 남은 쉼표)을 모두 반영하고 각각 테스트를 추가했다.
+- 최근 태그(`recentTags`)는 캡처 저장 후에만 갱신한다(스펙 1.5). 편집으로는 바꾸지 않는다.

@@ -81,3 +81,110 @@ import Testing
         #expect(LibraryModel(storageRoot: { dir }, settings: store).paneWidths == PaneWidths(sidebar: 260, library: 400))
     }
 }
+
+/// Trash stand-in: removes the folder (success) or fails/leaves it in place.
+struct FakeTrash: TrashMover {
+    enum Mode: Sendable { case succeed, fail, silentlyKeep }
+    let mode: Mode
+    func trash(_ url: URL) throws {
+        switch mode {
+        case .succeed: try FileManager.default.removeItem(at: url)
+        case .fail: throw NSError(domain: "test", code: 1)
+        case .silentlyKeep: break
+        }
+    }
+}
+
+@MainActor
+@Suite struct LibraryEditingTests {
+    /// A model over a copy of the fixture storage, so tests may write.
+    private func model(trash: FakeTrash.Mode = .succeed) async throws -> (LibraryModel, URL) {
+        let source = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("docs/swift-migration/fixtures/storage")
+        let copy = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.copyItem(at: source, to: copy)
+        let model = LibraryModel(storageRoot: { copy }, trash: FakeTrash(mode: trash))
+        await model.reload()
+        return (model, copy)
+    }
+
+    // E-06
+    @Test func editingUpdatesTheListAndKeepsTheSelection() async throws {
+        let (model, root) = try await model()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let id = try #require(model.selectedID)
+        model.editor.setNote("edited note")
+        await model.editor.flush()
+        #expect(model.selectedID == id)
+        #expect(model.selectedDrop?.note == "edited note")
+        #expect(model.drops.count == 6)
+        let onDisk = try String(contentsOf: root.appendingPathComponent("drops/\(id)/note.md"), encoding: .utf8)
+        #expect(onDisk == "edited note")
+    }
+
+    // E-06: an edit that no longer matches the active filter must not move the selection.
+    @Test func editingKeepsTheSelectionEvenWhenTheFilterNoLongerMatches() async throws {
+        let (model, root) = try await model()
+        defer { try? FileManager.default.removeItem(at: root) }
+        model.collection = .tag("swift")
+        let id = try #require(model.selectedID)
+        let tag = "swift"
+        model.editor.removeTag(tag)
+        await model.editor.flush()
+        #expect(model.selectedID == id)
+        #expect(model.selectedDrop?.tags.contains(tag) == false)
+        #expect(model.editor.dropID == id)
+    }
+
+    @Test func selectingAnotherDropShowsItsOwnFields() async throws {
+        let (model, root) = try await model()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let other = try #require(model.filtered.dropFirst().first)
+        model.selectedID = other.id
+        #expect(model.editor.dropID == other.id)
+        #expect(model.editor.draft.title == other.title)
+    }
+
+    // S-16
+    @Test func deleteMovesTheFolderAndSelectsAnotherDrop() async throws {
+        let (model, root) = try await model()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let id = try #require(model.selectedID)
+        model.editor.setNote("will be discarded")
+        let ok = await model.delete(id: id)
+        #expect(ok)
+        #expect(model.drops.count == 5)
+        #expect(!model.drops.contains { $0.id == id })
+        #expect(model.selectedID != id && model.selectedID != nil)
+        #expect(model.editor.dropID == model.selectedID)
+        #expect(model.notice == L10n.t("trashSuccess"))
+        #expect(!FileManager.default.fileExists(atPath: root.appendingPathComponent("drops/\(id)").path))
+    }
+
+    @Test func failedDeleteKeepsTheDropAndReports() async throws {
+        for mode in [FakeTrash.Mode.fail, .silentlyKeep] {
+            let (model, root) = try await model(trash: mode)
+            defer { try? FileManager.default.removeItem(at: root) }
+            let id = try #require(model.selectedID)
+            let ok = await model.delete(id: id)
+            #expect(!ok)
+            #expect(model.drops.count == 6)
+            #expect(model.selectedID == id)
+            #expect(model.alertMessage != nil)
+        }
+    }
+
+    // Spec 7
+    @Test func exportWritesMarkdownAndFailureIsReported() async throws {
+        let (model, root) = try await model()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let drop = try #require(model.selectedDrop)
+        let target = root.appendingPathComponent("out.md")
+        #expect(model.exportMarkdown(of: drop, to: target))
+        #expect(try String(contentsOf: target, encoding: .utf8) == MarkdownExport.render(drop))
+        #expect(model.notice == L10n.t("exportSuccess"))
+        #expect(!model.exportMarkdown(of: drop, to: root.appendingPathComponent("missing/dir/out.md")))
+        #expect(model.alertMessage != nil)
+    }
+}

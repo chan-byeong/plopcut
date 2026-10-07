@@ -82,18 +82,18 @@ struct MainWindow: View {
             } else {
                 // A plain HStack instead of `.inspector`: toggling that modifier from layout code crashed AppKit constraints.
                 HStack(spacing: 0) {
-                    DropDetailView(drop: model.selectedDrop)
+                    DropDetailView(model: model, listFocused: $listFocused)
                         .frame(minWidth: Self.bodyMinWidth)
                     if sideBySide && model.inspectorVisible {
                         Divider()
-                        InspectorView(drop: model.selectedDrop).frame(width: 280)
+                        InspectorView(model: model).frame(width: 280)
                     }
                 }
             }
         }
         .overlay(alignment: .trailing) {
             if !sideBySide && model.inspectorOverlayOpen && model.collection != .settings {
-                InspectorView(drop: model.selectedDrop)
+                InspectorView(model: model)
                     .frame(width: 280, alignment: .topLeading)
                     .frame(maxHeight: .infinity, alignment: .top)
                     .background(Rectangle().fill(.regularMaterial).ignoresSafeArea())
@@ -114,6 +114,20 @@ struct MainWindow: View {
             visible: model.collection != .settings && (width >= Self.compactSearchWidth || searchOpen)))
         .onChange(of: searchPresented) { _, presented in if !presented { searchOpen = false } }
         .toolbar { toolbarContent(sideBySide: sideBySide, width: width) }
+        .confirmationDialog(
+            L10n.t("confirmTrash"), isPresented: Binding(get: { model.pendingDeleteID != nil }, set: { if !$0 { model.pendingDeleteID = nil } }),
+            titleVisibility: .visible
+        ) {
+            Button(L10n.t("moveTrash"), role: .destructive) {
+                if let id = model.pendingDeleteID { Task { await model.delete(id: id) } }
+                model.pendingDeleteID = nil
+            }
+            Button(L10n.t("cancel"), role: .cancel) { model.pendingDeleteID = nil }
+        } message: { Text(L10n.t("confirmTrashBody")) }
+        .alert(model.alertMessage ?? "", isPresented: Binding(get: { model.alertMessage != nil }, set: { if !$0 { model.alertMessage = nil } })) {
+            Button("OK", role: .cancel) {}
+        }
+        .overlay(alignment: .bottom) { NoticeBanner(model: model) }
         .background {
             // Cmd+F focuses search at every width; the toolbar icon only exists in narrow windows.
             Button("") { openSearch() }
@@ -183,4 +197,24 @@ struct ToolbarSearch: ViewModifier {
 
     private static let escapeKeyCode: UInt16 = 53
 
+}
+
+/// A short confirmation ("Drop moved to Trash.") that fades after a few seconds.
+struct NoticeBanner: View {
+    @Bindable var model: LibraryModel
+
+    var body: some View {
+        if let notice = model.notice {
+            Text(notice)
+                .padding(.horizontal, 14).padding(.vertical, 8)
+                .background(.regularMaterial, in: Capsule())
+                .padding(.bottom, 16)
+                .transition(.opacity)
+                .accessibilityAddTraits(.updatesFrequently)
+                .task(id: notice) {
+                    try? await Task.sleep(for: .seconds(3))
+                    model.notice = nil
+                }
+        }
+    }
 }
