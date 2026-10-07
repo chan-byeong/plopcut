@@ -12,27 +12,24 @@ struct LibraryListView: View {
             if !model.warnings.isEmpty { warningBanner }
             content
         }
-    }
-
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .center) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(model.title).font(.title3.bold())
-                    Text(L10n.t("dropCount", ["count": String(model.filtered.count)])).font(.caption).foregroundStyle(.secondary)
-                }
-                Spacer()
+        .navigationTitle(model.title)
+        .navigationSubtitle(L10n.t("dropCount", ["count": String(model.filtered.count)]))
+        .toolbar {
+            ToolbarItemGroup(placement: .primaryAction) {
                 if model.hasRefiningFilters {
-                    Button { model.clearFilters() } label: { Image(systemName: "arrow.counterclockwise") }
-                        .buttonStyle(.borderless).help(L10n.t("clearFilters")).accessibilityLabel(L10n.t("clearFilters"))
+                    Button { model.clearFilters() } label: { Label(L10n.t("clearFilters"), systemImage: "arrow.counterclockwise") }
+                        .help(L10n.t("clearFilters"))
                 }
-                Button { filtersOpen.toggle() } label: { Image(systemName: "line.3.horizontal.decrease") }
-                    .buttonStyle(.borderless).help(L10n.t("openFilters")).accessibilityLabel(L10n.t("openFilters"))
+                Button { filtersOpen.toggle() } label: { Label(L10n.t("openFilters"), systemImage: "line.3.horizontal.decrease") }
+                    .help(L10n.t("openFilters"))
                     .popover(isPresented: $filtersOpen) { FilterPopover(model: model) }
             }
-            if model.hasRefiningFilters { chips }
         }
-        .padding(.horizontal, 16).padding(.vertical, 10)
+    }
+
+    /// Title and count live in the window toolbar (navigationTitle/Subtitle); only filter chips stay in the pane.
+    @ViewBuilder private var header: some View {
+        if model.hasRefiningFilters { chips.padding(.horizontal, 16).padding(.vertical, 8) }
     }
 
     private var chips: some View {

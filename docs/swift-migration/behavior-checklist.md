@@ -201,3 +201,9 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 확인함(창 캡처, 앱 번들 실행): 사이드바 접힘이 Library↔설정 전환 뒤에도 유지(L-06), 사이드바 단일 선택(L-05, 모델 테스트 포함), 960 pt에서 검색 아이콘 축약·아이콘 클릭으로 필드 열림, 1176 pt 미만에서 인스펙터가 오버레이로 열리고 Escape로 닫힘, 라이트 테마 960 pt.
 
 미완(후속 STA-43): L-07 토글 포커스 복귀, L-08 검색 Escape·Cmd+F 실동작, L-15 구분선 조절·접근성 값(구분선은 `NavigationSplitView` 기본), 서체관리자와의 시각 차이(서체관리자는 8 pt 인셋의 떠 있는 사이드바와 도구 막대 안의 제목·개수, 캡슐로 묶인 도구 막대 버튼을 쓰지만 Notedrop은 기본 사이드바와 목록 헤더를 씁니다), Xcode 프로젝트(현재는 SwiftPM + `scripts/make-app.sh`).
+
+## 서체관리자 시각 일치 결과 (STA-43)
+
+- 원인: SwiftPM이 바이너리의 SDK 버전을 배포 대상(14.0)으로 기록해 macOS 26이 이전 창 스타일을 적용했다. `scripts/make-app.sh`가 `vtool`로 실제 SDK 버전을 다시 기록한다.
+- 결과: 떠 있는 둥근 사이드바, 캡슐로 묶인 도구 막대 버튼, 도구 막대의 제목·개수(`navigationTitle`/`navigationSubtitle`)가 서체관리자와 같다. 다크 테마 1300 pt 창으로 확인했다.
+- 남음: 구분선 키보드·접근성(L-15), 포커스 복귀(L-07), 검색 Escape·Cmd+F(L-08), 설정 화면의 검색 비활성.

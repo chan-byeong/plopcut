@@ -9,6 +9,10 @@ APP=.build/Notedrop.app
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS"
 cp ".build/$CONFIG/Notedrop" "$APP/Contents/MacOS/Notedrop"
+# SwiftPM stamps the SDK as the deployment target (14.0), which keeps macOS on the pre-Liquid-Glass window style.
+# Restamp with the real SDK so system chrome matches native apps.
+SDK_VERSION="$(xcrun --show-sdk-version)"
+vtool -set-build-version macos 14.0 "$SDK_VERSION" -replace -output "$APP/Contents/MacOS/Notedrop" "$APP/Contents/MacOS/Notedrop"
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
