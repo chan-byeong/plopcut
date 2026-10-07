@@ -1,0 +1,20 @@
+{
+  "id": "2026-01-02_100000_000000002_drop",
+  "type": "text",
+  "title": "한글 제목 문서",
+  "text": null,
+  "imagePath": null,
+  "source": {
+    "appName": "Google Chrome",
+    "windowTitle": "한글 문서 - 위키",
+    "url": "https://example.com/wiki/한글",
+    "filePath": null
+  },
+  "note": null,
+  "tags": [
+    "한글",
+    "메모"
+  ],
+  "createdAt": "2026-01-02T10:00:00.000000002Z",
+  "updatedAt": "2026-01-02T10:30:00.000000002Z"
+}

@@ -1,0 +1,17 @@
+{
+  "id": "2026-01-06_140000_000000006_mixed",
+  "type": "mixed",
+  "title": "Mixed type from another tool",
+  "text": null,
+  "imagePath": "image.png",
+  "source": {
+    "appName": "Other Tool",
+    "windowTitle": null,
+    "url": null,
+    "filePath": null
+  },
+  "note": null,
+  "tags": [],
+  "createdAt": "2026-01-06T14:00:00.000000006Z",
+  "updatedAt": "2026-01-06T14:00:00.000000006Z"
+}

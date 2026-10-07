@@ -1,0 +1,16 @@
+{
+  "storageFolderPath": "/REPLACE/WITH/ABSOLUTE/PATH/fixtures/storage",
+  "hasCompletedFirstRun": true,
+  "theme": "dark",
+  "captureConfirmationMode": "modal",
+  "selectedTextShortcut": "Shift+Cmd+C",
+  "paneWidths": {
+    "sidebar": 215,
+    "library": 373
+  },
+  "recentTags": [
+    "research",
+    "swift"
+  ],
+  "updatedAt": "2026-01-06T14:00:00.000000006Z"
+}

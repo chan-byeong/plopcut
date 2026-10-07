@@ -1,0 +1,1 @@
+This drop must be skipped with a warning.

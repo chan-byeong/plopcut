@@ -1,0 +1,1 @@
+Mixed drops are never written by Notedrop.

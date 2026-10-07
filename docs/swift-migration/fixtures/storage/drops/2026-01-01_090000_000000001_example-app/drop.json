@@ -1,0 +1,20 @@
+{
+  "id": "2026-01-01_090000_000000001_example-app",
+  "type": "text",
+  "title": "Example App",
+  "text": null,
+  "imagePath": null,
+  "source": {
+    "appName": "Example App",
+    "windowTitle": "Release notes",
+    "url": null,
+    "filePath": null
+  },
+  "note": null,
+  "tags": [
+    "research",
+    "swift"
+  ],
+  "createdAt": "2026-01-01T09:00:00.000000001Z",
+  "updatedAt": "2026-01-01T09:00:00.000000001Z"
+}

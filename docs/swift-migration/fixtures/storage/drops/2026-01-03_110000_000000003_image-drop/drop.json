@@ -1,0 +1,17 @@
+{
+  "id": "2026-01-03_110000_000000003_image-drop",
+  "type": "image",
+  "title": "Image Drop",
+  "text": null,
+  "imagePath": "image.png",
+  "source": {
+    "appName": "Preview",
+    "windowTitle": "diagram.png",
+    "url": null,
+    "filePath": null
+  },
+  "note": null,
+  "tags": [],
+  "createdAt": "2026-01-03T11:00:00.000000003Z",
+  "updatedAt": "2026-01-03T11:00:00.000000003Z"
+}

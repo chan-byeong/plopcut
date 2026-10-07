@@ -1,0 +1,1 @@
+Files directly under drops/ must be ignored.
