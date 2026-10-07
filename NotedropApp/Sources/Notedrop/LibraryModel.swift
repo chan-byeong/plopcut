@@ -24,12 +24,26 @@ final class LibraryModel {
     /// The user's choice for the inspector beside the body. Narrow windows show it as an overlay instead (spec 2.2).
     var inspectorVisible = true
     var inspectorOverlayOpen = false
+    /// Column widths restored at launch and saved only after a divider drag (spec L-15).
+    private(set) var paneWidths = PaneWidths.default
 
     /// Library to show before settings exist: `NOTEDROP_STORAGE_FOLDER` overrides settings.json (dev and tests).
     private let storageRoot: @Sendable () throws -> URL
 
-    init(storageRoot: @escaping @Sendable () throws -> URL = LibraryModel.defaultStorageRoot) {
+    private let settings: SettingsStore?
+
+    init(storageRoot: @escaping @Sendable () throws -> URL = LibraryModel.defaultStorageRoot, settings: SettingsStore? = nil) {
         self.storageRoot = storageRoot
+        self.settings = settings
+        paneWidths = (try? settings?.read().paneWidths) ?? .default
+    }
+
+    /// `NOTEDROP_SETTINGS_FILE` keeps dev runs and screenshots away from the user's real settings.json.
+    static var defaultSettings: SettingsStore {
+        if let override = ProcessInfo.processInfo.environment["NOTEDROP_SETTINGS_FILE"] {
+            return SettingsStore(fileURL: URL(fileURLWithPath: override))
+        }
+        return SettingsStore()
     }
 
     static let defaultStorageRoot: @Sendable () throws -> URL = {
@@ -99,6 +113,12 @@ final class LibraryModel {
             loadError = (error as? NotedropError)?.code ?? error.localizedDescription
         }
         reselect()
+    }
+
+    /// Pane widths are a convenience; a failed write keeps the in-memory value and retries on the next drag.
+    func savePaneWidths(_ widths: PaneWidths) {
+        paneWidths = widths
+        _ = try? settings?.update(SettingsUpdate(paneWidths: widths))
     }
 
     func clearFilters() {

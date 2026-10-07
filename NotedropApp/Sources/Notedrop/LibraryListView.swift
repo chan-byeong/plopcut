@@ -4,6 +4,7 @@ import SwiftUI
 
 struct LibraryListView: View {
     @Bindable var model: LibraryModel
+    var listFocused: FocusState<Bool>.Binding
     @State private var filtersOpen = false
 
     var body: some View {
@@ -71,6 +72,7 @@ struct LibraryListView: View {
                 }
             }
             .listStyle(.inset)
+            .focused(listFocused)
             .contextMenu(forSelectionType: String.self) { ids in
                 if let drop = model.drops.first(where: { ids.contains($0.id) }) {
                     if let url = drop.source.url.flatMap(URL.init(string:)), drop.source.url?.isEmpty == false {

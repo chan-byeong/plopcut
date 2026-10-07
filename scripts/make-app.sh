@@ -19,6 +19,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <plist version="1.0"><dict>
   <key>CFBundleIdentifier</key><string>app.notedrop.dev</string>
   <key>CFBundleName</key><string>Notedrop</string>
+  <key>CFBundleDevelopmentRegion</key><string>en</string>
+  <key>CFBundleLocalizations</key><array><string>en</string><string>ko</string></array>
   <key>CFBundleExecutable</key><string>Notedrop</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>0.1.0</string>

@@ -66,3 +66,18 @@ import Testing
         L10n.languageOverride = nil
     }
 }
+
+@MainActor
+@Suite struct PaneWidthSettingsTests {
+    @Test func restoresAndSavesPaneWidths() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let store = SettingsStore(fileURL: dir.appendingPathComponent("settings.json"), defaultStorageFolder: dir)
+        let model = LibraryModel(storageRoot: { dir }, settings: store)
+        #expect(model.paneWidths == .default)
+        model.savePaneWidths(PaneWidths(sidebar: 260, library: 400))
+        #expect(try store.read().paneWidths == PaneWidths(sidebar: 260, library: 400))
+        #expect(LibraryModel(storageRoot: { dir }, settings: store).paneWidths == PaneWidths(sidebar: 260, library: 400))
+    }
+}

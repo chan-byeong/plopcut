@@ -113,14 +113,14 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | L-05 | 사이드바 선택은 항상 하나. 유형 선택은 태그 필터를 지우고 태그 선택은 유형을 `all`로 돌린다. 필터 지우기는 앱·기간만 지운다. | `Sidebar.tsx`, `useLibraryFilters.ts`(STA-37) | 단위 | ☑ |
 | L-06 | 사이드바 접힘은 Library↔Settings 전환과 창 크기 변경을 지나도 유지. 두 화면에서 사이드바 너비·모양이 같다. | `MainWindow.tsx`(STA-38) | 수동 | ☑ |
 | L-07 | 인스펙터 오버레이: 같은 토글 또는 Escape로 닫고 토글로 포커스 복귀. 검색 편집 중 Escape는 검색을 먼저 닫는다. | `docs/design/sta30-font-book/README.md` | 수동 | ☐ |
-| L-08 | 검색을 닫아도(Escape) 검색어와 결과 유지. 지우기는 전체 복원. `Cmd+F`는 검색 포커스. | `design-system.md` | 수동 | ☐ |
+| L-08 | 검색을 닫아도(Escape) 검색어와 결과 유지. 지우기는 전체 복원. `Cmd+F`는 검색 포커스. | `design-system.md` | 수동 | ☑ |
 | L-09 | 새로고침은 디스크를 다시 스캔한다. 다른 곳(팝업 창 등)의 저장 신호를 받아도 다시 스캔한다. | `useLibraryRefreshEvent.ts` | 수동 | ☐ |
 | L-10 | 저장한 뒤 새 Drop을 선택한다. | `handleCaptureSaved` | 수동 | ☐ |
 | L-11 | 목록 우클릭 메뉴: 출처 열기(URL 있을 때), 내용 복사(텍스트일 때), Markdown 내보내기, 구분선, 휴지통. 우클릭하면 그 행을 먼저 선택. | `LibraryPane.tsx` | 수동 | ☐ |
 | L-12 | `Cmd+Backspace`는 삭제 확인 시트, 확인 후에만 휴지통으로 이동. | `LibraryPane.tsx`, `DeleteConfirmationSheet.tsx` | 수동 | ☐ |
 | L-13 | 출처 열기: URL이 비어 있으면 `source_url_missing`. 버튼은 URL이 없을 때 비활성. | `commands.rs` `open_source_url` | 단위·수동 | ☐ |
 | L-14 | Markdown 내보내기: 취소하면 파일을 쓰지 않는다. 형식은 spec 7장. | `markdown.rs`, 테스트: `markdown_generation_includes_drop_fields` | 단위 | ☐ |
-| L-15 | 창 크기 때문에 줄어든 표시 너비를 `paneWidths`에 저장하지 않는다. 구분선 조절이 끝났을 때만 저장. | `MainWindow.tsx` | 수동 | ☐ |
+| L-15 | 창 크기 때문에 줄어든 표시 너비를 `paneWidths`에 저장하지 않는다. 구분선 조절이 끝났을 때만 저장. | `MainWindow.tsx` | 수동 | ☑ |
 
 ## E. 편집
 
@@ -200,10 +200,28 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 
 확인함(창 캡처, 앱 번들 실행): 사이드바 접힘이 Library↔설정 전환 뒤에도 유지(L-06), 사이드바 단일 선택(L-05, 모델 테스트 포함), 960 pt에서 검색 아이콘 축약·아이콘 클릭으로 필드 열림, 1176 pt 미만에서 인스펙터가 오버레이로 열리고 Escape로 닫힘, 라이트 테마 960 pt.
 
-미완(후속 STA-43): L-07 토글 포커스 복귀, L-08 검색 Escape·Cmd+F 실동작, L-15 구분선 조절·접근성 값(구분선은 `NavigationSplitView` 기본), 서체관리자와의 시각 차이(서체관리자는 8 pt 인셋의 떠 있는 사이드바와 도구 막대 안의 제목·개수, 캡슐로 묶인 도구 막대 버튼을 쓰지만 Notedrop은 기본 사이드바와 목록 헤더를 씁니다), Xcode 프로젝트(현재는 SwiftPM + `scripts/make-app.sh`).
+후속 STA-43에서 처리했습니다. 결과는 아래 섹션에 있습니다.
 
 ## 서체관리자 시각 일치 결과 (STA-43)
 
 - 원인: SwiftPM이 바이너리의 SDK 버전을 배포 대상(14.0)으로 기록해 macOS 26이 이전 창 스타일을 적용했다. `scripts/make-app.sh`가 `vtool`로 실제 SDK 버전을 다시 기록한다.
 - 결과: 떠 있는 둥근 사이드바, 캡슐로 묶인 도구 막대 버튼, 도구 막대의 제목·개수(`navigationTitle`/`navigationSubtitle`)가 서체관리자와 같다. 다크 테마 1300 pt 창으로 확인했다.
-- 남음: 구분선 키보드·접근성(L-15), 포커스 복귀(L-07), 검색 Escape·Cmd+F(L-08), 설정 화면의 검색 비활성.
+- 앱 번들에 `CFBundleLocalizations`(en, ko)를 선언해 시스템이 붙이는 문구(사이드바 가리기, 접근성 역할 이름)도 한국어로 나온다.
+
+### 동작 확인 (실제 키·마우스 이벤트, 1300/1000/960 pt)
+
+- L-15: 구분선을 마우스로 끌었을 때만 `paneWidths`를 저장한다(버튼이 눌린 상태 + 창 너비 변화 없음, 400 ms 뒤 한 번). 실행 직후 레이아웃 정착, 창 크기 변경, 사이드바 접기는 저장하지 않는다. 960 pt에서 목록이 390 → 339로 줄어도 저장 값은 390이다. 다시 실행하면 settings.json 값으로 복원한다.
+  - SwiftUI가 `ideal` 열 너비를 무시하므로 창이 열릴 때 NSSplitView 구분선 위치를 직접 설정한다(`SplitViewRestorer`). AppKit의 자체 자동 저장(`NSSplitView Subview Frames …`)은 줄어든 너비를 복원하므로 실행 시 지운다.
+  - 본문 최소 너비 360을 지정해, 창을 줄일 때 목록이 300 아래로 밀리지 않게 했다.
+  - 구분선의 접근성 값은 AppKit 기본(`splitter, Value`)으로 노출된다.
+- L-08: `Cmd+F`가 모든 너비에서 검색 필드로 포커스한다(이전에는 좁은 창에서만 동작). Escape로 닫아도 검색어와 결과를 유지한다. AppKit은 Escape 때 필드를 비우므로, 현재 이벤트가 Escape 키일 때 빈 값을 무시한다. 지우기 버튼(실제 클릭)은 전체 목록을 복원한다.
+- L-07: 오버레이와 검색이 함께 열려 있을 때 첫 Escape는 검색만, 두 번째 Escape는 오버레이를 닫는다. 좁은 창의 `Cmd+F`는 필드가 생긴 다음 턴에 포커스를 요청한다.
+- 설정 화면: 검색 필드와 검색 아이콘을 숨기고 `Cmd+F`를 비활성화한다.
+
+### 결정
+
+- D-13 (L-07 변경, 사용자 확인 대기 — 확인 전까지 L-07은 ☐): 오버레이를 닫으면 포커스를 토글이 아닌 Drop 목록으로 돌린다. macOS 도구 막대 버튼은 '전체 키보드 접근'이 꺼져 있으면 키보드 포커스를 받지 않으므로, 토글로 돌려주면 포커스가 사라진다.
+- D-14 (구분선 키보드 조절, 사용자 확인 대기 — 스펙 2.2와 다름): 좌우 화살표 8 pt 조절은 구현하지 않는다. NSSplitView와 서체관리자 모두 키보드 조절을 제공하지 않으며, 웹뷰 시절 요구였다. 접근성 값은 AppKit 기본으로 제공된다.
+- D-15 (`.inspector` 대신 HStack): 인스펙터는 고정 280 pt(design-system)이라 크기 조절 손실이 없다. 인스펙터 내용은 일반 SwiftUI 뷰라 접근성 트리와 Tab 이동은 같다. 잃는 것은 시스템 인스펙터의 전체 높이 열 배치와 기본 전환 애니메이션이며, 1176 pt 미만은 어차피 직접 만든 오버레이를 쓴다. 시작 시 종료 문제가 없는 현재 방식을 유지한다.
+- D-16 (Xcode 프로젝트): 지금은 만들지 않는다. SwiftPM + `make-app.sh`로 빌드·테스트·번들이 된다. 4단계에서 접근성 권한(TCC)을 쓰면, 빌드마다 바뀌는 ad-hoc 서명 때문에 권한이 초기화된다. 그때 고정 서명 ID나 Xcode 프로젝트 도입을 다시 판단한다.
+- 남음: `orca computer`의 접근성 누르기로 검색 지우기 버튼을 누르면 필드만 비고 결과가 남는다(실제 클릭은 정상). VoiceOver 사용자 경로라 4~6단계 접근성 점검 때 다시 본다.

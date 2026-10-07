@@ -1,3 +1,5 @@
+import AppKit
+import NotedropCore
 import SwiftUI
 
 struct MainWindow: View {
@@ -6,20 +8,48 @@ struct MainWindow: View {
     @State private var searchPresented = false
     /// In narrow windows the field only exists after the icon (or Cmd+F) opens it.
     @State private var searchOpen = false
+    @State private var sidebarColumnWidth: CGFloat = 0
+    @State private var listColumnWidth: CGFloat = 0
+    @State private var recorder = PaneWidthRecorder()
+    @State private var pendingSave: Task<Void, Never>?
+    /// Closing the overlay returns focus to the drop list; toolbar buttons take no key focus without Full Keyboard Access.
+    @FocusState private var listFocused: Bool
 
     /// Sidebar 220 + list 300 + body 360 + two 8 pt dividers + inspector 280 (design-system.md).
     private static let sideBySideWidth: CGFloat = 1176
     private static let sidebarWidth: CGFloat = 220
+    /// Keeps a narrow window from squeezing the list below its 300 pt minimum.
+    private static let bodyMinWidth: CGFloat = 360
     /// Below this window width the search field becomes an icon (spec 2.3).
     private static let compactSearchWidth: CGFloat = 1050
 
     var body: some View {
-        GeometryReader { proxy in layout(sideBySide: isSideBySide(width: proxy.size.width), width: proxy.size.width) }
+        GeometryReader { proxy in
+            layout(sideBySide: isSideBySide(width: proxy.size.width), width: proxy.size.width)
+                .onChange(of: [sidebarColumnWidth, listColumnWidth]) { paneWidthsChanged(window: proxy.size.width) }
+        }
+    }
+
+    /// Saves after the divider stops moving, so a drag writes settings.json once.
+    private func paneWidthsChanged(window: CGFloat) {
+        let visibleSidebar = columns == .detailOnly ? 0 : sidebarColumnWidth
+        guard let widths = recorder.observe(
+            sidebar: visibleSidebar, list: listColumnWidth, window: window, mouseDown: NSEvent.pressedMouseButtons & 1 != 0) else { return }
+        pendingSave?.cancel()
+        pendingSave = Task {
+            try? await Task.sleep(for: .milliseconds(400))
+            guard !Task.isCancelled else { return }
+            // The last layout pass after mouse-up is not seen as a drag; save the widths as they are now.
+            let settled = columns == .detailOnly ? widths.sidebar : sidebarColumnWidth
+            model.savePaneWidths(PaneWidths(sidebar: settled, library: listColumnWidth > 0 ? listColumnWidth : widths.library))
+        }
     }
 
     private func openSearch() {
+        guard !searchOpen else { searchPresented = true; return }
         searchOpen = true
-        searchPresented = true
+        // In narrow windows the field is only inserted now; request focus once it exists.
+        Task { @MainActor in searchPresented = true }
     }
 
     private func isSideBySide(width: CGFloat) -> Bool {
@@ -29,13 +59,22 @@ struct MainWindow: View {
     private func layout(sideBySide: Bool, width: CGFloat) -> some View {
         NavigationSplitView(columnVisibility: $columns) {
             SidebarView(model: model)
-                .navigationSplitViewColumnWidth(min: 180, ideal: 220, max: 320)
+                .navigationSplitViewColumnWidth(min: 180, ideal: model.paneWidths.sidebar, max: 320)
         } content: {
             if model.collection == .settings {
                 Color.clear.navigationSplitViewColumnWidth(0)
+                    .onAppear { listColumnWidth = 0 }
             } else {
-                LibraryListView(model: model)
-                    .navigationSplitViewColumnWidth(min: 300, ideal: 330, max: 560)
+                LibraryListView(model: model, listFocused: $listFocused)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    // Measure the filled column, not the content's intrinsic size. The floating sidebar is drawn
+                    // inset, so its own width under-reports; the list's left edge is the divider.
+                    .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: {
+                        sidebarColumnWidth = $0.minX
+                        listColumnWidth = $0.width
+                    }
+                    .navigationSplitViewColumnWidth(min: 300, ideal: model.paneWidths.library, max: 560)
+                    .background(SplitViewRestorer(widths: model.paneWidths))
             }
         } detail: {
             if model.collection == .settings {
@@ -44,6 +83,7 @@ struct MainWindow: View {
                 // A plain HStack instead of `.inspector`: toggling that modifier from layout code crashed AppKit constraints.
                 HStack(spacing: 0) {
                     DropDetailView(drop: model.selectedDrop)
+                        .frame(minWidth: Self.bodyMinWidth)
                     if sideBySide && model.inspectorVisible {
                         Divider()
                         InspectorView(drop: model.selectedDrop).frame(width: 280)
@@ -68,20 +108,27 @@ struct MainWindow: View {
             }
         }
         .animation(.default, value: model.inspectorOverlayOpen)
+        .onChange(of: model.inspectorOverlayOpen) { _, open in if !open { listFocused = true } }
         .modifier(ToolbarSearch(
             text: $model.search, presented: $searchPresented,
-            visible: width >= Self.compactSearchWidth || searchOpen))
+            visible: model.collection != .settings && (width >= Self.compactSearchWidth || searchOpen)))
         .onChange(of: searchPresented) { _, presented in if !presented { searchOpen = false } }
         .toolbar { toolbarContent(sideBySide: sideBySide, width: width) }
+        .background {
+            // Cmd+F focuses search at every width; the toolbar icon only exists in narrow windows.
+            Button("") { openSearch() }
+                .keyboardShortcut("f", modifiers: .command)
+                .disabled(model.collection == .settings)
+                .opacity(0).accessibilityHidden(true)
+        }
     }
 
     @ToolbarContentBuilder
     private func toolbarContent(sideBySide: Bool, width: CGFloat) -> some ToolbarContent {
         ToolbarItemGroup(placement: .primaryAction) {
-            if width < Self.compactSearchWidth {
+            if width < Self.compactSearchWidth && model.collection != .settings {
                 Button { openSearch() } label: { Label(L10n.t("search"), systemImage: "magnifyingglass") }
                     .help(L10n.t("search"))
-                    .keyboardShortcut("f", modifiers: .command)
             }
             Button { Task { await model.reload() } } label: { Label(L10n.t("refreshLibrary"), systemImage: "arrow.clockwise") }
                 .help(L10n.t("refreshLibrary"))
@@ -117,9 +164,23 @@ struct ToolbarSearch: ViewModifier {
 
     func body(content: Content) -> some View {
         if visible {
-            content.searchable(text: $text, isPresented: $presented, placement: .toolbar, prompt: L10n.t("searchPlaceholder"))
+            content.searchable(text: keepingQueryOnDismiss, isPresented: $presented, placement: .toolbar,
+                               prompt: L10n.t("searchPlaceholder"))
         } else {
             content
         }
     }
+
+    /// AppKit empties the field when Escape dismisses it, but Escape must keep the query (spec L-08).
+    /// The clear button and deleting the text still empty it.
+    private var keepingQueryOnDismiss: Binding<String> {
+        Binding(get: { text }, set: { value in
+            let event = NSApp.currentEvent
+            if value.isEmpty, event?.type == .keyDown, event?.keyCode == Self.escapeKeyCode { return }
+            text = value
+        })
+    }
+
+    private static let escapeKeyCode: UInt16 = 53
+
 }
