@@ -41,13 +41,14 @@ struct MainWindow: View {
             if model.collection == .settings {
                 SettingsPlaceholder()
             } else {
-                DropDetailView(drop: model.selectedDrop)
-                    .inspector(isPresented: Binding(
-                        get: { sideBySide && model.inspectorVisible },
-                        set: { model.inspectorVisible = $0 })) {
-                        InspectorView(drop: model.selectedDrop)
-                            .inspectorColumnWidth(min: 240, ideal: 280, max: 360)
+                // A plain HStack instead of `.inspector`: toggling that modifier from layout code crashed AppKit constraints.
+                HStack(spacing: 0) {
+                    DropDetailView(drop: model.selectedDrop)
+                    if sideBySide && model.inspectorVisible {
+                        Divider()
+                        InspectorView(drop: model.selectedDrop).frame(width: 280)
                     }
+                }
             }
         }
         .overlay(alignment: .trailing) {
@@ -58,6 +59,11 @@ struct MainWindow: View {
                     .background(Rectangle().fill(.regularMaterial).ignoresSafeArea())
                     .overlay(alignment: .leading) { Divider() }
                     .shadow(radius: 8)
+                    .background {
+                        // Escape closes the overlay without needing keyboard focus inside it.
+                        Button("") { model.inspectorOverlayOpen = false }
+                            .keyboardShortcut(.cancelAction).opacity(0).accessibilityHidden(true)
+                    }
                     .transition(.move(edge: .trailing))
             }
         }
@@ -67,7 +73,6 @@ struct MainWindow: View {
             visible: width >= Self.compactSearchWidth || searchOpen))
         .onChange(of: searchPresented) { _, presented in if !presented { searchOpen = false } }
         .toolbar { toolbarContent(sideBySide: sideBySide, width: width) }
-        .onExitCommand { model.inspectorOverlayOpen = false } // the search field consumes Escape first
     }
 
     @ToolbarContentBuilder

@@ -110,8 +110,8 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | L-02 | 기간 필터: 오늘은 같은 달력 날짜, 7·30일은 `createdAt ≥ 지금 − N일`. 날짜를 해석할 수 없는 Drop은 기간 필터에서 제외. | `matchesDateFilter` | 단위 | ☑ |
 | L-03 | 날짜 그룹: 오늘/어제/지난 7일(2~7일 전)/이전. 해석 불가한 날짜는 `이전`. 빈 그룹 숨김. | `drop-groups.ts` | 단위 | ☑ |
 | L-04 | 선택이 필터 결과에서 사라지면 첫 항목, 결과가 비면 선택 없음. | `useLibraryFilters.ts` | 단위 | ☑ |
-| L-05 | 사이드바 선택은 항상 하나. 유형 선택은 태그 필터를 지우고 태그 선택은 유형을 `all`로 돌린다. 필터 지우기는 앱·기간만 지운다. | `Sidebar.tsx`, `useLibraryFilters.ts`(STA-37) | 단위 | ☐ |
-| L-06 | 사이드바 접힘은 Library↔Settings 전환과 창 크기 변경을 지나도 유지. 두 화면에서 사이드바 너비·모양이 같다. | `MainWindow.tsx`(STA-38) | 수동 | ☐ |
+| L-05 | 사이드바 선택은 항상 하나. 유형 선택은 태그 필터를 지우고 태그 선택은 유형을 `all`로 돌린다. 필터 지우기는 앱·기간만 지운다. | `Sidebar.tsx`, `useLibraryFilters.ts`(STA-37) | 단위 | ☑ |
+| L-06 | 사이드바 접힘은 Library↔Settings 전환과 창 크기 변경을 지나도 유지. 두 화면에서 사이드바 너비·모양이 같다. | `MainWindow.tsx`(STA-38) | 수동 | ☑ |
 | L-07 | 인스펙터 오버레이: 같은 토글 또는 Escape로 닫고 토글로 포커스 복귀. 검색 편집 중 Escape는 검색을 먼저 닫는다. | `docs/design/sta30-font-book/README.md` | 수동 | ☐ |
 | L-08 | 검색을 닫아도(Escape) 검색어와 결과 유지. 지우기는 전체 복원. `Cmd+F`는 검색 포커스. | `design-system.md` | 수동 | ☐ |
 | L-09 | 새로고침은 디스크를 다시 스캔한다. 다른 곳(팝업 창 등)의 저장 신호를 받아도 다시 스캔한다. | `useLibraryRefreshEvent.ts` | 수동 | ☐ |
@@ -195,3 +195,9 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 - C-01: 고정 경로 계산(`SettingsStore.defaultFileURL`)은 구현했지만 테스트하지 않았습니다.
 - C-04: 설정 갱신 API가 열거형이라 잘못된 값은 컴파일 단계에서 막힙니다. 읽을 때의 거부만 테스트했습니다.
 - C-07: `Data.write(.atomic)`(임시 파일 + 이름 변경)를 쓰며 fsync는 하지 않습니다. 쓰기 실패 시 임시 파일 정리는 테스트하지 않았습니다.
+
+## 2단계 확인 결과 (STA-42)
+
+확인함(창 캡처, 앱 번들 실행): 사이드바 접힘이 Library↔설정 전환 뒤에도 유지(L-06), 사이드바 단일 선택(L-05, 모델 테스트 포함), 960 pt에서 검색 아이콘 축약·아이콘 클릭으로 필드 열림, 1176 pt 미만에서 인스펙터가 오버레이로 열리고 Escape로 닫힘, 라이트 테마 960 pt.
+
+미완(후속 STA-43): L-07 토글 포커스 복귀, L-08 검색 Escape·Cmd+F 실동작, L-15 구분선 조절·접근성 값(구분선은 `NavigationSplitView` 기본), 서체관리자와의 시각 차이(서체관리자는 8 pt 인셋의 떠 있는 사이드바와 도구 막대 안의 제목·개수, 캡슐로 묶인 도구 막대 버튼을 쓰지만 Notedrop은 기본 사이드바와 목록 헤더를 씁니다), Xcode 프로젝트(현재는 SwiftPM + `scripts/make-app.sh`).
