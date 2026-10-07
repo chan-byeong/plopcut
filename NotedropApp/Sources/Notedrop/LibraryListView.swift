@@ -1,3 +1,4 @@
+import AppKit
 import NotedropCore
 import SwiftUI
 
@@ -73,6 +74,19 @@ struct LibraryListView: View {
                 }
             }
             .listStyle(.inset)
+            .contextMenu(forSelectionType: String.self) { ids in
+                if let drop = model.drops.first(where: { ids.contains($0.id) }) {
+                    if let url = drop.source.url.flatMap(URL.init(string:)), drop.source.url?.isEmpty == false {
+                        Button(L10n.t("openSource")) { NSWorkspace.shared.open(url) }
+                    }
+                    if drop.type == .text, let text = drop.text {
+                        Button(L10n.t("copyContent")) {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(text, forType: .string)
+                        }
+                    }
+                }
+            }
         }
     }
 }

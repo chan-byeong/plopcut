@@ -21,7 +21,9 @@ final class LibraryModel {
     var selectedID: String?
 
     var sidebarVisible = true
+    /// The user's choice for the inspector beside the body. Narrow windows show it as an overlay instead (spec 2.2).
     var inspectorVisible = true
+    var inspectorOverlayOpen = false
 
     /// Library to show before settings exist: `NOTEDROP_STORAGE_FOLDER` overrides settings.json (dev and tests).
     private let storageRoot: @Sendable () throws -> URL
