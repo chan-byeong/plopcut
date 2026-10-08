@@ -31,14 +31,16 @@ final class SettingsModel {
         applyAppearance()
     }
 
-    /// Setting the app appearance explicitly is what lets `system` release an earlier light/dark override;
-    /// `preferredColorScheme(nil)` alone does not reliably do that on macOS.
+    /// The single place the theme reaches the windows. `preferredColorScheme` is not used: it pins a per-window
+    /// appearance that `nil` does not release, which left windows light after switching back to `system`.
     func applyAppearance() {
-        NSApp?.appearance = switch colorScheme {
+        guard let app = NSApp else { return }
+        app.appearance = switch colorScheme {
         case .light: NSAppearance(named: .aqua)
         case .dark: NSAppearance(named: .darkAqua)
         default: nil
         }
+        for window in app.windows { window.appearance = nil }
     }
 
     /// The scheme to force on every Notedrop window; `nil` leaves it to the system.

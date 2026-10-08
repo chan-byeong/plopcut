@@ -20,7 +20,7 @@ final class CaptureRuntime {
     init(model: LibraryModel, settings: SettingsStore, appearance: SettingsModel) {
         self.model = model
         self.settings = settings
-        self.popup = SavePopupWindowController(settings: appearance)
+        self.popup = SavePopupWindowController()
     }
 
     func start() {

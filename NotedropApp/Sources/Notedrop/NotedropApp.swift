@@ -28,7 +28,6 @@ struct NotedropApp: App {
             MainWindow(model: model, settings: appearance)
                 .modifier(OpenMainWindowBinding(runtime: capture))
                 .frame(minWidth: 960, minHeight: 640)
-                .preferredColorScheme(appearance.colorScheme)
                 .task {
                     CompositionMonitor.shared.install()
                     delegate.drain = { [model] in await model.editor.drain() }
