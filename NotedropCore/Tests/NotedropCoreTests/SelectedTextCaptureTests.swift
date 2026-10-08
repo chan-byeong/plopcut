@@ -191,6 +191,14 @@ final class PollCounter: @unchecked Sendable {
         #expect(draft.text == "same")
     }
 
+    // P-02: 25 ms between polls, 700 ms in total.
+    @Test func pollingIsEveryTwentyFiveMillisecondsForSevenHundred() {
+        #expect(SelectedTextCapture.pollInterval == .milliseconds(25))
+        #expect(SelectedTextCapture.timeout == .milliseconds(700))
+        #expect(SelectedTextCapture.maxPolls == 28)
+        #expect(SelectedTextCapture.pollInterval * SelectedTextCapture.maxPolls == SelectedTextCapture.timeout)
+    }
+
     @Test func timesOutAfterTwentyEightPollsAndRestores() async throws {
         let log = CallLog()
         let original = ClipboardSnapshot(text: "original", png: nil)

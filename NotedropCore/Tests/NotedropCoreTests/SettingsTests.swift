@@ -125,6 +125,35 @@ private var required: [String: Any] { [
         #expect(siblings == ["settings.json"])
     }
 
+    // C-01
+    @Test func theSettingsFileLivesInApplicationSupportWhateverTheStorageFolderIs() throws {
+        #expect(SettingsStore.defaultFileURL.path.hasSuffix("/Library/Application Support/Notedrop/settings.json"))
+        let file = try tempFile()
+        let elsewhere = try tempDir()
+        let s = store(file)
+        _ = try s.update(SettingsUpdate(storageFolderPath: elsewhere.path))
+        #expect(try s.read().storageFolderPath == elsewhere.path)
+        #expect(FileManager.default.fileExists(atPath: file.path))
+        #expect(try FileManager.default.contentsOfDirectory(atPath: elsewhere.path).isEmpty)
+    }
+
+    // C-07: a failed write keeps the previous file and leaves no temp file behind.
+    @Test func aFailedWriteKeepsTheOldFileAndLeavesNoTempFile() throws {
+        try #require(geteuid() != 0, "permission checks do not apply to root")
+        let file = try tempFile(copying: "settings.json")
+        let dir = file.deletingLastPathComponent()
+        let before = try Data(contentsOf: file)
+        let s = store(file)
+        try FileManager.default.setAttributes([.posixPermissions: 0o555], ofItemAtPath: dir.path)
+        defer {
+            try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: dir.path)
+            try? FileManager.default.removeItem(at: dir)
+        }
+        #expect(expectCode("settings_unwritable") { try s.update(SettingsUpdate(theme: .light)) })
+        #expect(try Data(contentsOf: file) == before)
+        #expect(try FileManager.default.contentsOfDirectory(atPath: dir.path) == ["settings.json"])
+    }
+
     @Test func concurrentUpdatesAreSerialized() throws {
         let file = try tempFile(copying: "settings.json")
         let s = store(file)
