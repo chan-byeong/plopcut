@@ -103,7 +103,15 @@ enum StringTable {
         "captureShortcut": (en: "Shortcut format", ko: "단축키 형식"),
         "selectedTextShortcut": (en: "Selected text shortcut", ko: "선택 텍스트 단축키"),
         "shortcutExample": (en: "Example: Shift+Cmd+K", ko: "예시: Shift+Cmd+K"),
-        "shortcutFormatHint": (en: "Use Tauri syntax, for example Shift+Cmd+K.", ko: "Tauri 형식을 사용하세요. 예: Shift+Cmd+K"),
+        "shortcutFormatHint": (
+            en: "Join modifiers and a key with +, for example Shift+Cmd+K. F21–F24 are not supported.",
+            ko: "수식키와 키를 +로 연결하세요. 예: Shift+Cmd+K (F21–F24는 지원하지 않습니다)"),
+        "shortcutRegistrationFailed": (
+            en: "Could not register that shortcut. Another app may already use it. The previous shortcut still works.",
+            ko: "이 단축키를 등록하지 못했습니다. 다른 앱이 이미 사용 중일 수 있습니다. 이전 단축키는 그대로 동작합니다."),
+        "shortcutRollbackFailed": (
+            en: "The shortcut could not be saved and the previous one could not be restored. Set a shortcut again.",
+            ko: "단축키를 저장하지 못했고 이전 단축키도 복원하지 못했습니다. 단축키를 다시 설정하세요."),
         "captureConfirmation": (en: "Save confirmation", ko: "저장 확인"),
         "modal": (en: "Show popup", ko: "팝업 표시"),
         "instant": (en: "Save text instantly", ko: "텍스트 즉시 저장"),
