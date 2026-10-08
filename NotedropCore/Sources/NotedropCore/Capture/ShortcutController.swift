@@ -36,8 +36,12 @@ public final class ShortcutController {
     public func change(to text: String, save: (String) throws -> Void) throws {
         let shortcut = try Shortcut.parse(text)
         guard let old = registration else {
-            registration = (shortcut, try registrar.register(shortcut))
-            try save(text)
+            let fresh = try registrar.register(shortcut)
+            do { try save(text) } catch {
+                fresh.unregister()  // nothing was working before; do not leave an unsaved shortcut live
+                throw error
+            }
+            registration = (shortcut, fresh)
             return
         }
         if old.shortcut == shortcut {

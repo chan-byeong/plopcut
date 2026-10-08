@@ -46,9 +46,14 @@ final class GlobalHotKey: ShortcutRegistration {
                     MemoryLayout<EventHotKeyID>.size, nil, &pressed)
                 guard status == noErr else { return noErr }
                 let box = Unmanaged<Box>.fromOpaque(userData).takeUnretainedValue()
+                let pressedID = pressed.id
+                // Carbon delivers application events on the main thread. A press that belongs to another hot key
+                // must stay unhandled so that key's own handler still receives it.
+                let ours = MainActor.assumeIsolated { box.hotKey?.id == pressedID }
+                guard ours else { return OSStatus(eventNotHandledErr) }
                 DispatchQueue.main.async {
                     MainActor.assumeIsolated {
-                        if let hotKey = box.hotKey, hotKey.id == pressed.id { hotKey.action() }
+                        if let hotKey = box.hotKey, hotKey.id == pressedID { hotKey.action() }
                     }
                 }
                 return noErr

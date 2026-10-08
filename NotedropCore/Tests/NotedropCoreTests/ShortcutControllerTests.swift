@@ -82,7 +82,6 @@ private final class FakeRegistrar: ShortcutRegistrar {
     @Test func persistenceFailureWithAFailedRestoreReportsTheRollbackFailure() throws {
         let registrar = FakeRegistrar()
         let controller = try started(registrar)
-        registrar.failingOnce = []
         do {
             try controller.change(to: "Shift+Cmd+K") { _ in
                 registrar.failing = ["C"]  // someone else took the old shortcut in the meantime
@@ -93,6 +92,18 @@ private final class FakeRegistrar: ShortcutRegistrar {
             #expect(error.code == "shortcut_rollback_failed")
         } catch { Issue.record("unexpected \(error)") }
         #expect(controller.current == nil)
+    }
+
+    @Test func persistenceFailureAfterAFailedStartupLeavesNothingRegistered() throws {
+        let registrar = FakeRegistrar()
+        registrar.failing = ["C"]
+        let controller = ShortcutController(registrar: registrar)
+        #expect(throws: NotedropError.self) { try controller.start("Shift+Cmd+C") }
+        #expect(throws: NotedropError.self) {
+            try controller.change(to: "Shift+Cmd+K") { _ in throw NotedropError("settings_unwritable") }
+        }
+        #expect(controller.current == nil)
+        #expect(registrar.log.events.last == "unregister K")
     }
 
     // C-06
