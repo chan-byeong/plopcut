@@ -12,6 +12,7 @@ final class CaptureRuntime {
     private var coordinator: CaptureCoordinator?
     private var started = false
     private var didPromptForAccessibility = false
+    private var menuBar: MenuBarController?
 
     /// Set by the main window when it appears; opens the window again after it was closed.
     var openMainWindow: (() -> Void)?
@@ -25,6 +26,7 @@ final class CaptureRuntime {
     func start() {
         guard !started else { return }
         started = true
+        menuBar = MenuBarController(openMainWindow: { [weak self] in self?.showMainWindow() })
 
         coordinator = CaptureCoordinator(
             capture: { try await Self.captureSelectedText() },
@@ -63,6 +65,7 @@ final class CaptureRuntime {
             didPromptForAccessibility = true  // once per launch; the message in the main window repeats the guidance
             _ = AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": true] as CFDictionary)
         }
+        menuBar?.showError()
         model.pendingCapture.store(error)
         showMainWindow()
         model.presentPendingCaptureError()
