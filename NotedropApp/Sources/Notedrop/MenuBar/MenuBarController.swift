@@ -44,6 +44,7 @@ final class MenuBarController: NSObject {
     }
 
     func showError() { feedback?.showError() }
+    func showSaved() { feedback?.showSaved() }
 
     @objc private func clicked(_ sender: NSStatusBarButton) {
         guard let event = NSApp.currentEvent else { return openMainWindow() }
