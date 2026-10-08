@@ -55,7 +55,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var warnedAt: Date?
     private static let warningWindow: TimeInterval = 15
 
-    /// The global shortcut must keep working with the main window closed (spec 2.1). D-07 is decided in stage 5.
+    /// The global shortcut must keep working with the main window closed (spec 2.1). D-07 (decided in STA-52): the app stays in the menu bar.
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {

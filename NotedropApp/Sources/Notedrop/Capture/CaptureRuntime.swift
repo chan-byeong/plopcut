@@ -12,6 +12,7 @@ final class CaptureRuntime {
     private var coordinator: CaptureCoordinator?
     private var started = false
     private var didPromptForAccessibility = false
+    private var menuBar: MenuBarController?
 
     /// Set by the main window when it appears; opens the window again after it was closed.
     var openMainWindow: (() -> Void)?
@@ -25,6 +26,7 @@ final class CaptureRuntime {
     func start() {
         guard !started else { return }
         started = true
+        menuBar = MenuBarController(openMainWindow: { [weak self] in self?.showMainWindow() })
 
         coordinator = CaptureCoordinator(
             capture: { try await Self.captureSelectedText() },
@@ -64,6 +66,7 @@ final class CaptureRuntime {
             didPromptForAccessibility = true  // once per launch; the message in the main window repeats the guidance
             _ = AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": true] as CFDictionary)
         }
+        menuBar?.showError()
         model.pendingCapture.store(error)
         showMainWindow()
         model.presentPendingCaptureError()
@@ -71,7 +74,7 @@ final class CaptureRuntime {
 
     func showMainWindow() {
         NSApp.activate(ignoringOtherApps: true)
-        if let window = NSApp.windows.first(where: { !($0 is NSPanel) && $0.canBecomeMain }) {
+        if let window = NSApp.windows.first(where: { $0.identifier == MainWindowTag.identifier }) {
             if window.isMiniaturized { window.deminiaturize(nil) }
             window.makeKeyAndOrderFront(nil)
         } else {
@@ -118,6 +121,23 @@ struct OpenMainWindowBinding: ViewModifier {
     let runtime: CaptureRuntime
 
     func body(content: Content) -> some View {
-        content.onAppear { runtime.openMainWindow = { openWindow(id: "main") } }
+        content
+            .background(MainWindowTag())
+            .onAppear { runtime.openMainWindow = { openWindow(id: "main") } }
+    }
+}
+
+/// Marks the hosting window so it can be found by identifier, not by "first normal window".
+struct MainWindowTag: NSViewRepresentable {
+    static let identifier = NSUserInterfaceItemIdentifier("notedrop.main")
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async { view.window?.identifier = Self.identifier }
+        return view
+    }
+
+    func updateNSView(_ view: NSView, context: Context) {
+        if view.window?.identifier != Self.identifier { view.window?.identifier = Self.identifier }
     }
 }
