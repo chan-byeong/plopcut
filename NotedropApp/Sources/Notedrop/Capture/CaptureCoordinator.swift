@@ -21,12 +21,12 @@ final class CaptureGate {
 @MainActor
 final class CaptureCoordinator {
     private let capture: () async throws -> CaptureDraft
-    private let present: (CaptureDraft) -> Void
+    private let present: (CaptureDraft) async -> Void
     private let failed: (NotedropError) -> Void
     private let gate: CaptureGate
 
     init(
-        capture: @escaping () async throws -> CaptureDraft, present: @escaping (CaptureDraft) -> Void,
+        capture: @escaping () async throws -> CaptureDraft, present: @escaping (CaptureDraft) async -> Void,
         failed: @escaping (NotedropError) -> Void, gate: CaptureGate = CaptureGate()
     ) {
         self.gate = gate
@@ -39,7 +39,8 @@ final class CaptureCoordinator {
         guard gate.enter() else { return }
         defer { gate.leave() }
         do {
-            present(try await capture())
+            // The gate stays closed until the draft is routed, so an instant save is not overlapped by a new capture.
+            await present(try await capture())
         } catch let error as NotedropError {
             failed(error)
         } catch {

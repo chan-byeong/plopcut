@@ -67,6 +67,23 @@ import Testing
         #expect(await counter.value == 2)
     }
 
+    @Test func theGateStaysClosedWhileTheDraftIsBeingRouted() async {
+        let open = Gate()
+        let counter = SaveCounter()
+        let coordinator = CaptureCoordinator(
+            capture: {
+                await counter.increment()
+                return CaptureDraft(type: .text, title: "t", text: "x")
+            }, present: { _ in await open.wait() }, failed: { _ in })
+        let first = Task { await coordinator.trigger() }
+        while await counter.value == 0 { await Task.yield() }
+        await Task.yield()
+        await coordinator.trigger()
+        #expect(await counter.value == 1)
+        await open.open()
+        await first.value
+    }
+
     @Test func pendingErrorIsReturnedOnce() {
         let pending = PendingCaptureError()
         pending.store(NotedropError("permission_missing"))

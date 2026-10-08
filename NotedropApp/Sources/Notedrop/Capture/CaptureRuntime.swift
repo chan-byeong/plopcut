@@ -35,12 +35,12 @@ final class CaptureRuntime {
         let gate = CaptureGate()
         coordinator = CaptureCoordinator(
             capture: { try await Self.captureSelectedText() },
-            present: { [weak self] in self?.present($0) },
+            present: { [weak self] draft in await self?.router.route(draft) },
             failed: { [weak self] in self?.report($0) }, gate: gate)
 
         clipboardCoordinator = CaptureCoordinator(
             capture: { try await Self.captureClipboard() },
-            present: { [weak self] in self?.present($0) },
+            present: { [weak self] draft in await self?.router.route(draft) },
             failed: { [weak self] in self?.reportQuietly($0) }, gate: gate)
 
         do {
@@ -125,7 +125,23 @@ final class CaptureRuntime {
         }
     }
 
-    // MARK: Save Popup
+    // MARK: Routing and Save Popup
+
+    /// Reads the confirmation mode from settings on every draft; an unreadable file falls back to the popup.
+    private lazy var router = CaptureRouter(
+        mode: { [settings] in (try? settings.read().captureConfirmationMode) ?? .modal },
+        save: { [storageRoot = LibraryModel.defaultStorageRoot] request in
+            try await Self.save(request, storageRoot: storageRoot)
+        },
+        showPopup: { [weak self] in self?.present($0) },
+        saved: { [weak self] in self?.savedInstantly($0) },
+        failed: { [weak self] in self?.reportQuietly($0) })
+
+    /// `instant` save done: no popup to close and no tags to remember, so only the feedback and the Library change.
+    private func savedInstantly(_ drop: Drop) {
+        menuBar?.showSaved()
+        Task { await model.reload(selecting: drop.id) }
+    }
 
     private func present(_ draft: CaptureDraft) {
         let recent = (try? settings.read().recentTags) ?? []

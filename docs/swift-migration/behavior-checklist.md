@@ -67,8 +67,8 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | P-08 | 자동화·접근성 오류는 `permission_missing`으로 바꾸고 손쉬운 사용 권한 안내를 붙인다. | `capture_selected_text_with` | 수동: 권한 없이 실행 | ☑ |
 | P-09 | **(폴백 경로)** 백업 대상은 텍스트와 PNG 이미지. 이미지는 PNG로 정규화해 보관·복원한다. 복원은 텍스트와 이미지를 한 항목으로 쓴다. | `write_clipboard_snapshot` | 수동: 이미지만/텍스트만/둘 다 있던 클립보드 | ☐ |
 | P-10 | 결과 Draft는 `note` 없음, `tags` 빈 배열. | `capture_selected_text_with` | 단위 | ☑ |
-| P-11 | `modal`이면 팝업, `instant`이면 텍스트만 즉시 저장(노트 `""`, 태그 없음). | `instant_save_payload_from_draft`, `handle_capture_draft` | 테스트: `instant_save_payload_uses_empty_note_and_tags` | ☐ |
-| P-12 | `instant`에서도 이미지·`mixed`는 팝업. (도구 막대 캡처 버튼은 D-05 결정으로 만들지 않는다.) | `handle_capture_draft` | 수동 | ☐ |
+| P-11 | `modal`이면 팝업, `instant`이면 텍스트만 즉시 저장(노트 `""`, 태그 없음). | `instant_save_payload_from_draft`, `handle_capture_draft` | 단위: `CaptureConfirmationTests`, `CaptureRouterTests`(`instantTextIsSavedWithAnEmptyNoteAndNoTags`, `theModeIsReadAtEveryCapture`) + 수동 | ☑ |
+| P-12 | `instant`에서도 이미지·`mixed`는 팝업. (도구 막대 캡처 버튼은 D-05 결정으로 만들지 않는다.) | `handle_capture_draft` | 단위: `instantStillOpensThePopupForImagesAndMixedContent`, `instantImageAndMixedOpenThePopupAndSaveNothing` + 수동 | ☐ |
 | P-13 | 선택 텍스트 캡처 실패: 오류 보관 + 메인 창 표시 + 메뉴 막대 `Error`. 보관 오류는 메인 창에서 **한 번만** 소비. | `emit_selected_text_capture_event`, 테스트: `pending_capture_error_is_returned_once` | 단위·수동 | ☐ |
 | P-14 | 별도 팝업 창이 이미 열려 있으면 단축키는 새 캡처를 하지 않고 열린 팝업을 앞으로 가져온다(결정 STA-47). 팝업이 열려 있으면 최전면 앱이 Notedrop 자신이라 선택 텍스트를 읽을 수 없기 때문이다. 레거시의 "새 Draft로 교체"와 다르다. | `open_capture_window` | 수동: 팝업을 연 채 단축키 재입력 | ☑ |
 | P-15 | 레거시는 클립보드 접근을 `swift -e` 서브프로세스로 했다. Swift 앱은 `NSPasteboard`를 직접 쓰므로 이 구조는 이어받지 않는다(같은 시맨틱만 유지). | `capture.rs` | — | ☐ |
@@ -152,7 +152,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | --- | --- | --- | --- | --- |
 | T-01 | 템플릿 아이콘, 툴팁 `Notedrop`, 좌클릭은 메뉴가 아니라 메인 창 열기. 메뉴는 좌클릭이 아닌 방식(우클릭)으로 연다. | `tray.rs` | 수동 | ☐ |
 | T-02 | 메뉴 항목 ID는 `save-clipboard`, `open-library`. 알 수 없는 ID는 무시. | 테스트: `routes_stable_tray_menu_ids`, `save_clipboard_menu_action_starts_clipboard_capture` | 단위 | ☐ |
-| T-03 | 성공 `Saved`, 실패 `Error`를 900 ms 동안 제목과 툴팁에 표시하고 원복. | `show_feedback` | 수동 | ☐ |
+| T-03 | 성공 `Saved`, 실패 `Error`를 900 ms 동안 제목과 툴팁에 표시하고 원복. | `show_feedback` | 단위: `MenuBarTests`(`errorShowsFor900msThenRestores`, `savedShowsFor900msThenRestores`) + 수동 | ☐ |
 | T-04 | 메인 창을 열 때 보관된 캡처 오류를 확인하도록 신호를 보낸다. | `show_main_window` | 수동 | ☐ |
 
 ## N. 지역화
@@ -303,3 +303,11 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 단위 테스트로 확인함: 분류와 제목(`ClipboardCaptureTests`), 비PNG 바이트 거부, 팝업의 유형 선택과 저장 요청(`SavePopupImageTests`).
 
 수동 확인이 남음(실제 앱): K-04(스크린샷 PNG와 TIFF를 내는 앱에서 저장), 이미지만/텍스트+이미지 클립보드에서 팝업 미리보기와 선택, 저장한 이미지 Drop이 Library 본문에 보임, P-09(선택 텍스트 캡처 전후로 이미지만/텍스트만/둘 다 있던 클립보드 복원). 폴백 복원은 TIFF만 있던 클립보드를 PNG로 되돌린다.
+
+## 5단계 instant 모드 기록 (STA-58)
+
+저장 확인 방식(`captureConfirmationMode`)이 캡처 동작에 연결됐다. 단축키와 `Save Clipboard...` 모두 같은 경로(`CaptureRouter`)를 지나며, 모드는 캡처마다 설정 파일에서 읽어서 재시작 없이 반영된다(읽을 수 없으면 팝업). `instant`에서 텍스트 Draft는 팝업 없이 노트 `""`·태그 없음으로 저장되고, 메뉴 막대에 `Saved`가 900 ms 보이고, Library가 새로고침되며 새 Drop이 선택된다. 이미지와 `mixed`는 `instant`에서도 팝업이다. 즉시 저장이 실패하면 오류를 보관하고(메인 창을 띄우지 않음) `Error`를 보인다. 즉시 저장은 태그가 없으므로 `recentTags`를 갱신하지 않는다.
+
+단위 테스트로 확인함: 모드×유형 결정(`CaptureConfirmationTests`), 즉시 저장 요청 모양·팝업 경로·모드 재읽기·실패 보고(`CaptureRouterTests`), `Saved`/`Error` 900 ms와 교체(`MenuBarTests`).
+
+수동 확인이 남음(실제 앱): `instant`로 바꾼 뒤 텍스트 선택 캡처(`Shift+Cmd+C`)와 `클립보드 저장...`이 팝업 없이 저장되고 `Saved`가 보이며 Library에 새 Drop이 선택됨, 이미지·mixed는 `instant`에서도 팝업, `modal`로 되돌리면 다시 팝업, 저장 폴더를 쓸 수 없을 때 `Error`가 보이고 다음에 메인 창을 열면 오류가 한 번 나옴.

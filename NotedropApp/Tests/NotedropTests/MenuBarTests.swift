@@ -55,4 +55,25 @@ import Testing
         #expect(h.cancelled == [0])
         #expect(h.pending.count == 1)
     }
+
+    // T-03
+    @Test func savedShowsFor900msThenRestores() {
+        let h = Harness()
+        h.feedback.showSaved()
+        #expect(h.shown.last?.title == "Saved")
+        #expect(h.shown.last?.tooltip == "Saved")
+        #expect(h.delays == [.milliseconds(900)])
+        h.pending.values.forEach { $0() }
+        #expect(h.shown.last?.title == nil)
+        #expect(h.shown.last?.tooltip == "Notedrop")
+    }
+
+    @Test func aNewMessageReplacesTheOneStillShowing() {
+        let h = Harness()
+        h.feedback.showSaved()
+        h.feedback.showError()
+        #expect(h.shown.last?.title == "Error")
+        #expect(h.cancelled == [0])
+        #expect(h.pending.count == 1)
+    }
 }
