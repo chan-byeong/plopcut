@@ -43,13 +43,13 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | C-01 | 설정 파일 경로는 고정(`~/Library/Application Support/Notedrop/settings.json`)이고 저장 폴더 설정과 무관. | `settings.rs` | 단위 | ☐ |
 | C-02 | 파일이 없으면 기본값을 만들어 저장. JSON이 깨지면 `settings_invalid`. | 테스트: `default_settings_use_default_storage_and_system_theme` | 단위·픽스처 | ☑ |
 | C-03 | 부분 갱신: 보낸 필드만 바꾸고 나머지는 유지, `updatedAt` 갱신. | 테스트: `updating_settings_persists_path_first_run_theme_and_updated_at`, `updating_settings_persists_shortcuts_without_changing_unrelated_fields` | 단위 | ☑ |
-| C-04 | `captureConfirmationMode` 키가 없으면 `modal`. 잘못된 값으로 갱신하면 거부. | 테스트: `missing_capture_confirmation_mode_defaults_to_modal`, `update_rejects_invalid_capture_confirmation_mode` | 단위 | ☐ |
+| C-04 | `captureConfirmationMode` 키가 없으면 `modal`. 잘못된 값으로 갱신하면 거부. | 테스트: `missing_capture_confirmation_mode_defaults_to_modal`, `update_rejects_invalid_capture_confirmation_mode`, `changingCaptureModePersistsAndKeepsTheme` | 단위 | ☑ |
 | C-05 | `paneWidths`는 읽고 쓸 때 180–320 / 300–560으로 고정, `recentTags`는 태그 규칙과 12개 제한. | 테스트: `updating_settings_persists_pane_widths_and_recent_tags` | 단위 | ☑ |
 | C-06 | 단축키 문자열은 Tauri 문법(`Shift+Cmd+K`)으로 저장. Swift가 이 문자열을 파싱해야 하며 파싱 불가면 저장 거부. 파일은 바뀌지 않아야 한다. | 테스트: `update_rejects_unparseable_selected_text_shortcut`, `update_rejecting_invalid_shortcut_leaves_persisted_settings_file_untouched` | 단위: 수식어(`Shift`, `Cmd`/`Command`, `Ctrl`/`Control`, `Alt`/`Option`)와 키 이름 | ☑ |
 | C-07 | 원자적 쓰기(임시 파일 + 이름 변경)로 쓰고 쓰기 실패 시 임시 파일을 지운다. 동시 갱신은 직렬화. | `atomic_write_settings`, `SETTINGS_UPDATE_LOCK` | 단위 | ☐ |
 | C-08 | 단축키 변경 순서: 새 것 등록 → 이전 것 해제 → 설정 저장. 어느 단계가 실패해도 이전 단축키가 살아 있어야 한다. | 테스트: `changing_selected_text_shortcut_replaces_the_old_registration`, `failed_registration_keeps_the_previous_shortcut_active`, `persistence_failure_restores_the_previous_shortcut` | 단위(가짜 등록기) + 수동 | ☐ |
 | C-09 | 시작 시 저장된 단축키 하나만 등록(다른 단축키는 등록하지 않음). 등록 실패는 보관 오류와 메뉴 막대 `Error`로 알린다. | 테스트: `startup_registers_only_the_selected_text_shortcut` | 수동 | ☐ |
-| C-10 | `theme`가 `system`이면 앱 외형을 시스템에 맡기고, `light`/`dark`는 시스템을 덮어쓴다. | `useTheme.ts` | 수동 | ☐ |
+| C-10 | `theme`가 `system`이면 앱 외형을 시스템에 맡기고, `light`/`dark`는 시스템을 덮어쓴다. | `useTheme.ts`. Swift: `SettingsModel.colorScheme`, 테스트 `colorSchemeFollowsTheme`, `changingThemePersistsAndKeepsOtherFields` | 단위(모델) + 수동(창 외형) | ☐ |
 | C-11 | 읽은 `theme`이 잘못되면 `system`으로 보정, `storageFolderPath`가 공백이면 기본 폴더. | `read_app_settings_from_path` | 단위 | ☑ |
 | C-12 | 번들 ID를 바꾸면 손쉬운 사용·자동화 권한을 새로 허용해야 한다. 설정과 Drop은 영향이 없다. | — | 수동 | ☐ |
 
@@ -255,3 +255,9 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 - 구조: Drop마다 편집 슬롯(초안·저장본·상태·리비전)을 두고, 모든 쓰기를 하나의 순서 있는 큐로 보낸다. Drop을 바꿔도 편집은 백그라운드로 저장되고, 실패하면 슬롯이 남아 알림을 띄우며 다시 선택하면 복원된다. 종료 시 `applicationShouldTerminate`가 `drain`을 기다리고, 저장 실패면 첫 종료 요청은 취소하고 경고한다(15초 안에 다시 요청하면 종료).
 - 리뷰: Codex로 3회 진행했다. 1회차 7건(겹친 저장, 전환 시 실패 유실, 종료 직전 유실, 제목 입력 중 응답, 필터 중 선택 이동, 내보내기 오래된 값, 태그 blur 저장), 2회차 5건(슬롯 소유권 문제 전반, 종료·내보내기·제목 blur 재시도), 3회차 4건(전환 시 제목 유실, 오래된 종료 경고, 저장 중 대기한 blur의 재시도, 남은 쉼표)을 모두 반영하고 각각 테스트를 추가했다.
 - 최근 태그(`recentTags`)는 캡처 저장 후에만 갱신한다(스펙 1.5). 편집으로는 바꾸지 않는다.
+
+## 5단계 설정 화면 기록 (STA-51)
+
+단위 테스트(`SettingsModelTests`, 8개)로 확인함: 저장된 테마·저장 확인 방식을 읽음, 테마·방식 변경이 해당 필드만 바꿈(C-03), 쓰기 실패 시 선택을 되돌리고 안내, `system`은 재정의 없음·`light`/`dark`는 강제, 버전 표시 대체값.
+
+수동 확인이 남음(실제 앱): 테마 변경이 메인 창과 Save Popup에 즉시 적용되고 `system`으로 돌아가면 풀리는지(C-10), 재실행 후 유지, 설정 화면에서 사이드바 접힘·너비가 Library와 같은지(L-06). `NOTEDROP_APPEARANCE`는 테마가 `system`일 때만 적용되는 개발용 재정의로 남겨 둠.
