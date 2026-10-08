@@ -54,7 +54,8 @@ final class CaptureRuntime {
     private static func captureSelectedText() async throws -> CaptureDraft {
         try await SelectedTextCapture(
             reader: AXSelectedTextReader(), clipboard: SystemClipboard(), sender: CGEventCopySender(),
-            collector: FrontmostSourceCollector(), sleep: { try? await Task.sleep(for: $0) }
+            collector: FrontmostSourceCollector(), frontmost: FrontmostSourceCollector.currentTarget,
+            sleep: { try? await Task.sleep(for: $0) }
         ).capture()
     }
 
