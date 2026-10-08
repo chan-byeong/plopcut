@@ -40,13 +40,13 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 
 | ID | 동작 | 근거 | 확인 방법 | ☐ |
 | --- | --- | --- | --- | --- |
-| C-01 | 설정 파일 경로는 고정(`~/Library/Application Support/Notedrop/settings.json`)이고 저장 폴더 설정과 무관. | `settings.rs` | 단위 | ☐ |
+| C-01 | 설정 파일 경로는 고정(`~/Library/Application Support/Notedrop/settings.json`)이고 저장 폴더 설정과 무관. | `settings.rs` | 단위 | ☑ |
 | C-02 | 파일이 없으면 기본값을 만들어 저장. JSON이 깨지면 `settings_invalid`. | 테스트: `default_settings_use_default_storage_and_system_theme` | 단위·픽스처 | ☑ |
 | C-03 | 부분 갱신: 보낸 필드만 바꾸고 나머지는 유지, `updatedAt` 갱신. | 테스트: `updating_settings_persists_path_first_run_theme_and_updated_at`, `updating_settings_persists_shortcuts_without_changing_unrelated_fields` | 단위 | ☑ |
 | C-04 | `captureConfirmationMode` 키가 없으면 `modal`. 잘못된 값으로 갱신하면 거부. | 테스트: `missing_capture_confirmation_mode_defaults_to_modal`, `update_rejects_invalid_capture_confirmation_mode`, `changingCaptureModePersistsAndKeepsTheme` | 단위 | ☑ |
 | C-05 | `paneWidths`는 읽고 쓸 때 180–320 / 300–560으로 고정, `recentTags`는 태그 규칙과 12개 제한. | 테스트: `updating_settings_persists_pane_widths_and_recent_tags` | 단위 | ☑ |
 | C-06 | 단축키 문자열은 Tauri 문법(`Shift+Cmd+K`)으로 저장. Swift가 이 문자열을 파싱해야 하며 파싱 불가면 저장 거부. 파일은 바뀌지 않아야 한다. | 테스트: `update_rejects_unparseable_selected_text_shortcut`, `update_rejecting_invalid_shortcut_leaves_persisted_settings_file_untouched` | 단위(앱): `ShortcutModelTests`로 거절된 입력이 필드에 남지 않음 확인. 단위: 수식어(`Shift`, `Cmd`/`Command`, `Ctrl`/`Control`, `Alt`/`Option`)와 키 이름 | ☑ |
-| C-07 | 원자적 쓰기(임시 파일 + 이름 변경)로 쓰고 쓰기 실패 시 임시 파일을 지운다. 동시 갱신은 직렬화. | `atomic_write_settings`, `SETTINGS_UPDATE_LOCK` | 단위 | ☐ |
+| C-07 | 원자적 쓰기(임시 파일 + 이름 변경)로 쓰고 쓰기 실패 시 임시 파일을 지운다. 동시 갱신은 직렬화. | `atomic_write_settings`, `SETTINGS_UPDATE_LOCK` | 단위 | ☑ |
 | C-08 | 단축키 변경 순서: 새 것 등록 → 이전 것 해제 → 설정 저장. 어느 단계가 실패해도 이전 단축키가 살아 있어야 한다. | 테스트: `changing_selected_text_shortcut_replaces_the_old_registration`, `failed_registration_keeps_the_previous_shortcut_active`, `persistence_failure_restores_the_previous_shortcut` | 단위(가짜 등록기): `ShortcutControllerTests` (등록→해제→저장 순서, 등록 실패·저장 실패 롤백, 롤백 실패 `shortcut_rollback_failed`) + 수동(실제 충돌) | ☑ |
 | C-09 | 시작 시 저장된 단축키 하나만 등록(다른 단축키는 등록하지 않음). 등록 실패는 보관 오류와 메뉴 막대 `Error`로 알린다. | 테스트: `startup_registers_only_the_selected_text_shortcut` | 단위: `ShortcutControllerTests.startupRegistersOnlyTheStoredShortcut` + 수동 | ☑ |
 | C-10 | `theme`가 `system`이면 앱 외형을 시스템에 맡기고, `light`/`dark`는 시스템을 덮어쓴다. | `useTheme.ts`. Swift: `SettingsModel.colorScheme`, 테스트 `colorSchemeFollowsTheme`, `changingThemePersistsAndKeepsOtherFields` | 단위(모델) + 수동(창 외형) | ☑ |
@@ -58,7 +58,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | ID | 동작 | 근거 | 확인 방법 | ☐ |
 | --- | --- | --- | --- | --- |
 | P-01 | 출처 수집이 선택 텍스트 읽기(접근성·클립보드 폴백 모두)보다 **먼저**. 앞 앱은 캡처 시작 때 한 번만 정하고 출처 수집과 선택 읽기가 같은 앱을 쓴다(STA-50). | 테스트: `selected_text_capture_collects_source_first_and_restores_text_and_image`, `frontmostAppIsResolvedOnceAndSharedByCollectorAndReader` | 단위(호출 순서) | ☑ |
-| P-02 | **(폴백 경로)** 복사 후 대기: 변경 횟수가 달라질 때까지 25 ms 폴링, 최대 700 ms. | `SELECTED_TEXT_COPY_TIMEOUT`, `POLL_INTERVAL` | 단위·수동 | ☐ |
+| P-02 | **(폴백 경로)** 복사 후 대기: 변경 횟수가 달라질 때까지 25 ms 폴링, 최대 700 ms. | `SELECTED_TEXT_COPY_TIMEOUT`, `POLL_INTERVAL` | 단위·수동 | ☑ |
 | P-03 | **(폴백 경로)** 복사한 텍스트가 이전 클립보드와 같아도 변경 횟수가 달라졌으면 성공. | 테스트: `selected_text_capture_accepts_text_that_matches_the_previous_clipboard` | 단위 | ☑ |
 | P-04 | **(폴백 경로)** 시간 초과, 빈 선택, 읽기 실패, 복사 시뮬레이션 실패 **모두에서** 이전 클립보드를 복원한다. 단, 변경 횟수가 그대로면(복사가 일어나지 않았으면) 클립보드를 다시 쓰지 않는다. 다시 쓰면 파일·RTF·여러 항목이 텍스트와 PNG로 줄어든다. | 테스트: `selected_text_capture_restores_clipboard_after_copy_timeout`, `…_after_empty_selection`, `…_after_read_failure`, `…_when_copy_shortcut_fails` | 단위 | ☑ |
 | P-05 | **(폴백 경로)** 복원 실패는 캡처 실패가 아니라 경고(`clipboard_restore_failed`)가 붙은 성공. | 테스트: `selected_text_is_returned_with_a_warning_when_restore_fails` | 단위 | ☑ |
@@ -71,7 +71,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | P-12 | `instant`에서도 이미지·`mixed`는 팝업. (도구 막대 캡처 버튼은 D-05 결정으로 만들지 않는다.) | `handle_capture_draft` | 단위: `instantStillOpensThePopupForImagesAndMixedContent`, `instantImageAndMixedOpenThePopupAndSaveNothing` + 수동 | ☑ |
 | P-13 | 선택 텍스트 캡처 실패: 오류 보관 + 메인 창 표시 + 메뉴 막대 `Error`. 보관 오류는 메인 창에서 **한 번만** 소비. | `emit_selected_text_capture_event`, 테스트: `pending_capture_error_is_returned_once` | 단위·수동 | ☐ |
 | P-14 | 별도 팝업 창이 이미 열려 있으면 단축키는 새 캡처를 하지 않고 열린 팝업을 앞으로 가져온다(결정 STA-47). 팝업이 열려 있으면 최전면 앱이 Notedrop 자신이라 선택 텍스트를 읽을 수 없기 때문이다. 레거시의 "새 Draft로 교체"와 다르다. | `open_capture_window` | 수동: 팝업을 연 채 단축키 재입력 | ☑ |
-| P-15 | 레거시는 클립보드 접근을 `swift -e` 서브프로세스로 했다. Swift 앱은 `NSPasteboard`를 직접 쓰므로 이 구조는 이어받지 않는다(같은 시맨틱만 유지). | `capture.rs` | — | ☐ |
+| P-15 | 레거시는 클립보드 접근을 `swift -e` 서브프로세스로 했다. Swift 앱은 `NSPasteboard`를 직접 쓰므로 이 구조는 이어받지 않는다(같은 시맨틱만 유지). | `capture.rs` | — | ☑ |
 | P-16 | 접근성 읽기(`AXUIElementCreateApplication(최전면 앱)` → 포커스 요소 → `AXSelectedText`)가 비어 있지 않은 값을 주면 클립보드를 읽거나 쓰지 않고, `Cmd+C`도 보내지 않는다. 시스템 전역 요소는 쓰지 않는다(Chrome에서 실패). | [ax-probe.md](ax-probe.md) | 단위(가짜 호출 기록) + 수동: 메모·Chrome에서 캡처 전후 클립보드 `changeCount` 동일 | ☑ |
 | P-17 | 접근성 읽기가 실패하거나 값이 비거나 공백뿐이면 클립보드 폴백(P-02~P-09)으로 넘어가며, 그 자체로 `no_selected_text`로 보지 않는다. 최전면 앱이 Notedrop이면 접근성 읽기를 건너뛴다. | [ax-probe.md](ax-probe.md) | 단위 + 수동: Safari·터미널(Hyper)에서 폴백으로 저장 | ☑ |
 
@@ -92,8 +92,8 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | --- | --- | --- | --- | --- |
 | M-01 | 최전면 앱 이름과 앞 윈도우 제목. 제목을 못 얻어도 앱 이름은 유지. | `collect_source_metadata` | 수동 | ☑ |
 | M-02 | 앱이 `Google Chrome`일 때만 활성 탭 URL을 시도. 실패는 경고 `chrome_url_failed`, 앱·윈도우 실패는 `metadata_failed`. | 위와 같음 | 수동: 권한 거부 상태 | ☑ |
-| M-03 | 출처 수집 실패는 저장을 막지 않는다. 비어 있는 필드는 `null`로 저장. | PRD "Source metadata" | 단위 | ☐ |
-| M-04 | 파일 경로는 레거시가 수집하지 않는다. 신뢰할 수 있는 API가 없으면 비워 둔다. | `collect_source_metadata` | — | ☐ |
+| M-03 | 출처 수집 실패는 저장을 막지 않는다. 비어 있는 필드는 `null`로 저장. | PRD "Source metadata" | 단위 | ☑ |
+| M-04 | 파일 경로는 레거시가 수집하지 않는다. 신뢰할 수 있는 API가 없으면 비워 둔다. | `collect_source_metadata` | — | ☑ |
 
 ## A. 권한
 
@@ -170,15 +170,15 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 
 | ID | 상황 | 제안 | 결정 | ☐ |
 | --- | --- | --- | --- | --- |
-| D-01 | PRD는 `Shift+Cmd+V`(클립보드 캡처)를 요구하지만 구현된 적이 없다. 클립보드 캡처는 메뉴 막대의 `Save Clipboard...`뿐이다. | 먼저 레거시와 같게 메뉴만 구현. 단축키는 별도 요청이 있을 때. | | ☐ |
-| D-02 | 타입에 `mixed`가 있지만 **저장되는 Drop은 `text` 또는 `image`뿐**이다(`mixed` Draft는 팝업에서 하나를 고른다). 레거시는 `mixed` Drop을 목록에는 보여 주지만 본문과 이미지를 읽지 않는다(픽스처로 확인). | 최소한 레거시와 같게(깨지지 않고 목록에 표시). 본문·이미지 표시는 별도 결정. | | ☐ |
-| D-03 | 레거시 단축키 문자열은 Tauri 문법이다. 전체 허용 범위(예: 방향키, 펑션키, `CmdOrCtrl`)는 문서화되어 있지 않다. | 최소 `Shift/Cmd/Ctrl/Alt` + 문자·숫자·펑션키를 지원하고 나머지는 거부. | | ☐ |
-| D-04 | 이미지 Drop의 `image.png`가 아닌 다른 `imagePath`를 읽는 경로는 있으나(`drop.imagePath`) 쓰는 경로는 항상 `image.png`다. | 읽기는 `imagePath` 우선, 쓰기는 `image.png`. | | ☐ |
+| D-01 | PRD는 `Shift+Cmd+V`(클립보드 캡처)를 요구하지만 구현된 적이 없다. 클립보드 캡처는 메뉴 막대의 `Save Clipboard...`뿐이다. | 먼저 레거시와 같게 메뉴만 구현. 단축키는 별도 요청이 있을 때. | | ☑ |
+| D-02 | 타입에 `mixed`가 있지만 **저장되는 Drop은 `text` 또는 `image`뿐**이다(`mixed` Draft는 팝업에서 하나를 고른다). 레거시는 `mixed` Drop을 목록에는 보여 주지만 본문과 이미지를 읽지 않는다(픽스처로 확인). | 최소한 레거시와 같게(깨지지 않고 목록에 표시). 본문·이미지 표시는 별도 결정. | | ☑ |
+| D-03 | 레거시 단축키 문자열은 Tauri 문법이다. 전체 허용 범위(예: 방향키, 펑션키, `CmdOrCtrl`)는 문서화되어 있지 않다. | 최소 `Shift/Cmd/Ctrl/Alt` + 문자·숫자·펑션키를 지원하고 나머지는 거부. | | ☑ |
+| D-04 | 이미지 Drop의 `image.png`가 아닌 다른 `imagePath`를 읽는 경로는 있으나(`drop.imagePath`) 쓰는 경로는 항상 `image.png`다. | 읽기는 `imagePath` 우선, 쓰기는 `image.png`. | | ☑ |
 | D-05 | 도구 막대 `선택한 텍스트 캡처`는 Notedrop이 최전면일 때 Notedrop 안의 선택 텍스트만 캡처한다(다른 앱의 선택을 가져오지 못한다). | 기능을 만들지 않는다. | **결정(STA-47): 제거.** 트리거는 전역 단축키뿐. 문구 `captureSelected`도 제거. | ☑ |
 | D-06 | 이름 바꾼 단축키가 다른 앱과 충돌해 등록에 실패할 때의 사용자 메시지(`shortcut_registration_failed`)가 레거시에서는 영어 원문이다. | 한국어 문구 추가. | **결정(STA-55): 한국어·영어 문구 `shortcutRegistrationFailed` 추가.** | ☑ |
 | D-07 | 메인 창을 닫았을 때 앱이 종료되는지, 메뉴 막대에 남는지가 레거시에서 확인되지 않았다. 메뉴 막대와 전역 단축키의 목적상 남는 편이 자연스럽다. | 메뉴 막대에 남는다. 마지막 창을 닫아도 종료하지 않고 전역 단축키와 메뉴 막대 항목을 유지한다. 종료는 Cmd+Q. (STA-52) | | ✔ |
-| D-08 | 로그인 시 자동 실행, Dock 아이콘 표시 여부는 정의되어 있지 않다. | 범위 밖. 필요하면 새 이슈. | | ☐ |
-| D-09 | `Design.md`와 `design-system.md`의 일부 문장은 AppKit 도구 막대, `compactSearch`, `inspectorOverlay` 같은 Tauri 구현 용어를 쓴다. | Swift 구현이 안정되면 문서에서 해당 구현 용어를 제거. | | ☐ |
+| D-08 | 로그인 시 자동 실행, Dock 아이콘 표시 여부는 정의되어 있지 않다. | 범위 밖. 필요하면 새 이슈. | | ☑ |
+| D-09 | `Design.md`와 `design-system.md`의 일부 문장은 AppKit 도구 막대, `compactSearch`, `inspectorOverlay` 같은 Tauri 구현 용어를 쓴다. | Swift 구현이 안정되면 문서에서 해당 구현 용어를 제거. | | ☑ |
 | D-10 | STA-38에서 도입한 SF Symbols 렌더링, 포커스 링, 제목 인라인 이름 변경, 목록 비포커스 선택 약화, 설정 화면 토글은 **실제 앱에서 확인되지 않았다.** | 레거시 앱에서 확인하지 말고 Swift 구현에서 기준(서체관리자)으로 직접 확인. | | ☐ |
 | D-11 | 라이트 테마의 도구 막대와 960 pt 너비 실화면 확인이 남아 있다. | Swift 구현에서 확인. | | ☐ |
 | D-12 | 문구 `shortcutFormatHint`가 "Tauri 형식"이라고 안내한다. 저장 문자열은 호환을 위해 같은 형식(`Shift+Cmd+K`)을 쓰지만 사용자에게 구현 용어를 보이면 안 된다. | 문구에서 Tauri를 빼고 형식 예시만 안내. | **결정(STA-55): `shortcutFormatHint`를 "수식키와 키를 +로 연결, 예: Shift+Cmd+K, F21–F24 미지원"으로 교체.** | ☑ |
@@ -345,3 +345,23 @@ P-02는 실제 대기 시간을 보는 수동 항목이라 ☐로 남긴다.
 - 처음 확인에서 우클릭 메뉴에 `Markdown 내보내기`와 구분선이 없고 `내용 복사`가 휴지통 뒤에 있었다. L-11 순서(출처 열기, 내용 복사, Markdown 내보내기, 구분선, 휴지통)로 고쳤다. 내보내기 로직은 상세 화면 버튼과 메뉴가 `LibraryModel.exportWithPanel`을 함께 쓴다.
 - `Cmd+Backspace`는 처음에 아무 반응이 없었다. 목록 뷰의 키 핸들러(`onKeyPress`)로는 `Cmd` 조합이 도달하지 않아서, 목록에 포커스가 있을 때만 활성화되는 메뉴 명령 `휴지통으로 이동`(⌘⌫, `TrashCommand`)으로 바꿔 동작을 확인했다. 노트·태그 입력창에서는 메뉴 항목이 비활성이라 글자 지우기가 그대로 동작한다.
 - 출처 열기(URL 없을 때 비활성)와 Markdown 내보내기 취소(파일 미생성)는 이상 없음.
+
+## 체크리스트 정리 A 묶음: 단위 테스트 근거 (STA-63)
+
+- C-01: `SettingsTests.theSettingsFileLivesInApplicationSupportWhateverTheStorageFolderIs`. 기본 경로가 `~/Library/Application Support/Notedrop/settings.json`이고, 저장 폴더를 바꿔도 설정 파일이 옮겨지지 않으며 새 폴더에 파일이 생기지 않는다.
+- C-07: `SettingsTests.aFailedWriteKeepsTheOldFileAndLeavesNoTempFile`(쓰기 실패 시 `settings_unwritable`, 기존 파일 그대로, 임시 파일 없음. root에서는 권한 검사가 맞지 않아 건너뜀), `writtenFileUsesContractKeysAndLeavesNoTempFiles`(성공 시 임시 파일 없음), `concurrentUpdatesAreSerialized`(동시 갱신 직렬화).
+- M-03: `SelectedTextCaptureTests.sourceFailureNeverBlocksCapture`(출처 수집 실패가 캡처를 막지 않음)와 `DropStoreTests`의 `drop.json` 확인(비어 있는 출처 필드는 `null`로 저장).
+- P-02: `SelectedTextCaptureTests.pollingIsEveryTwentyFiveMillisecondsForSevenHundred`(25 ms, 700 ms, 28회)와 `timesOutAfterTwentyEightPollsAndRestores`. 실제 폴백 동작은 STA-47 수동 확인(Safari)에서 확인됨.
+
+## 결정 사항 기록 (STA-63, 2026-10-08)
+
+사용자가 아래와 같이 결정했고, 해당 항목을 ☑(결정 완료)로 바꿨다.
+
+- P-15: 레거시의 `swift -e` 서브프로세스 클립보드 접근 구조는 이어받지 않는다. `NSPasteboard`를 직접 쓰고 같은 동작만 유지한다(이미 그렇게 구현됨).
+- M-04: 파일 경로는 수집하지 않는다. 신뢰할 수 있는 API가 없어 `filePath`는 항상 `null`이다(현재 구현 그대로).
+- D-01: 클립보드 캡처 단축키(`Shift+Cmd+V`)는 만들지 않고 메뉴 막대 `Save Clipboard...`만 둔다. 단축키는 별도 요청이 있을 때 새 이슈로 한다.
+- D-02: `mixed` Drop 폴더는 레거시와 같게 깨지지 않고 목록에만 표시한다. 본문과 이미지 표시는 필요할 때 새 이슈로 한다. 새로 저장하는 Drop은 `text` 또는 `image`뿐이다.
+- D-03: 단축키 허용 범위는 현재 구현 그대로다. `Shift/Cmd/Ctrl/Option` 조합에 문자, 숫자, `F1`~`F24`(등록은 `F21`~`F24`를 거부하고 안내), 방향키, `Space`, `Enter`, `Tab`, `Escape`, `Backspace`, `Delete`, `Home`, `End`, `PageUp`, `PageDown`을 받고 나머지는 거부한다.
+- D-04: 이미지 Drop은 읽기에서 `drop.json`의 `imagePath`를 우선하고(없으면 `image.png`), 쓰기는 항상 `image.png`다.
+- D-08: 로그인 시 자동 실행과 Dock 아이콘 표시 여부는 범위 밖이다. 현재 동작(메뉴 막대에 남고 Dock에도 보임, 자동 실행 없음)을 유지하고 필요하면 새 이슈로 한다.
+- D-09: 디자인 문서의 Tauri 구현 용어 정리는 별도 이슈 STA-64로 이관했다.
