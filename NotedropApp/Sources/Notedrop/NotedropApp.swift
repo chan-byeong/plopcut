@@ -17,7 +17,7 @@ struct NotedropApp: App {
         _appearance = State(initialValue: appearance)
         _folder = State(initialValue: StorageFolderModel(
             store: settings, picker: OpenPanelFolderPicker(),
-            prepare: { [model] in _ = await model.editor.drain() },
+            prepare: { [model] in await model.editor.drain() },
             onChanged: { [model] in Task { await model.reload() } }))
         _capture = State(initialValue: CaptureRuntime(model: model, settings: settings, appearance: appearance))
         // settings.json owns the column widths (spec L-15). AppKit's own split autosave would restore widths that a

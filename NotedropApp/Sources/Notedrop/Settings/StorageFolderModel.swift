@@ -21,14 +21,20 @@ final class StorageFolderModel {
 
     private let store: SettingsStore?
     private let picker: FolderPicker
-    private let prepare: () async -> Void
+    private let prepare: () async -> Bool
+    /// `NOTEDROP_STORAGE_FOLDER` (dev and tests) wins over settings.json, so the screen must show and obey it.
+    private let environmentOverride: String?
+    private var isApplying = false
     private let onChanged: () -> Void
 
-    /// `prepare` runs before the folder changes (pending edits are written to the old folder); `onChanged` after.
-    init(store: SettingsStore?, picker: FolderPicker, prepare: @escaping () async -> Void = {},
-         onChanged: @escaping () -> Void = {}) {
+    /// `prepare` runs before the folder changes (pending edits are written to the old folder) and returns false
+    /// when they could not be written, which stops the change; `onChanged` runs after.
+    init(store: SettingsStore?, picker: FolderPicker, prepare: @escaping () async -> Bool = { true },
+         onChanged: @escaping () -> Void = {},
+         environmentOverride: String? = ProcessInfo.processInfo.environment["NOTEDROP_STORAGE_FOLDER"]) {
         self.store = store
         self.picker = picker
+        self.environmentOverride = environmentOverride
         self.prepare = prepare
         self.onChanged = onChanged
         refresh()
@@ -49,10 +55,19 @@ final class StorageFolderModel {
     }
 
     private func apply(_ change: SettingsUpdate, folder: URL, success: StorageFolderNotice) async {
-        guard let store else { return }
+        guard let store, !isApplying else { return }
+        if environmentOverride != nil, change.storageFolderPath != nil {
+            notice = .failed("NOTEDROP_STORAGE_FOLDER overrides the storage folder setting.")
+            return
+        }
+        isApplying = true
+        defer { isApplying = false }
         do {
             try StorageFolderCheck.prepare(folder)
-            await prepare()
+            guard await prepare() else {
+                notice = .failed(L10n.t("saveFailed"))
+                return
+            }
             _ = try store.update(change)
             refresh()
             notice = success
@@ -66,7 +81,7 @@ final class StorageFolderModel {
         guard let store else { return }
         do {
             let settings = try store.read()
-            path = settings.storageFolderPath
+            path = environmentOverride ?? settings.storageFolderPath
             needsFirstRun = !settings.hasCompletedFirstRun
             problem = StorageFolderCheck.problem(for: URL(fileURLWithPath: path)).map(ErrorText.message(for:))
         } catch {

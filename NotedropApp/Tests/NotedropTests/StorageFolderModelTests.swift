@@ -35,9 +35,35 @@ private final class FakePicker: FolderPicker {
         return url
     }
 
-    private func model(_ env: Env, picker: FakePicker = FakePicker(), prepare: @escaping () async -> Void = {},
-                       onChanged: @escaping () -> Void = {}) -> StorageFolderModel {
-        StorageFolderModel(store: env.store, picker: picker, prepare: prepare, onChanged: onChanged)
+    private func model(_ env: Env, picker: FakePicker = FakePicker(), prepare: @escaping () async -> Bool = { true },
+                       onChanged: @escaping () -> Void = {}, environmentOverride: String? = nil) -> StorageFolderModel {
+        StorageFolderModel(
+            store: env.store, picker: picker, prepare: prepare, onChanged: onChanged,
+            environmentOverride: environmentOverride)
+    }
+
+    @Test func aFailedFlushOfPendingEditsKeepsTheOldFolder() async throws {
+        let env = try makeEnv()
+        let picker = FakePicker()
+        picker.result = try makeFolder(env, "Other")
+        var changes = 0
+        let m = model(env, picker: picker, prepare: { false }, onChanged: { changes += 1 })
+        await m.chooseFolder()
+        #expect(try env.store.read().storageFolderPath == env.defaultFolder.path)
+        #expect(changes == 0)
+        guard case .failed? = m.notice else { Issue.record("expected a failure notice"); return }
+    }
+
+    @Test func theEnvironmentOverrideIsShownAndBlocksFolderChanges() async throws {
+        let env = try makeEnv()
+        let override = try makeFolder(env, "FromEnv").path
+        let picker = FakePicker()
+        picker.result = try makeFolder(env, "Other")
+        let m = model(env, picker: picker, environmentOverride: override)
+        #expect(m.path == override)
+        await m.chooseFolder()
+        #expect(try env.store.read().storageFolderPath == env.defaultFolder.path)
+        guard case .failed? = m.notice else { Issue.record("expected a failure notice"); return }
     }
 
     @Test func freshSettingsShowTheDefaultFolderAndAskForFirstRun() throws {
@@ -107,7 +133,7 @@ private final class FakePicker: FolderPicker {
         let picker = FakePicker()
         picker.result = try makeFolder(env, "Other")
         var log: [String] = []
-        let m = model(env, picker: picker, prepare: { log.append("prepare") }, onChanged: { log.append("changed") })
+        let m = model(env, picker: picker, prepare: { log.append("prepare"); return true }, onChanged: { log.append("changed") })
         await m.chooseFolder()
         #expect(log == ["prepare", "changed"])
     }
