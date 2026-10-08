@@ -20,6 +20,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39)
 | `refreshLibrary` | Refresh library | 라이브러리 새로고침 |
 | `capture` | Capture | 캡처 |
 | `openSettings` | Open settings | 설정 열기 |
+| `saveClipboard` | Save Clipboard... | 클립보드 저장... |
 | `openLibrary` | Open library | 라이브러리 열기 |
 | `showSidebar` | Show sidebar | 사이드바 표시 |
 | `hideSidebar` | Hide sidebar | 사이드바 숨기기 |
@@ -158,6 +159,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39)
 | `clipboardEmpty` | The clipboard has no supported text or image. | 클립보드에 지원되는 텍스트나 이미지가 없습니다. |
 | `clipboardUnavailable` | Notedrop could not read the clipboard. | 클립보드를 읽지 못했습니다. |
 | `clipboardChanged` | The clipboard changed while it was being read. Try Save Clipboard again. | 읽는 중 클립보드 내용이 바뀌었습니다. 클립보드 저장을 다시 실행하세요. |
+| `clipboardImageUnsupported` | Saving an image from the clipboard is not supported yet. | 클립보드 이미지 저장은 아직 지원하지 않습니다. |
 | `clipboardRestoreFailed` | The capture succeeded, but the previous clipboard could not be restored. | 캡처는 완료했지만 이전 클립보드를 복원하지 못했습니다. |
 | `automationFailed` | Source metadata could not be collected. You can still save the drop. | 출처 메타데이터를 가져오지 못했습니다. 드롭은 계속 저장할 수 있습니다. |
 | `invalidImage` | The clipboard image could not be read. | 클립보드 이미지를 읽지 못했습니다. |

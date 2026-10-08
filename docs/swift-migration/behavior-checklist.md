@@ -79,12 +79,12 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 
 | ID | 동작 | 근거 | 확인 방법 | ☐ |
 | --- | --- | --- | --- | --- |
-| K-01 | 변경 횟수를 읽기 전후로 비교해 다르면 `clipboard_changed`. | 테스트: `clipboard_snapshot_rejects_content_changed_during_read` | 단위 | ☐ |
-| K-02 | 분류: 텍스트만 `text`, 이미지만 `image`, 둘 다 `mixed`, 둘 다 없으면 `clipboard_empty`. | 테스트: `clipboard_snapshot_classifies_text_image_and_mixed_content` | 단위 | ☐ |
-| K-03 | 이미지 디코딩 실패 시 텍스트가 있으면 텍스트로 진행하고 경고 `clipboard_image_unavailable`. 텍스트도 없으면 그 오류로 실패. | 테스트: `clipboard_snapshot_prefers_text_when_image_decoding_fails`, `clipboard_snapshot_rejects_unreadable_content` | 단위 | ☐ |
+| K-01 | 변경 횟수를 읽기 전후로 비교해 다르면 `clipboard_changed`. | 테스트: `ClipboardCaptureTests.rejectsContentChangedDuringRead`, `acceptsAnUnchangedCountAndAnUnreportedCount` | 단위 | ☑ |
+| K-02 | 분류: 텍스트만 `text`, 이미지만 `image`, 둘 다 `mixed`, 둘 다 없으면 `clipboard_empty`. | 테스트: `textOnlyBecomesATextDraft`, `mixedContentIsSavedAsTextWithoutAWarningForNow`, `imageOnlyIsReportedAsUnsupportedUntilImageSaving`, `emptyOrBlankClipboardFailsAsEmpty` (이미지·mixed 저장은 STA-57) | 단위 | ☑ |
+| K-03 | 이미지 디코딩 실패 시 텍스트가 있으면 텍스트로 진행하고 경고 `clipboard_image_unavailable`. 텍스트도 없으면 그 오류로 실패. | 테스트: `undecodableImageFallsBackToTextWithAWarning`, `undecodableImageWithoutTextFails`, `readFailureIsReportedAsUnavailable` | 단위 | ☑ |
 | K-04 | 이미지는 PNG가 있으면 PNG, 없으면 TIFF를 PNG로 변환해 사용. | `read_clipboard_snapshot` | 수동: 스크린샷(PNG)과 TIFF를 내는 앱 | ☐ |
-| K-05 | 최전면 앱이 Notedrop이면 출처를 비우고 제목을 다시 추론. 다른 앱이면 출처 유지. | 테스트: `tray_capture_omits_notedrop_source_and_reinfers_title`, `tray_capture_preserves_non_notedrop_source` | 단위 | ☐ |
-| K-06 | 클립보드 캡처 실패는 오류 보관 + 메뉴 막대 `Error`만(메인 창을 띄우지 않음). | `emit_tray_clipboard_capture_event` | 수동 | ☐ |
+| K-05 | 최전면 앱이 Notedrop이면 출처를 비우고 제목을 다시 추론. 다른 앱이면 출처 유지. | 테스트: `omitsNotedropAsSourceAndReinfersTheTitle`, `keepsTheSourceOfAnotherApp` | 단위 | ☑ |
+| K-06 | 클립보드 캡처 실패는 오류 보관 + 메뉴 막대 `Error`만(메인 창을 띄우지 않음). | `CaptureRuntime.reportQuietly`(Error만 표시하고 오류를 보관, 메인 창은 띄우지 않음) | 수동 | ☐ |
 
 ## M. 출처 수집
 
@@ -261,3 +261,10 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 단위 테스트(`SettingsModelTests`, 8개)로 확인함: 저장된 테마·저장 확인 방식을 읽음, 테마·방식 변경이 해당 필드만 바꿈(C-03), 쓰기 실패 시 선택을 되돌리고 안내, `system`은 재정의 없음·`light`/`dark`는 강제, 버전 표시 대체값.
 
 수동 확인이 남음(실제 앱): 테마 변경이 메인 창과 Save Popup에 즉시 적용되고 `system`으로 돌아가면 풀리는지(C-10), 재실행 후 유지, 설정 화면에서 사이드바 접힘·너비가 Library와 같은지(L-06). `NOTEDROP_APPEARANCE`는 테마가 `system`일 때만 적용되는 개발용 재정의로 남겨 둠.
+
+
+## 5단계 클립보드 캡처 기록 (STA-56)
+
+메뉴 막대 `Save Clipboard...`로 텍스트 클립보드를 캡처한다. K-01, K-02, K-03, K-05는 단위 테스트(`ClipboardCaptureTests`)로 확인함. K-04(PNG/TIFF 변환)는 이미지 저장을 다루는 STA-57에서 확인한다. 지금은 이미지만 있는 클립보드를 `clipboard_image_unsupported`로 알리고, 텍스트와 이미지가 함께 있으면 텍스트만 저장한다(경고 없음).
+
+수동 확인이 남음(실제 앱): K-06(실패 시 `Error`만 보이고 메인 창이 뜨지 않음), 메뉴 항목에서 팝업이 열리고 저장되는지, Notedrop이 앞일 때 출처가 비는지.

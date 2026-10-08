@@ -1,6 +1,21 @@
 import Foundation
 import NotedropCore
 
+/// Shared by every capture trigger so only one capture runs at a time: the selected-text fallback borrows the
+/// clipboard, and a clipboard capture in that window would read the borrowed content.
+@MainActor
+final class CaptureGate {
+    private(set) var isBusy = false
+
+    func enter() -> Bool {
+        guard !isBusy else { return false }
+        isBusy = true
+        return true
+    }
+
+    func leave() { isBusy = false }
+}
+
 /// Runs one capture per trigger and routes the result: a draft opens the popup, a failure is kept for the main
 /// window (spec 3.3, checklist P-13). A trigger that arrives while a capture is running is dropped.
 @MainActor
@@ -8,21 +23,21 @@ final class CaptureCoordinator {
     private let capture: () async throws -> CaptureDraft
     private let present: (CaptureDraft) -> Void
     private let failed: (NotedropError) -> Void
-    private var isRunning = false
+    private let gate: CaptureGate
 
     init(
         capture: @escaping () async throws -> CaptureDraft, present: @escaping (CaptureDraft) -> Void,
-        failed: @escaping (NotedropError) -> Void
+        failed: @escaping (NotedropError) -> Void, gate: CaptureGate = CaptureGate()
     ) {
+        self.gate = gate
         self.capture = capture
         self.present = present
         self.failed = failed
     }
 
     func trigger() async {
-        guard !isRunning else { return }
-        isRunning = true
-        defer { isRunning = false }
+        guard gate.enter() else { return }
+        defer { gate.leave() }
         do {
             present(try await capture())
         } catch let error as NotedropError {

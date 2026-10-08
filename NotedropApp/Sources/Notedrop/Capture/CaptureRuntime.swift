@@ -10,6 +10,7 @@ final class CaptureRuntime {
     private let popup: SavePopupWindowController
     private var hotKey: GlobalHotKey?
     private var coordinator: CaptureCoordinator?
+    private var clipboardCoordinator: CaptureCoordinator?
     private var started = false
     private var didPromptForAccessibility = false
     private var menuBar: MenuBarController?
@@ -26,12 +27,20 @@ final class CaptureRuntime {
     func start() {
         guard !started else { return }
         started = true
-        menuBar = MenuBarController(openMainWindow: { [weak self] in self?.showMainWindow() })
+        menuBar = MenuBarController(
+            openMainWindow: { [weak self] in self?.showMainWindow() },
+            saveClipboard: { [weak self] in self?.saveClipboard() })
 
+        let gate = CaptureGate()
         coordinator = CaptureCoordinator(
             capture: { try await Self.captureSelectedText() },
             present: { [weak self] in self?.present($0) },
-            failed: { [weak self] in self?.report($0) })
+            failed: { [weak self] in self?.report($0) }, gate: gate)
+
+        clipboardCoordinator = CaptureCoordinator(
+            capture: { try await Self.captureClipboard() },
+            present: { [weak self] in self?.present($0) },
+            failed: { [weak self] in self?.reportQuietly($0) }, gate: gate)
 
         let hotKey = GlobalHotKey { [weak self] in
             guard let self, let coordinator else { return }
@@ -59,6 +68,28 @@ final class CaptureRuntime {
             collector: FrontmostSourceCollector(), frontmost: FrontmostSourceCollector.currentTarget,
             sleep: { try? await Task.sleep(for: $0) }
         ).capture()
+    }
+
+    private static func captureClipboard() async throws -> CaptureDraft {
+        try await ClipboardCapture(
+            clipboard: SystemClipboard(), collector: FrontmostSourceCollector(),
+            frontmost: FrontmostSourceCollector.currentTarget,
+            isNotedrop: { $0?.processID == ProcessInfo.processInfo.processIdentifier }
+        ).capture()
+    }
+
+    /// Menu bar `Save Clipboard...` (spec 3.2).
+    private func saveClipboard() {
+        guard let clipboardCoordinator else { return }
+        if popup.isVisible { popup.bringToFront(); return }
+        Task { await clipboardCoordinator.trigger() }
+    }
+
+    /// A failed clipboard capture only flashes `Error` in the menu bar and keeps the message for the next time the
+    /// main window opens; it never raises the window itself (checklist K-06).
+    private func reportQuietly(_ error: NotedropError) {
+        menuBar?.showError()
+        model.pendingCapture.store(error)
     }
 
     private func report(_ error: NotedropError) {

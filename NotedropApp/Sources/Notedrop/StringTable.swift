@@ -16,6 +16,8 @@ enum StringTable {
         "refreshLibrary": (en: "Refresh library", ko: "라이브러리 새로고침"),
         "capture": (en: "Capture", ko: "캡처"),
         "openSettings": (en: "Open settings", ko: "설정 열기"),
+        "saveClipboard": (en: "Save Clipboard...", ko: "클립보드 저장..."),
+        "clipboardImageUnsupported": (en: "Saving an image from the clipboard is not supported yet.", ko: "클립보드 이미지 저장은 아직 지원하지 않습니다."),
         "openLibrary": (en: "Open library", ko: "라이브러리 열기"),
         "showSidebar": (en: "Show sidebar", ko: "사이드바 표시"),
         "hideSidebar": (en: "Hide sidebar", ko: "사이드바 숨기기"),

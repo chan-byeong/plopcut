@@ -4,9 +4,12 @@ import Foundation
 public struct ClipboardSnapshot: Equatable, Sendable {
     public var text: String?
     public var png: Data?
-    public init(text: String? = nil, png: Data? = nil) {
+    /// An image is on the pasteboard but could not be turned into PNG (checklist K-03).
+    public var imageUnreadable: Bool
+    public init(text: String? = nil, png: Data? = nil, imageUnreadable: Bool = false) {
         self.text = text
         self.png = png
+        self.imageUnreadable = imageUnreadable
     }
 }
 

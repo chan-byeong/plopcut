@@ -399,6 +399,7 @@ UTF-8, 들여쓰기 2칸의 pretty JSON, 키는 camelCase입니다.
 | `clipboard_unavailable` | 클립보드를 읽지 못함 | — |
 | `clipboard_changed` | 읽는 중 클립보드가 바뀜 | — |
 | `clipboard_image_unavailable` | 이미지 디코딩 실패 | — |
+| `clipboard_image_unsupported` | 이미지만 있는 클립보드(STA-57 전까지 임시, 이미지 저장이 들어오면 제거) | — |
 | `clipboard_restore_failed` | 이전 클립보드 복원 실패(경고) | 아니오 |
 | `permission_missing` / `automation_*` | 손쉬운 사용·자동화 권한 필요 | — |
 | `empty_text`, `empty_image`, `invalid_image` | 저장할 내용이 없거나 PNG가 아님 | 예 |

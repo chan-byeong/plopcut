@@ -31,6 +31,8 @@ enum ErrorText {
         case "clipboard_unavailable": L10n.t("clipboardUnavailable")
         case "clipboard_changed": L10n.t("clipboardChanged")
         case "clipboard_empty": L10n.t("clipboardEmpty")
+        case "clipboard_image_unavailable": L10n.t("invalidImage")
+        case "clipboard_image_unsupported": L10n.t("clipboardImageUnsupported")
         case "permission_missing": L10n.t("permissionAccessibilityMissing")
         case "empty_text", "empty_image": L10n.t("noCaptured")
         case "invalid_image": L10n.t("invalidImage")

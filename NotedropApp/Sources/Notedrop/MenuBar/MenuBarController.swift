@@ -6,10 +6,12 @@ final class MenuBarController: NSObject {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let menu = NSMenu()
     private let openMainWindow: () -> Void
+    private let saveClipboard: () -> Void
     private var feedback: MenuBarFeedback?
 
-    init(openMainWindow: @escaping () -> Void) {
+    init(openMainWindow: @escaping () -> Void, saveClipboard: @escaping () -> Void) {
         self.openMainWindow = openMainWindow
+        self.saveClipboard = saveClipboard
         super.init()
         feedback = MenuBarFeedback(
             apply: { [weak self] title, tooltip in
@@ -33,10 +35,12 @@ final class MenuBarController: NSObject {
             button.action = #selector(clicked(_:))
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
-        let open = NSMenuItem(title: L10n.t("openLibrary"), action: #selector(menuSelected(_:)), keyEquivalent: "")
-        open.representedObject = MenuBarAction.openLibrary.rawValue
-        open.target = self
-        menu.addItem(open)
+        for (action, title) in [(MenuBarAction.saveClipboard, "saveClipboard"), (.openLibrary, "openLibrary")] {
+            let item = NSMenuItem(title: L10n.t(title), action: #selector(menuSelected(_:)), keyEquivalent: "")
+            item.representedObject = action.rawValue
+            item.target = self
+            menu.addItem(item)
+        }
     }
 
     func showError() { feedback?.showError() }
@@ -55,6 +59,7 @@ final class MenuBarController: NSObject {
     @objc private func menuSelected(_ item: NSMenuItem) {
         guard let id = item.representedObject as? String, let action = MenuBarAction(id: id) else { return }
         switch action {
+        case .saveClipboard: saveClipboard()
         case .openLibrary: openMainWindow()
         }
     }
