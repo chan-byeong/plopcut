@@ -20,8 +20,11 @@ struct SystemPermissionChecker: PermissionChecking {
     func accessibilityTrusted() -> Bool { AXIsProcessTrusted() }
 
     func clipboardReadable() -> Bool? {
-        // NSPasteboard has no permission prompt; reading the type list only fails when the pasteboard is unavailable.
-        NSPasteboard.general.types == nil ? nil : true
+        // NSPasteboard has no permission query. Text on the board that cannot be read means access is denied;
+        // an empty or non-text board says nothing about access, so it stays unknown (checklist A-02).
+        let board = NSPasteboard.general
+        guard board.types?.contains(.string) == true else { return nil }
+        return board.string(forType: .string) != nil
     }
 }
 

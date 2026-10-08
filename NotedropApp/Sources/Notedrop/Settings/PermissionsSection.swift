@@ -11,6 +11,7 @@ struct PermissionsSection: View {
                 row(item)
             }
         }
+        .onAppear { model.refresh() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             model.refresh()
         }
