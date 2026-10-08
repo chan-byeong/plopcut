@@ -48,6 +48,7 @@ struct NotedropApp: App {
         }
         .defaultSize(width: 1120, height: 720)
         .windowToolbarStyle(.unified)
+        .commands { CommandGroup(after: .pasteboard) { TrashCommand() } }
     }
 }
 

@@ -1,6 +1,8 @@
+import AppKit
 import Foundation
 import NotedropCore
 import Observation
+import UniformTypeIdentifiers
 
 /// What the sidebar has selected. Exactly one row is selected at a time (spec 2.4).
 enum SidebarSelection: Hashable {
@@ -186,6 +188,20 @@ final class LibraryModel {
             alertMessage = ErrorText.message(for: error)
             return false
         }
+    }
+
+    /// Pending edits are saved first and the drop is read again after the panel closes, so the file holds what
+    /// the user sees. Cancelling the save panel writes nothing (spec 7). Shared by the detail button and the list menu.
+    func exportWithPanel(id: String) async {
+        guard await editor.drain() else { alertMessage = L10n.t("saveFailed"); return }
+        guard let drop = drops.first(where: { $0.id == id }) else { return }
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = MarkdownExport.fileName(for: drop)
+        if let markdown = UTType(filenameExtension: "md") { panel.allowedContentTypes = [markdown] }
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        guard await editor.drain() else { alertMessage = L10n.t("saveFailed"); return }
+        guard let latest = drops.first(where: { $0.id == id }) else { return }
+        _ = exportMarkdown(of: latest, to: url)
     }
 
     func exportMarkdown(of drop: Drop, to url: URL) -> Bool {

@@ -1,7 +1,6 @@
 import AppKit
 import NotedropCore
 import SwiftUI
-import UniformTypeIdentifiers
 
 struct DropDetailView: View {
     @Bindable var model: LibraryModel
@@ -57,7 +56,7 @@ struct DropDetailView: View {
         HStack {
             Button { openSource(drop) } label: { Label(L10n.t("openSource"), systemImage: "arrow.up.right.square") }
                 .disabled(URL(string: drop.source.url ?? "") == nil || drop.source.url?.isEmpty != false)
-            Button { Task { await export(drop.id) } } label: { Label(L10n.t("exportMarkdown"), systemImage: "square.and.arrow.down") }
+            Button { Task { await model.exportWithPanel(id: drop.id) } } label: { Label(L10n.t("exportMarkdown"), systemImage: "square.and.arrow.down") }
             Button(role: .destructive) { model.pendingDeleteID = drop.id } label: { Label(L10n.t("moveTrash"), systemImage: "trash") }
         }
     }
@@ -74,20 +73,6 @@ struct DropDetailView: View {
 
     private func openSource(_ drop: Drop) {
         if let value = drop.source.url, let url = URL(string: value) { NSWorkspace.shared.open(url) }
-    }
-
-    /// Pending edits are saved first and the drop is read again after the panel closes, so the file holds what
-    /// the user sees. Cancelling the save panel writes nothing (spec 7).
-    private func export(_ id: String) async {
-        guard await editor.drain() else { model.alertMessage = L10n.t("saveFailed"); return }
-        guard let drop = model.drops.first(where: { $0.id == id }) else { return }
-        let panel = NSSavePanel()
-        panel.nameFieldStringValue = MarkdownExport.fileName(for: drop)
-        if let markdown = UTType(filenameExtension: "md") { panel.allowedContentTypes = [markdown] }
-        guard panel.runModal() == .OK, let url = panel.url else { return }
-        guard await editor.drain() else { model.alertMessage = L10n.t("saveFailed"); return }
-        guard let latest = model.drops.first(where: { $0.id == id }) else { return }
-        _ = model.exportMarkdown(of: latest, to: url)
     }
 }
 
