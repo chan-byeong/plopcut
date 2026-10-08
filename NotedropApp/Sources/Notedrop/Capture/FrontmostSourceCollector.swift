@@ -9,7 +9,9 @@ struct FrontmostSourceCollector: SourceCollector {
 
     /// The app that is frontmost right now. Called once per capture; everything after works on the result.
     static func currentTarget() -> CaptureTarget? {
-        guard let app = NSWorkspace.shared.frontmostApplication, let name = app.localizedName else { return nil }
+        guard let app = NSWorkspace.shared.frontmostApplication else { return nil }
+        // 이름이 없어도 pid가 있으면 AX 읽기는 가능하므로 대상을 버리지 않는다.
+        let name = app.localizedName ?? app.bundleIdentifier ?? ""
         return CaptureTarget(processID: app.processIdentifier, name: name, bundleID: app.bundleIdentifier)
     }
 
