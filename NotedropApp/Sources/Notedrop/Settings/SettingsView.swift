@@ -23,6 +23,7 @@ struct SettingsView: View {
                 }
                 .pickerStyle(.radioGroup)
             }
+            ShortcutSection()
             Section(L10n.t("about")) {
                 LabeledContent(L10n.t("appVersion"), value: model.appVersion)
             }

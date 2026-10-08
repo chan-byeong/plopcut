@@ -8,9 +8,10 @@ final class CaptureRuntime {
     private let model: LibraryModel
     private let settings: SettingsStore
     private let popup: SavePopupWindowController
-    private var hotKey: GlobalHotKey?
     private var coordinator: CaptureCoordinator?
     private var clipboardCoordinator: CaptureCoordinator?
+    private lazy var shortcuts = ShortcutController(
+        registrar: GlobalHotKeyRegistrar(action: { [weak self] in self?.shortcutPressed() }))
     private var started = false
     private var didPromptForAccessibility = false
     private var menuBar: MenuBarController?
@@ -42,22 +43,33 @@ final class CaptureRuntime {
             present: { [weak self] in self?.present($0) },
             failed: { [weak self] in self?.reportQuietly($0) }, gate: gate)
 
-        let hotKey = GlobalHotKey { [weak self] in
-            guard let self, let coordinator else { return }
-            // Notedrop is frontmost while its popup is open, so a capture would read Notedrop itself. Show the
-            // popup instead (a deliberate difference from checklist P-14, which expects the draft to be replaced).
-            if popup.isVisible { popup.bringToFront(); return }
-            Task { await coordinator.trigger() }
-        }
-        self.hotKey = hotKey
         do {
             let text = (try? settings.read().selectedTextShortcut) ?? SettingsStore.defaultShortcut
-            try hotKey.register(try Shortcut.parse(text))
+            try shortcuts.start(text)
         } catch let error as NotedropError {
-            model.pendingCapture.store(error)
+            reportQuietly(error)  // C-09: kept for the main window and shown as `Error` in the menu bar
         } catch {
-            model.pendingCapture.store(NotedropError("shortcut_registration_failed", detail: error.localizedDescription))
+            reportQuietly(NotedropError("shortcut_registration_failed", detail: error.localizedDescription))
         }
+    }
+
+    // MARK: Shortcut
+
+    /// The settings field for the shortcut; its change goes register -> release -> save (checklist C-08).
+    private(set) lazy var shortcutModel = ShortcutModel(
+        initial: (try? settings.read().selectedTextShortcut) ?? SettingsStore.defaultShortcut,
+        apply: { [weak self] in try self?.changeShortcut($0) })
+
+    private func changeShortcut(_ text: String) throws {
+        try shortcuts.change(to: text) { [settings] in _ = try settings.update(SettingsUpdate(selectedTextShortcut: $0)) }
+    }
+
+    private func shortcutPressed() {
+        guard let coordinator else { return }
+        // Notedrop is frontmost while its popup is open, so a capture would read Notedrop itself. Show the
+        // popup instead (a deliberate difference from checklist P-14, which expects the draft to be replaced).
+        if popup.isVisible { popup.bringToFront(); return }
+        Task { await coordinator.trigger() }
     }
 
     // MARK: Capture

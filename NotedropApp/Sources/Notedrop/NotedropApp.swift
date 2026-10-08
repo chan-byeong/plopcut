@@ -26,6 +26,7 @@ struct NotedropApp: App {
     var body: some Scene {
         WindowGroup(id: "main") {
             MainWindow(model: model, settings: appearance)
+                .environment(capture.shortcutModel)
                 .modifier(OpenMainWindowBinding(runtime: capture))
                 .frame(minWidth: 960, minHeight: 640)
                 .task {

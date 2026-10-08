@@ -106,7 +106,9 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39)
 | `captureShortcut` | Shortcut format | 단축키 형식 |
 | `selectedTextShortcut` | Selected text shortcut | 선택 텍스트 단축키 |
 | `shortcutExample` | Example: Shift+Cmd+K | 예시: Shift+Cmd+K |
-| `shortcutFormatHint` | Use Tauri syntax, for example Shift+Cmd+K. | Tauri 형식을 사용하세요. 예: Shift+Cmd+K |
+| `shortcutFormatHint` | Join modifiers and a key with +, for example Shift+Cmd+K. F21–F24 are not supported. | 수식키와 키를 +로 연결하세요. 예: Shift+Cmd+K (F21–F24는 지원하지 않습니다) |
+| `shortcutRegistrationFailed` | Could not register that shortcut. Another app may already use it. The previous shortcut still works. | 이 단축키를 등록하지 못했습니다. 다른 앱이 이미 사용 중일 수 있습니다. 이전 단축키는 그대로 동작합니다. |
+| `shortcutRollbackFailed` | The shortcut could not be saved and the previous one could not be restored. Set a shortcut again. | 단축키를 저장하지 못했고 이전 단축키도 복원하지 못했습니다. 단축키를 다시 설정하세요. |
 | `captureConfirmation` | Save confirmation | 저장 확인 |
 | `modal` | Show popup | 팝업 표시 |
 | `instant` | Save text instantly | 텍스트 즉시 저장 |
