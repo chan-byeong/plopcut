@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import NotedropCore
 
@@ -9,7 +10,8 @@ struct SavePopupView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(L10n.t("saveText")).font(.headline)
+            Text(L10n.t(model.selectedType == .image ? "saveImage" : "saveText")).font(.headline)
+            if model.isMixed { typePicker }
             preview
             VStack(alignment: .leading, spacing: 2) {
                 Text(L10n.t("source")).font(.caption).foregroundStyle(.secondary)
@@ -29,13 +31,28 @@ struct SavePopupView: View {
         .onAppear { focus = .note }
     }
 
-    private var preview: some View {
-        ScrollView {
-            Text(model.draft.text ?? "")
-                .font(.body).frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled).padding(8)
+    private var typePicker: some View {
+        Picker(L10n.t("chooseType"), selection: $model.selectedType) {
+            Text(L10n.t("text")).tag(DropType.text)
+            Text(L10n.t("image")).tag(DropType.image)
         }
-        .frame(height: 120)
-        .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
+        .pickerStyle(.segmented)
+    }
+
+    @ViewBuilder private var preview: some View {
+        if model.selectedType == .image, let image = model.previewImage {
+            Image(nsImage: image)
+                .resizable().scaledToFit().frame(maxWidth: .infinity).frame(height: 120)
+                .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
+                .accessibilityLabel(L10n.t("image"))
+        } else {
+            ScrollView {
+                Text(model.draft.text ?? "")
+                    .font(.body).frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled).padding(8)
+            }
+            .frame(height: 120)
+            .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
+        }
     }
 
     @ViewBuilder private var warnings: some View {

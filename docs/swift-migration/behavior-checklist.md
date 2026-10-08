@@ -80,7 +80,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | ID | 동작 | 근거 | 확인 방법 | ☐ |
 | --- | --- | --- | --- | --- |
 | K-01 | 변경 횟수를 읽기 전후로 비교해 다르면 `clipboard_changed`. | 테스트: `ClipboardCaptureTests.rejectsContentChangedDuringRead`, `acceptsAnUnchangedCountAndAnUnreportedCount` | 단위 | ☑ |
-| K-02 | 분류: 텍스트만 `text`, 이미지만 `image`, 둘 다 `mixed`, 둘 다 없으면 `clipboard_empty`. | 테스트: `textOnlyBecomesATextDraft`, `mixedContentIsSavedAsTextWithoutAWarningForNow`, `imageOnlyIsReportedAsUnsupportedUntilImageSaving`, `emptyOrBlankClipboardFailsAsEmpty` (이미지·mixed 저장은 STA-57) | 단위 | ☑ |
+| K-02 | 분류: 텍스트만 `text`, 이미지만 `image`, 둘 다 `mixed`, 둘 다 없으면 `clipboard_empty`. | 테스트: `textOnlyBecomesATextDraft`, `mixedContentKeepsBothForThePopupToChooseFrom`, `imageOnlyBecomesAnImageDraft`, `imageFromNotedropHasNoSourceAndTheFallbackTitle`, `emptyOrBlankClipboardFailsAsEmpty`; 팝업에서 고른 유형만 저장: `SavePopupImageTests` | 단위 | ☑ |
 | K-03 | 이미지 디코딩 실패 시 텍스트가 있으면 텍스트로 진행하고 경고 `clipboard_image_unavailable`. 텍스트도 없으면 그 오류로 실패. | 테스트: `undecodableImageFallsBackToTextWithAWarning`, `undecodableImageWithoutTextFails`, `readFailureIsReportedAsUnavailable` | 단위 | ☑ |
 | K-04 | 이미지는 PNG가 있으면 PNG, 없으면 TIFF를 PNG로 변환해 사용. | `read_clipboard_snapshot` | 수동: 스크린샷(PNG)과 TIFF를 내는 앱 | ☐ |
 | K-05 | 최전면 앱이 Notedrop이면 출처를 비우고 제목을 다시 추론. 다른 앱이면 출처 유지. | 테스트: `omitsNotedropAsSourceAndReinfersTheTitle`, `keepsTheSourceOfAnotherApp` | 단위 | ☑ |
@@ -265,7 +265,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 
 ## 5단계 클립보드 캡처 기록 (STA-56)
 
-메뉴 막대 `Save Clipboard...`로 텍스트 클립보드를 캡처한다. K-01, K-02, K-03, K-05는 단위 테스트(`ClipboardCaptureTests`)로 확인함. K-04(PNG/TIFF 변환)는 이미지 저장을 다루는 STA-57에서 확인한다. 지금은 이미지만 있는 클립보드를 `clipboard_image_unsupported`로 알리고, 텍스트와 이미지가 함께 있으면 텍스트만 저장한다(경고 없음).
+메뉴 막대 `Save Clipboard...`로 텍스트 클립보드를 캡처한다. K-01, K-02, K-03, K-05는 단위 테스트(`ClipboardCaptureTests`)로 확인함. 이미지와 `mixed` 저장은 STA-57에서 들어왔다(아래 기록).
 
 수동 확인이 남음(실제 앱): K-06(실패 시 `Error`만 보이고 메인 창이 뜨지 않음), 메뉴 항목에서 팝업이 열리고 저장되는지, Notedrop이 앞일 때 출처가 비는지.
 
@@ -295,3 +295,11 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 설정 화면의 `선택 텍스트 단축키` 섹션에서 바꾼다. 순서는 새 단축키 등록 → 이전 해제 → 설정 저장이며(`ShortcutController`), 등록 실패나 저장 실패면 이전 단축키가 계속 동작하고 설정 파일은 바뀌지 않는다. 저장 실패 뒤 이전 단축키를 다시 등록하지 못하면 `shortcut_rollback_failed`로 알린다. 거절된 입력은 필드에 남지 않고 동작 중인 단축키로 되돌아간다. 시작 시에는 저장된 단축키 하나만 등록하고, 실패하면 오류를 보관하고 메뉴 막대에 `Error`를 보인다(C-09). 새 오류 문구는 한국어·영어로 `shortcutRegistrationFailed`, `shortcutRollbackFailed`를 추가했고, 형식 오류는 `shortcutFormatHint`를 보인다. Carbon 핫키는 등록마다 고유 id를 붙여 교체 중 두 핫키가 동시에 살아 있어도 누른 쪽만 동작한다.
 
 수동 확인이 남음(실제 앱): 단축키 변경 직후 새 단축키로 캡처되고 이전 것은 반응하지 않는지, 다른 앱이 쓰는 조합으로 바꾸면 한국어 오류가 나오고 이전 단축키가 계속 되는지, 재실행 후 유지되는지, F21–F24 입력 시 형식 안내가 나오는지.
+
+## 5단계 이미지와 mixed 저장 기록 (STA-57)
+
+`Save Clipboard...`로 이미지만 있는 클립보드는 `image` Draft, 텍스트와 이미지가 함께 있으면 `mixed` Draft가 된다. Save Popup은 이미지 미리보기를 보여 주고, `mixed`는 텍스트/이미지 분할 선택(기본 텍스트)을 주며 고른 유형 하나만 저장한다(D-02). 이미지는 `DropStore.saveImage`로 `image.png`에 저장하고, 비었거나 PNG가 아닌 이미지는 저장하지 않고 이유를 보여 준다(S-10). 캡처 단계에서도 PNG 시그니처가 아니면 `clipboard_image_unavailable`로 취급해 텍스트가 있으면 경고와 함께 텍스트로 진행한다. 임시 오류 코드 `clipboard_image_unsupported`와 문구 `clipboardImageUnsupported`는 제거했다.
+
+단위 테스트로 확인함: 분류와 제목(`ClipboardCaptureTests`), 비PNG 바이트 거부, 팝업의 유형 선택과 저장 요청(`SavePopupImageTests`).
+
+수동 확인이 남음(실제 앱): K-04(스크린샷 PNG와 TIFF를 내는 앱에서 저장), 이미지만/텍스트+이미지 클립보드에서 팝업 미리보기와 선택, 저장한 이미지 Drop이 Library 본문에 보임, P-09(선택 텍스트 캡처 전후로 이미지만/텍스트만/둘 다 있던 클립보드 복원). 폴백 복원은 TIFF만 있던 클립보드를 PNG로 되돌린다.

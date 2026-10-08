@@ -32,7 +32,6 @@ enum ErrorText {
         case "clipboard_changed": L10n.t("clipboardChanged")
         case "clipboard_empty": L10n.t("clipboardEmpty")
         case "clipboard_image_unavailable": L10n.t("invalidImage")
-        case "clipboard_image_unsupported": L10n.t("clipboardImageUnsupported")
         case "invalid_selected_text_shortcut": L10n.t("shortcutFormatHint")
         case "shortcut_registration_failed": L10n.t("shortcutRegistrationFailed")
         case "shortcut_rollback_failed": L10n.t("shortcutRollbackFailed")
