@@ -22,7 +22,7 @@ final class SettingsModel {
         self.store = store
         self.appVersion = appVersion
         self.devOverride = devOverride
-        var stored: Settings?
+        var stored: AppSettings?
         var loadError: String?
         do { stored = try store?.read() } catch { loadError = ErrorText.message(for: error) }
         theme = stored?.theme ?? .system
