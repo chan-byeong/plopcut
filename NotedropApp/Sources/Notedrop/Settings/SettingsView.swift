@@ -7,6 +7,7 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            StorageFolderSection()
             Section(L10n.t("general")) {
                 Picker(L10n.t("theme"), selection: Binding(get: { model.theme }, set: { model.setTheme($0) })) {
                     Text(L10n.t("system")).tag(Theme.system)

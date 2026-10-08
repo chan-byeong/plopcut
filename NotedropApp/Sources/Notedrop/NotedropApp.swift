@@ -6,6 +6,7 @@ struct NotedropApp: App {
     @State private var model: LibraryModel
     @State private var capture: CaptureRuntime
     @State private var appearance: SettingsModel
+    @State private var folder: StorageFolderModel
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 
     init() {
@@ -14,6 +15,10 @@ struct NotedropApp: App {
         _model = State(initialValue: model)
         let appearance = SettingsModel(store: settings)
         _appearance = State(initialValue: appearance)
+        _folder = State(initialValue: StorageFolderModel(
+            store: settings, picker: OpenPanelFolderPicker(),
+            prepare: { [model] in _ = await model.editor.drain() },
+            onChanged: { [model] in Task { await model.reload() } }))
         _capture = State(initialValue: CaptureRuntime(model: model, settings: settings, appearance: appearance))
         // settings.json owns the column widths (spec L-15). AppKit's own split autosave would restore widths that a
         // narrow window squeezed, so drop it before the window is built.
@@ -27,6 +32,8 @@ struct NotedropApp: App {
         WindowGroup(id: "main") {
             MainWindow(model: model, settings: appearance)
                 .modifier(OpenMainWindowBinding(runtime: capture))
+                .environment(folder)
+                .modifier(FirstRunSheet(model: folder))
                 .frame(minWidth: 960, minHeight: 640)
                 .task {
                     CompositionMonitor.shared.install()

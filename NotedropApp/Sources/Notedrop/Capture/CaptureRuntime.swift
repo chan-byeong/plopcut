@@ -130,6 +130,7 @@ final class CaptureRuntime {
     private static func save(_ request: SaveRequest, storageRoot: @escaping @Sendable () throws -> URL) async throws -> Drop {
         try await Task.detached {
             let root = try storageRoot()
+            try StorageFolderCheck.ensureUsable(root)
             return try DropStore(root: root).saveText(
                 request.text, title: request.title, source: request.source, tags: request.tags, note: request.note)
         }.value
