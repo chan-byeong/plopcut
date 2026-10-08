@@ -23,13 +23,18 @@ public struct ClipboardCapture: Sendable {
         var warnings: [CaptureWarning] = []
 
         let text = snapshot.text.flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
-        if snapshot.imageUnreadable {
+        // Bytes that are not a PNG are as unusable as an image that failed to decode (K-03, S-10).
+        let png = snapshot.png.flatMap { Self.isPNG($0) ? $0 : nil }
+        if snapshot.imageUnreadable || (snapshot.png != nil && png == nil) {
             guard text != nil else { throw NotedropError("clipboard_image_unavailable") }
             warnings.append(CaptureWarning("clipboard_image_unavailable"))
         }
-        guard let text else {
-            // Image-only content can't be saved until image drops are wired in (STA-57).
-            throw NotedropError(snapshot.png == nil ? "clipboard_empty" : "clipboard_image_unsupported")
+        let type: DropType
+        switch (text, png) {
+        case (nil, nil): throw NotedropError("clipboard_empty")
+        case (_?, nil): type = .text
+        case (nil, _?): type = .image
+        case (_?, _?): type = .mixed
         }
 
         let target = frontmost()
@@ -39,8 +44,14 @@ public struct ClipboardCapture: Sendable {
             source = result.source
             warnings += result.warnings
         }
-        let title = Naming.inferTitle(windowTitle: source.windowTitle, appName: source.appName, text: text)
-        return CaptureDraft(type: .text, title: title, text: text, source: source, warnings: warnings)
+        let title = Naming.inferTitle(
+            windowTitle: source.windowTitle, appName: source.appName, text: text,
+            fallback: type == .image ? "Image Drop" : "Untitled Drop")
+        return CaptureDraft(type: type, title: title, text: text, imagePNG: png, source: source, warnings: warnings)
+    }
+
+    private static func isPNG(_ data: Data) -> Bool {
+        data.starts(with: [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])
     }
 
     /// Reads the content between two change-count samples; a difference means another app copied meanwhile (K-01).

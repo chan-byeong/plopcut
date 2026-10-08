@@ -143,7 +143,11 @@ final class CaptureRuntime {
         try await Task.detached {
             let root = try storageRoot()
             try StorageFolderCheck.ensureUsable(root)
-            return try DropStore(root: root).saveText(
+            let store = DropStore(root: root)
+            if let png = request.imagePNG {
+                return try store.saveImage(png, title: request.title, source: request.source, tags: request.tags, note: request.note)
+            }
+            return try store.saveText(
                 request.text, title: request.title, source: request.source, tags: request.tags, note: request.note)
         }.value
     }

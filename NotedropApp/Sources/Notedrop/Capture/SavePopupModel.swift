@@ -2,13 +2,14 @@ import Foundation
 import NotedropCore
 import Observation
 
-/// What the popup asks storage to write.
+/// What the popup asks storage to write: a text drop, or an image drop when `imagePNG` is set.
 struct SaveRequest: Equatable, Sendable {
     var text: String
     var title: String
     var source: DropSource
     var note: String?
     var tags: [String]
+    var imagePNG: Data?
 }
 
 /// State of one Save Popup (spec 3.5). The popup never closes itself: the owner reacts to `onSaved` and `onCancel`.
@@ -17,6 +18,8 @@ final class SavePopupModel {
     let draft: CaptureDraft
     let recentTags: [String]
 
+    /// For a `mixed` draft the user picks one; only that type is saved (spec 3.5, checklist D-02).
+    var selectedType: DropType
     var note = ""
     var tagInput = ""
     var tagMessage: String?
@@ -33,6 +36,7 @@ final class SavePopupModel {
         onSaved: @escaping (Drop) -> Void, onCancel: @escaping () -> Void
     ) {
         self.draft = draft
+        self.selectedType = draft.type == .mixed ? .text : draft.type
         self.recentTags = recentTags
         self.tags = draft.tags
         self.note = draft.note ?? ""
@@ -40,6 +44,8 @@ final class SavePopupModel {
         self.onSaved = onSaved
         self.onCancel = onCancel
     }
+
+    var isMixed: Bool { draft.type == .mixed }
 
     /// One line: `app · window · URL`, or the unknown-source text when nothing was collected.
     var sourceSummary: String {
@@ -83,9 +89,10 @@ final class SavePopupModel {
         // Text typed in the tag field but not yet confirmed still counts.
         if !tagInput.trimmingCharacters(in: .whitespaces).isEmpty { registerTagInput() }
         let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
+        let saveImage = selectedType == .image
         let request = SaveRequest(
-            text: draft.text ?? "", title: draft.title, source: draft.source,
-            note: trimmedNote.isEmpty ? nil : note, tags: tags)
+            text: saveImage ? "" : draft.text ?? "", title: draft.title, source: draft.source,
+            note: trimmedNote.isEmpty ? nil : note, tags: tags, imagePNG: saveImage ? draft.imagePNG : nil)
         do {
             let drop = try await save(request)
             onSaved(drop)

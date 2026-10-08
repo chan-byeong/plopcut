@@ -31,7 +31,7 @@ private struct StubCollector: SourceCollector {
     func collect(from target: CaptureTarget?) async -> SourceResult { result }
 }
 
-private let png = Data([0x89, 0x50, 0x4E, 0x47])
+private let png = Data([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00])
 
 @Suite struct ClipboardCaptureTests {
     private func capture(
@@ -69,16 +69,39 @@ private let png = Data([0x89, 0x50, 0x4E, 0x47])
         #expect(draft.imagePNG == nil)
     }
 
-    @Test func mixedContentIsSavedAsTextWithoutAWarningForNow() async throws {
+    @Test func mixedContentKeepsBothForThePopupToChooseFrom() async throws {
         let draft = try await capture(StubClipboard(ClipboardSnapshot(text: "caption", png: png)))
-        #expect(draft.type == .text)
+        #expect(draft.type == .mixed)
         #expect(draft.text == "caption")
-        #expect(draft.imagePNG == nil)
+        #expect(draft.imagePNG == png)
         #expect(!draft.warnings.contains(CaptureWarning("clipboard_image_unavailable")))
     }
 
-    @Test func imageOnlyIsReportedAsUnsupportedUntilImageSaving() async {
-        await expectFailure(StubClipboard(ClipboardSnapshot(png: png)), code: "clipboard_image_unsupported")
+    // K-02, K-04
+    @Test func imageOnlyBecomesAnImageDraft() async throws {
+        let draft = try await capture(StubClipboard(ClipboardSnapshot(png: png)))
+        #expect(draft.type == .image)
+        #expect(draft.imagePNG == png)
+        #expect(draft.text == nil)
+        #expect(draft.title == "Docs")
+    }
+
+    @Test func imageFromNotedropHasNoSourceAndTheFallbackTitle() async throws {
+        let notedrop = CaptureTarget(processID: 99, name: "Notedrop")
+        let draft = try await capture(StubClipboard(ClipboardSnapshot(png: png)), target: notedrop)
+        #expect(draft.source == DropSource())
+        #expect(draft.title == "Image Drop")
+    }
+
+    // S-10
+    @Test func emptyOrNonPNGImageBytesAreNotKept() async throws {
+        for bad in [Data(), Data([0x01, 0x02, 0x03])] {
+            await expectFailure(StubClipboard(ClipboardSnapshot(png: bad)), code: "clipboard_image_unavailable")
+            let draft = try await capture(StubClipboard(ClipboardSnapshot(text: "kept", png: bad)))
+            #expect(draft.type == .text)
+            #expect(draft.imagePNG == nil)
+            #expect(draft.warnings.contains(CaptureWarning("clipboard_image_unavailable")))
+        }
     }
 
     @Test func emptyOrBlankClipboardFailsAsEmpty() async {
