@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import NotedropCore
 import Observation
@@ -11,7 +12,7 @@ final class SettingsModel {
     private(set) var theme: Theme
     private(set) var captureMode: CaptureConfirmationMode
     let appVersion: String
-    var errorMessage: String?
+    private(set) var errorMessage: String?
 
     private let store: SettingsStore?
     private let devOverride: ColorScheme?
@@ -21,9 +22,23 @@ final class SettingsModel {
         self.store = store
         self.appVersion = appVersion
         self.devOverride = devOverride
-        let stored = try? store?.read()
+        var stored: Settings?
+        var loadError: String?
+        do { stored = try store?.read() } catch { loadError = ErrorText.message(for: error) }
         theme = stored?.theme ?? .system
         captureMode = stored?.captureConfirmationMode ?? .modal
+        errorMessage = loadError
+        applyAppearance()
+    }
+
+    /// Setting the app appearance explicitly is what lets `system` release an earlier light/dark override;
+    /// `preferredColorScheme(nil)` alone does not reliably do that on macOS.
+    func applyAppearance() {
+        NSApp?.appearance = switch colorScheme {
+        case .light: NSAppearance(named: .aqua)
+        case .dark: NSAppearance(named: .darkAqua)
+        default: nil
+        }
     }
 
     /// The scheme to force on every Notedrop window; `nil` leaves it to the system.
@@ -40,6 +55,7 @@ final class SettingsModel {
         let previous = theme
         theme = value
         if !persist(SettingsUpdate(theme: value)) { theme = previous }
+        applyAppearance()
     }
 
     func setCaptureMode(_ value: CaptureConfirmationMode) {
