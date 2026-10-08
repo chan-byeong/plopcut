@@ -57,21 +57,23 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 
 | ID | 동작 | 근거 | 확인 방법 | ☐ |
 | --- | --- | --- | --- | --- |
-| P-01 | 출처 수집이 클립보드 백업·복사보다 **먼저**. | 테스트: `selected_text_capture_collects_source_first_and_restores_text_and_image` | 단위(호출 순서) | ☐ |
-| P-02 | 복사 후 대기: 변경 횟수가 달라질 때까지 25 ms 폴링, 최대 700 ms. | `SELECTED_TEXT_COPY_TIMEOUT`, `POLL_INTERVAL` | 단위·수동 | ☐ |
-| P-03 | 복사한 텍스트가 이전 클립보드와 같아도 변경 횟수가 달라졌으면 성공. | 테스트: `selected_text_capture_accepts_text_that_matches_the_previous_clipboard` | 단위 | ☐ |
-| P-04 | 시간 초과, 빈 선택, 읽기 실패, 복사 시뮬레이션 실패 **모두에서** 이전 클립보드를 복원한다. | 테스트: `selected_text_capture_restores_clipboard_after_copy_timeout`, `…_after_empty_selection`, `…_after_read_failure`, `…_when_copy_shortcut_fails` | 단위 | ☐ |
-| P-05 | 복원 실패는 캡처 실패가 아니라 경고(`clipboard_restore_failed`)가 붙은 성공. | 테스트: `selected_text_is_returned_with_a_warning_when_restore_fails` | 단위 | ☐ |
-| P-06 | 백업이 실패해도(경고 `clipboard_backup_failed`) 캡처는 계속하고 복원을 시도한다. | 테스트: `selected_text_capture_attempts_restore_when_backup_fails` | 단위 | ☐ |
-| P-07 | 선택된 텍스트가 없으면 `no_selected_text`(공백뿐인 텍스트 포함). 끝의 `\r`/`\n`은 제거. | `trimmed_capture_text` | 단위 | ☐ |
-| P-08 | 자동화·접근성 오류는 `permission_missing`으로 바꾸고 손쉬운 사용 권한 안내를 붙인다. | `capture_selected_text_with` | 수동: 권한 없이 실행 | ☐ |
-| P-09 | 백업 대상은 텍스트와 PNG 이미지. 이미지는 PNG로 정규화해 보관·복원한다. 복원은 텍스트와 이미지를 한 항목으로 쓴다. | `write_clipboard_snapshot` | 수동: 이미지만/텍스트만/둘 다 있던 클립보드 | ☐ |
-| P-10 | 결과 Draft는 `note` 없음, `tags` 빈 배열. | `capture_selected_text_with` | 단위 | ☐ |
+| P-01 | 출처 수집이 선택 텍스트 읽기(접근성·클립보드 폴백 모두)보다 **먼저**. | 테스트: `selected_text_capture_collects_source_first_and_restores_text_and_image` | 단위(호출 순서) | ☐ |
+| P-02 | **(폴백 경로)** 복사 후 대기: 변경 횟수가 달라질 때까지 25 ms 폴링, 최대 700 ms. | `SELECTED_TEXT_COPY_TIMEOUT`, `POLL_INTERVAL` | 단위·수동 | ☐ |
+| P-03 | **(폴백 경로)** 복사한 텍스트가 이전 클립보드와 같아도 변경 횟수가 달라졌으면 성공. | 테스트: `selected_text_capture_accepts_text_that_matches_the_previous_clipboard` | 단위 | ☐ |
+| P-04 | **(폴백 경로)** 시간 초과, 빈 선택, 읽기 실패, 복사 시뮬레이션 실패 **모두에서** 이전 클립보드를 복원한다. 단, 변경 횟수가 그대로면(복사가 일어나지 않았으면) 클립보드를 다시 쓰지 않는다. 다시 쓰면 파일·RTF·여러 항목이 텍스트와 PNG로 줄어든다. | 테스트: `selected_text_capture_restores_clipboard_after_copy_timeout`, `…_after_empty_selection`, `…_after_read_failure`, `…_when_copy_shortcut_fails` | 단위 | ☐ |
+| P-05 | **(폴백 경로)** 복원 실패는 캡처 실패가 아니라 경고(`clipboard_restore_failed`)가 붙은 성공. | 테스트: `selected_text_is_returned_with_a_warning_when_restore_fails` | 단위 | ☐ |
+| P-06 | **(폴백 경로)** 백업이 실패해도(경고 `clipboard_backup_failed`) 캡처는 계속하고 복원을 시도한다. | 테스트: `selected_text_capture_attempts_restore_when_backup_fails` | 단위 | ☐ |
+| P-07 | 선택된 텍스트가 없으면 `no_selected_text`(공백뿐인 텍스트 포함). 끝의 `\r`/`\n`은 제거. | `trimmed_capture_text` | 단위 | ☑ |
+| P-08 | 자동화·접근성 오류는 `permission_missing`으로 바꾸고 손쉬운 사용 권한 안내를 붙인다. | `capture_selected_text_with` | 수동: 권한 없이 실행 | ☑ |
+| P-09 | **(폴백 경로)** 백업 대상은 텍스트와 PNG 이미지. 이미지는 PNG로 정규화해 보관·복원한다. 복원은 텍스트와 이미지를 한 항목으로 쓴다. | `write_clipboard_snapshot` | 수동: 이미지만/텍스트만/둘 다 있던 클립보드 | ☐ |
+| P-10 | 결과 Draft는 `note` 없음, `tags` 빈 배열. | `capture_selected_text_with` | 단위 | ☑ |
 | P-11 | `modal`이면 팝업, `instant`이면 텍스트만 즉시 저장(노트 `""`, 태그 없음). | `instant_save_payload_from_draft`, `handle_capture_draft` | 테스트: `instant_save_payload_uses_empty_note_and_tags` | ☐ |
-| P-12 | `instant`에서도 이미지·`mixed`는 팝업. 도구 막대 버튼 캡처는 `instant`와 무관하게 항상 팝업. | `handle_capture_draft`, `MainWindow.tsx` `captureSelectedText` | 수동 | ☐ |
+| P-12 | `instant`에서도 이미지·`mixed`는 팝업. (도구 막대 캡처 버튼은 D-05 결정으로 만들지 않는다.) | `handle_capture_draft` | 수동 | ☐ |
 | P-13 | 선택 텍스트 캡처 실패: 오류 보관 + 메인 창 표시 + 메뉴 막대 `Error`. 보관 오류는 메인 창에서 **한 번만** 소비. | `emit_selected_text_capture_event`, 테스트: `pending_capture_error_is_returned_once` | 단위·수동 | ☐ |
-| P-14 | 별도 팝업 창이 이미 열려 있으면 재사용하고 새 Draft로 교체. | `open_capture_window` | 수동: 팝업을 연 채 단축키 재입력 | ☐ |
+| P-14 | 별도 팝업 창이 이미 열려 있으면 단축키는 새 캡처를 하지 않고 열린 팝업을 앞으로 가져온다(결정 STA-47). 팝업이 열려 있으면 최전면 앱이 Notedrop 자신이라 선택 텍스트를 읽을 수 없기 때문이다. 레거시의 "새 Draft로 교체"와 다르다. | `open_capture_window` | 수동: 팝업을 연 채 단축키 재입력 | ☑ |
 | P-15 | 레거시는 클립보드 접근을 `swift -e` 서브프로세스로 했다. Swift 앱은 `NSPasteboard`를 직접 쓰므로 이 구조는 이어받지 않는다(같은 시맨틱만 유지). | `capture.rs` | — | ☐ |
+| P-16 | 접근성 읽기(`AXUIElementCreateApplication(최전면 앱)` → 포커스 요소 → `AXSelectedText`)가 비어 있지 않은 값을 주면 클립보드를 읽거나 쓰지 않고, `Cmd+C`도 보내지 않는다. 시스템 전역 요소는 쓰지 않는다(Chrome에서 실패). | [ax-probe.md](ax-probe.md) | 단위(가짜 호출 기록) + 수동: 메모·Chrome에서 캡처 전후 클립보드 `changeCount` 동일 | ☑ |
+| P-17 | 접근성 읽기가 실패하거나 값이 비거나 공백뿐이면 클립보드 폴백(P-02~P-09)으로 넘어가며, 그 자체로 `no_selected_text`로 보지 않는다. 최전면 앱이 Notedrop이면 접근성 읽기를 건너뛴다. | [ax-probe.md](ax-probe.md) | 단위 + 수동: Safari·터미널(Hyper)에서 폴백으로 저장 | ☑ |
 
 ## K. 클립보드 캡처 (메뉴 막대 `Save Clipboard...`)
 
@@ -88,8 +90,8 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 
 | ID | 동작 | 근거 | 확인 방법 | ☐ |
 | --- | --- | --- | --- | --- |
-| M-01 | 최전면 앱 이름과 앞 윈도우 제목. 제목을 못 얻어도 앱 이름은 유지. | `collect_source_metadata` | 수동 | ☐ |
-| M-02 | 앱이 `Google Chrome`일 때만 활성 탭 URL을 시도. 실패는 경고 `chrome_url_failed`, 앱·윈도우 실패는 `metadata_failed`. | 위와 같음 | 수동: 권한 거부 상태 | ☐ |
+| M-01 | 최전면 앱 이름과 앞 윈도우 제목. 제목을 못 얻어도 앱 이름은 유지. | `collect_source_metadata` | 수동 | ☑ |
+| M-02 | 앱이 `Google Chrome`일 때만 활성 탭 URL을 시도. 실패는 경고 `chrome_url_failed`, 앱·윈도우 실패는 `metadata_failed`. | 위와 같음 | 수동: 권한 거부 상태 | ☑ |
 | M-03 | 출처 수집 실패는 저장을 막지 않는다. 비어 있는 필드는 `null`로 저장. | PRD "Source metadata" | 단위 | ☐ |
 | M-04 | 파일 경로는 레거시가 수집하지 않는다. 신뢰할 수 있는 API가 없으면 비워 둔다. | `collect_source_metadata` | — | ☐ |
 
@@ -114,8 +116,8 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | L-06 | 사이드바 접힘은 Library↔Settings 전환과 창 크기 변경을 지나도 유지. 두 화면에서 사이드바 너비·모양이 같다. | `MainWindow.tsx`(STA-38) | 수동 | ☑ |
 | L-07 | 인스펙터 오버레이: 같은 토글 또는 Escape로 닫고 Drop 목록으로 포커스 복귀(D-13). 검색 편집 중 Escape는 검색을 먼저 닫는다. | `docs/design/sta30-font-book/README.md` | 수동 | ☑ |
 | L-08 | 검색을 닫아도(Escape) 검색어와 결과 유지. 지우기는 전체 복원. `Cmd+F`는 검색 포커스. | `design-system.md` | 수동 | ☑ |
-| L-09 | 새로고침은 디스크를 다시 스캔한다. 다른 곳(팝업 창 등)의 저장 신호를 받아도 다시 스캔한다. | `useLibraryRefreshEvent.ts` | 수동 | ☐ |
-| L-10 | 저장한 뒤 새 Drop을 선택한다. | `handleCaptureSaved` | 수동 | ☐ |
+| L-09 | 새로고침은 디스크를 다시 스캔한다. 다른 곳(팝업 창 등)의 저장 신호를 받아도 다시 스캔한다. | `useLibraryRefreshEvent.ts` | 수동 | ☑ |
+| L-10 | Save Popup에서 저장하면 Library가 새로고침되고 새 Drop이 선택된다. | `handleCaptureSaved` | 단위(`LibraryModel`) + 수동 | ☑ |
 | L-11 | 목록 우클릭 메뉴: 출처 열기(URL 있을 때), 내용 복사(텍스트일 때), Markdown 내보내기, 구분선, 휴지통. 우클릭하면 그 행을 먼저 선택. | `LibraryPane.tsx` | 수동 | ☐ |
 | L-12 | `Cmd+Backspace`는 삭제 확인 시트, 확인 후에만 휴지통으로 이동. | `LibraryPane.tsx`, `DeleteConfirmationSheet.tsx` | 수동 | ☐ |
 | L-13 | 출처 열기: URL이 비어 있으면 `source_url_missing`. 버튼은 URL이 없을 때 비활성. | `commands.rs` `open_source_url` | 단위·수동 | ☐ |
@@ -140,7 +142,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | I-01 | **한글 입력기 조합 중 Enter/쉼표로 태그를 등록하지 않는다.** | `DropDetailPane.tsx` `isComposingKey`, `SavePopover.tsx` | 수동: 한글로 태그 입력 후 Enter(조합 확정 Enter는 등록 아님) | ☑ |
 | I-02 | 태그 입력은 Enter 또는 쉼표로 등록, 여러 개를 쉼표로 한 번에. 이미 있는 태그는 안내(`tagAlreadyAdded`)하고 중복 추가 안 함. | `DropDetailPane.tsx` `registerTags` | 단위 | ☑ |
 | I-03 | 태그 칩 삭제 후 입력창에 포커스. | `removeTag` | 수동 | ☑ |
-| I-04 | 팝업 `Cmd+Enter` 저장(저장 중이면 무시), Escape 취소. 레거시는 `Cmd+Enter`에서 입력기 조합 여부를 검사하지 않는다(조합 중에도 동작). | `SavePopover.tsx` | 수동 | ☐ |
+| I-04 | 팝업 `Cmd+Enter` 저장(저장 중이면 무시), Escape 취소. 레거시는 `Cmd+Enter`에서 입력기 조합 여부를 검사하지 않는다(조합 중에도 동작). | `SavePopover.tsx` | 수동 | ☑ |
 | I-05 | 포커스 링은 컨트롤 모양을 따르는 둥근 링이고 레이아웃을 밀지 않는다. 컨테이너에는 링이 없다. 목록 행은 안쪽 링. | STA-38 CSS(실제 앱 미검증) | 수동 | ☐ |
 | I-06 | 제목 인라인 이름 변경: Return 확정, Escape 되돌림, 둘 다 포커스를 목록에 돌린다. | STA-38(실제 앱 미검증) | 수동 | ☑ |
 
@@ -172,7 +174,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | D-02 | 타입에 `mixed`가 있지만 **저장되는 Drop은 `text` 또는 `image`뿐**이다(`mixed` Draft는 팝업에서 하나를 고른다). 레거시는 `mixed` Drop을 목록에는 보여 주지만 본문과 이미지를 읽지 않는다(픽스처로 확인). | 최소한 레거시와 같게(깨지지 않고 목록에 표시). 본문·이미지 표시는 별도 결정. | | ☐ |
 | D-03 | 레거시 단축키 문자열은 Tauri 문법이다. 전체 허용 범위(예: 방향키, 펑션키, `CmdOrCtrl`)는 문서화되어 있지 않다. | 최소 `Shift/Cmd/Ctrl/Alt` + 문자·숫자·펑션키를 지원하고 나머지는 거부. | | ☐ |
 | D-04 | 이미지 Drop의 `image.png`가 아닌 다른 `imagePath`를 읽는 경로는 있으나(`drop.imagePath`) 쓰는 경로는 항상 `image.png`다. | 읽기는 `imagePath` 우선, 쓰기는 `image.png`. | | ☐ |
-| D-05 | 도구 막대 `선택한 텍스트 캡처`는 Notedrop이 최전면일 때 Notedrop 안의 선택 텍스트를 캡처한다(실제로는 다른 앱의 선택을 가져오지 못한다). | 의도인지 확인. 필요하면 직전 앱으로 포커스를 돌려 캡처. | | ☐ |
+| D-05 | 도구 막대 `선택한 텍스트 캡처`는 Notedrop이 최전면일 때 Notedrop 안의 선택 텍스트만 캡처한다(다른 앱의 선택을 가져오지 못한다). | 기능을 만들지 않는다. | **결정(STA-47): 제거.** 트리거는 전역 단축키뿐. 문구 `captureSelected`도 제거. | ☑ |
 | D-06 | 이름 바꾼 단축키가 다른 앱과 충돌해 등록에 실패할 때의 사용자 메시지(`shortcut_registration_failed`)가 레거시에서는 영어 원문이다. | 한국어 문구 추가. | | ☐ |
 | D-07 | 메인 창을 닫았을 때 앱이 종료되는지, 메뉴 막대에 남는지가 레거시에서 확인되지 않았다. 메뉴 막대와 전역 단축키의 목적상 남는 편이 자연스럽다. | 레거시 앱으로 직접 확인한 뒤 결정. | | ☐ |
 | D-08 | 로그인 시 자동 실행, Dock 아이콘 표시 여부는 정의되어 있지 않다. | 범위 밖. 필요하면 새 이슈. | | ☐ |
@@ -180,6 +182,24 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | D-10 | STA-38에서 도입한 SF Symbols 렌더링, 포커스 링, 제목 인라인 이름 변경, 목록 비포커스 선택 약화, 설정 화면 토글은 **실제 앱에서 확인되지 않았다.** | 레거시 앱에서 확인하지 말고 Swift 구현에서 기준(서체관리자)으로 직접 확인. | | ☐ |
 | D-11 | 라이트 테마의 도구 막대와 960 pt 너비 실화면 확인이 남아 있다. | Swift 구현에서 확인. | | ☐ |
 | D-12 | 문구 `shortcutFormatHint`가 "Tauri 형식"이라고 안내한다. 저장 문자열은 호환을 위해 같은 형식(`Shift+Cmd+K`)을 쓰지만 사용자에게 구현 용어를 보이면 안 된다. | 문구에서 Tauri를 빼고 형식 예시만 안내. | | ☐ |
+
+## 4단계 수동 확인 기록 (STA-47, 2026-10-08)
+
+실제 앱(`make-app.sh debug` 번들, 저장 폴더·설정 파일은 `/tmp`로 분리)에서 확인한 범위입니다. 일부만 확인한 항목은 ☐로 두었습니다.
+
+| 확인한 내용 | 결과 | 관련 항목 |
+| --- | --- | --- |
+| 메모에서 선택 후 `Shift+Cmd+C` → 팝업 → 노트·태그 입력 → 저장 | 정상. `drop.json` 키 집합과 `null` 규칙, `content.md`, `note.md`, `recentTags` 갱신, 출처(앱·윈도우 제목) 확인 | P-10, M-01, S-01, I-02 |
+| Safari 본문 선택(접근성 읽기 불가 → 폴백) → 팝업에 선택 텍스트 → 저장·취소 후 붙여넣기 | 정상. 캡처 전 클립보드 텍스트가 그대로 복원됨 | P-17, P-04(성공 경로), P-09(텍스트만) |
+| 권한을 초기화한 뒤 다시 허용 | 같은 번들 ID의 레거시 Tauri 앱이 있으면 이전 허용 항목과 새 빌드 서명이 맞지 않아 권한이 없다고 나올 수 있음. `tccutil reset Accessibility app.notedrop.dev` 후 재허용 | C-12, A-01 |
+
+이어서 사용자가 목록의 나머지 수동 항목(메모에서 클립보드 불변, Chrome URL, 선택 없음, 권한 해제, 팝업이 열린 채 단축키,
+한글 조합 중 Enter, 터미널 폴백)이 모두 동작한다고 보고했습니다. 항목별 출력은 남기지 않았고 사용자 보고에 근거합니다.
+
+**범위 밖으로 확인된 것**: 이미지, 텍스트와 이미지가 함께 있는 클립보드의 **저장**은 4단계 범위가 아닙니다. 선택 텍스트 캡처는
+텍스트 Drop만 만들고(스펙 3.1), 이미지와 `mixed`는 클립보드 캡처(스펙 3.2, K-01~K-06, 메뉴 막대 `Save Clipboard...`)와 팝업의
+이미지 미리보기·유형 선택이 필요해 5단계에서 구현합니다(STA-47에서 확정). 이미지가 들어 있던 클립보드를 텍스트 캡처 뒤에
+복원하는 동작(P-09)은 이번에 따로 확인하지 않았습니다.
 
 ## 호환성 검증 절차
 

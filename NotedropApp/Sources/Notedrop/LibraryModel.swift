@@ -39,6 +39,8 @@ final class LibraryModel {
     var alertMessage: String?
     /// The drop waiting for the "Move to Trash?" confirmation.
     var pendingDeleteID: String?
+    /// A capture failure waiting for the main window; shown once (spec 3.3, checklist P-13).
+    let pendingCapture = PendingCaptureError()
 
     init(
         storageRoot: @escaping @Sendable () throws -> URL = LibraryModel.defaultStorageRoot,
@@ -111,8 +113,9 @@ final class LibraryModel {
 
     // MARK: Actions
 
-    /// Re-scans the storage folder (initial load, refresh, and "saved elsewhere" signals).
-    func reload() async {
+    /// Re-scans the storage folder (initial load, refresh, and saves from the Save Popup).
+    /// With `selecting`, that drop becomes the selection afterwards, clearing any filter that hides it (checklist L-10).
+    func reload(selecting id: String? = nil) async {
         isLoading = true
         defer { isLoading = false }
         let root = storageRoot
@@ -130,7 +133,21 @@ final class LibraryModel {
             loadError = (error as? NotedropError)?.code ?? error.localizedDescription
         }
         reselect()
+        if let id, drops.contains(where: { $0.id == id }) {
+            if !filtered.contains(where: { $0.id == id }) {
+                search = ""
+                clearFilters()
+                collection = .all
+            }
+            selectedID = id
+        }
         editor.show(selectedDrop)
+    }
+
+    /// Shows the stored capture failure, once, as `{pendingFailed}: {message}`.
+    func presentPendingCaptureError() {
+        guard let error = pendingCapture.take() else { return }
+        alertMessage = "\(L10n.t("pendingFailed")): \(ErrorText.message(for: error))"
     }
 
     /// A saved edit replaces the drop in the list; the selection stays on it.

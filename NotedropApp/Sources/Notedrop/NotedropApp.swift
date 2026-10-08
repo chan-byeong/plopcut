@@ -3,10 +3,15 @@ import SwiftUI
 
 @main
 struct NotedropApp: App {
-    @State private var model = LibraryModel(settings: LibraryModel.defaultSettings)
+    @State private var model: LibraryModel
+    @State private var capture: CaptureRuntime
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 
     init() {
+        let settings = LibraryModel.defaultSettings
+        let model = LibraryModel(settings: settings)
+        _model = State(initialValue: model)
+        _capture = State(initialValue: CaptureRuntime(model: model, settings: settings, colorScheme: Self.devColorScheme))
         // settings.json owns the column widths (spec L-15). AppKit's own split autosave would restore widths that a
         // narrow window squeezed, so drop it before the window is built.
         let defaults = UserDefaults.standard
@@ -16,7 +21,7 @@ struct NotedropApp: App {
     }
 
     /// `NOTEDROP_APPEARANCE=light|dark` forces a theme for screenshots until the theme setting lands (stage 5).
-    private static var devColorScheme: ColorScheme? {
+    static var devColorScheme: ColorScheme? {
         switch ProcessInfo.processInfo.environment["NOTEDROP_APPEARANCE"] {
         case "light": .light
         case "dark": .dark
@@ -25,8 +30,9 @@ struct NotedropApp: App {
     }
 
     var body: some Scene {
-        WindowGroup {
+        WindowGroup(id: "main") {
             MainWindow(model: model)
+                .modifier(OpenMainWindowBinding(runtime: capture))
                 .frame(minWidth: 960, minHeight: 640)
                 .preferredColorScheme(Self.devColorScheme)
                 .task {
@@ -34,6 +40,8 @@ struct NotedropApp: App {
                     delegate.drain = { [model] in await model.editor.drain() }
                     delegate.showSaveFailure = { [model] in model.alertMessage = L10n.t("saveFailed") }
                     delegate.hasUnsavedEdits = { [model] in model.editor.hasUnsavedEdits }
+                    capture.start()
+                    model.presentPendingCaptureError()
                     await model.reload()
                 }
         }
@@ -52,6 +60,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// When the failure warning was shown. Asking to quit again soon after quits anyway; an old warning does not count.
     private var warnedAt: Date?
     private static let warningWindow: TimeInterval = 15
+
+    /// The global shortcut must keep working with the main window closed (spec 2.1). D-07 is decided in stage 5.
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard let drain, hasUnsavedEdits?() == true else { return .terminateNow }

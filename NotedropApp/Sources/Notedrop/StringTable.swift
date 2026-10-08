@@ -15,7 +15,6 @@ enum StringTable {
         "settings": (en: "Settings", ko: "설정"),
         "refreshLibrary": (en: "Refresh library", ko: "라이브러리 새로고침"),
         "capture": (en: "Capture", ko: "캡처"),
-        "captureSelected": (en: "Capture selected text", ko: "선택한 텍스트 캡처"),
         "openSettings": (en: "Open settings", ko: "설정 열기"),
         "openLibrary": (en: "Open library", ko: "라이브러리 열기"),
         "showSidebar": (en: "Show sidebar", ko: "사이드바 표시"),

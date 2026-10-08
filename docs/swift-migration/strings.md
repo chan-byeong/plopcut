@@ -19,7 +19,6 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39)
 | `settings` | Settings | 설정 |
 | `refreshLibrary` | Refresh library | 라이브러리 새로고침 |
 | `capture` | Capture | 캡처 |
-| `captureSelected` | Capture selected text | 선택한 텍스트 캡처 |
 | `openSettings` | Open settings | 설정 열기 |
 | `openLibrary` | Open library | 라이브러리 열기 |
 | `showSidebar` | Show sidebar | 사이드바 표시 |
