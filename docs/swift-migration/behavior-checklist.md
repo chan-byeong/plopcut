@@ -162,7 +162,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | N-01 | 시스템 언어가 `ko`로 시작하면 한국어, 아니면 영어. | `i18n.tsx` `resolveLocale` | 단위 | ☐ |
 | N-02 | 두 언어의 키 집합이 같다(한쪽에만 있는 문구 없음). | `i18n.tsx` `Dictionary` 타입 | 단위 | ☐ |
 | N-03 | 알려진 오류 코드는 지역화한 문구로, 그 밖의 코드 오류는 원본 메시지로, 문자열 오류는 그대로, 그 밖에는 `defaultError`. | `translateError` | 단위 | ☐ |
-| N-04 | 권한 상세 문구는 항목×상태(허용/없음)로 키가 있고, `알 수 없음`은 `permissionUnknownDetail`. | `permissionDetail` | 단위 | ☐ |
+| N-04 | 권한 상세 문구는 항목×상태(허용/없음)로 키가 있고, `알 수 없음`은 `permissionUnknownDetail`. | `permissionDetail` | 단위 | ☑ (`PermissionsModelTests.detailKeysFollowItemAndStatusAndUnknownIsShared`, `everyDetailAndStatusKeyHasBothLanguages`) |
 
 ## D. 결정이 필요한 차이와 알려진 공백
 
@@ -268,3 +268,11 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 메뉴 막대 `Save Clipboard...`로 텍스트 클립보드를 캡처한다. K-01, K-02, K-03, K-05는 단위 테스트(`ClipboardCaptureTests`)로 확인함. K-04(PNG/TIFF 변환)는 이미지 저장을 다루는 STA-57에서 확인한다. 지금은 이미지만 있는 클립보드를 `clipboard_image_unsupported`로 알리고, 텍스트와 이미지가 함께 있으면 텍스트만 저장한다(경고 없음).
 
 수동 확인이 남음(실제 앱): K-06(실패 시 `Error`만 보이고 메인 창이 뜨지 않음), 메뉴 항목에서 팝업이 열리고 저장되는지, Notedrop이 앞일 때 출처가 비는지.
+
+## 5단계 권한 상태 기록 (STA-54)
+
+설정 화면에 손쉬운 사용·클립보드·자동화 세 항목의 상태(허용/권한 필요/알 수 없음), 설명, 다음 행동을 보여 준다. 손쉬운 사용이 없으면 `시스템 설정 열기` 버튼이 시스템 설정의 손쉬운 사용 화면으로 이동한다. 자동화는 항상 `알 수 없음`이고 Chrome URL을 처음 읽을 때 macOS가 묻는다는 안내(`permissionAutomationNote`)를 붙인다. 앱이 다시 활성화될 때(`didBecomeActive`) 상태를 다시 읽는다.
+
+단위 테스트(`PermissionsModelTests`, 8개)로 확인함: 손쉬운 사용·클립보드 판정(A-01, A-02), 자동화 항상 알 수 없음(A-03), 항목×상태 문구 키와 두 언어 존재(N-04), 시스템 설정 버튼은 손쉬운 사용이 없을 때만, 갱신 시 변경 반영.
+
+수동 확인이 남음(실제 앱): A-01~A-04 모두. 손쉬운 사용을 켜고 끈 뒤 앱으로 돌아오면 화면이 갱신되는지, 버튼이 시스템 설정 손쉬운 사용 화면을 여는지, 권한이 없어도 앱이 종료되지 않는지. 클립보드는 `NSPasteboard`에 권한 조회 API가 없어 타입 목록을 읽을 수 있으면 허용, 읽을 수 없으면 알 수 없음으로 표시한다.

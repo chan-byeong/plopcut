@@ -123,6 +123,8 @@ enum StringTable {
         "permissionAutomationGranted": (en: "Chrome source URLs can be collected during capture.", ko: "캡처 중 Chrome 출처 URL을 가져올 수 있습니다."),
         "permissionAutomationMissing": (en: "Allow browser automation when macOS asks for access.", ko: "macOS가 요청할 때 브라우저 자동화를 허용하세요."),
         "permissionUnknownDetail": (en: "Notedrop could not determine this permission status.", ko: "이 권한 상태를 확인하지 못했습니다."),
+        "permissionAutomationNote": (en: "macOS asks for access the first time Notedrop reads the Chrome URL.", ko: "Notedrop이 Chrome URL을 처음 읽을 때 macOS가 접근을 묻습니다."),
+        "openSystemSettings": (en: "Open System Settings", ko: "시스템 설정 열기"),
         "saveText": (en: "Save Text Drop", ko: "텍스트 드롭 저장"),
         "saveImage": (en: "Save Image Drop", ko: "이미지 드롭 저장"),
         "unknownApp": (en: "Unknown app", ko: "알 수 없는 앱"),
