@@ -35,12 +35,12 @@ final class CaptureRuntime {
         let gate = CaptureGate()
         coordinator = CaptureCoordinator(
             capture: { try await Self.captureSelectedText() },
-            present: { [weak self] draft in Task { await self?.router.route(draft) } },
+            present: { [weak self] draft in await self?.router.route(draft) },
             failed: { [weak self] in self?.report($0) }, gate: gate)
 
         clipboardCoordinator = CaptureCoordinator(
             capture: { try await Self.captureClipboard() },
-            present: { [weak self] draft in Task { await self?.router.route(draft) } },
+            present: { [weak self] draft in await self?.router.route(draft) },
             failed: { [weak self] in self?.reportQuietly($0) }, gate: gate)
 
         do {
