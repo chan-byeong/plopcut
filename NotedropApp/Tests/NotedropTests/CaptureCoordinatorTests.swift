@@ -41,6 +41,32 @@ import Testing
         #expect(await counter.value == 1)
     }
 
+    @Test func coordinatorsSharingAGateDoNotRunTogether() async {
+        let open = Gate()
+        let counter = SaveCounter()
+        let shared = CaptureGate()
+        let draft = CaptureDraft(type: .text, title: "t", text: "x")
+        let selection = CaptureCoordinator(
+            capture: {
+                await counter.increment()
+                await open.wait()
+                return draft
+            }, present: { _ in }, failed: { _ in }, gate: shared)
+        let clipboard = CaptureCoordinator(
+            capture: {
+                await counter.increment()
+                return draft
+            }, present: { _ in }, failed: { _ in }, gate: shared)
+        let first = Task { await selection.trigger() }
+        while await counter.value == 0 { await Task.yield() }
+        await clipboard.trigger()
+        #expect(await counter.value == 1)
+        await open.open()
+        await first.value
+        await clipboard.trigger()
+        #expect(await counter.value == 2)
+    }
+
     @Test func pendingErrorIsReturnedOnce() {
         let pending = PendingCaptureError()
         pending.store(NotedropError("permission_missing"))

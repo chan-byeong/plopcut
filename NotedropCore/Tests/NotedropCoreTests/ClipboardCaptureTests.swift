@@ -48,7 +48,10 @@ private let png = Data([0x89, 0x50, 0x4E, 0x47])
     @Test func rejectsContentChangedDuringRead() async {
         let clipboard = StubClipboard(ClipboardSnapshot(text: "hello"))
         clipboard.bumpDuringRead = true
-        do { _ = try await capture(clipboard) } catch let error as NotedropError {
+        do {
+            _ = try await capture(clipboard)
+            Issue.record("expected clipboard_changed")
+        } catch let error as NotedropError {
             #expect(error.code == "clipboard_changed")
         } catch { Issue.record("unexpected \(error)") }
     }

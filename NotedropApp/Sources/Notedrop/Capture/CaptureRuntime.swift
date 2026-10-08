@@ -31,15 +31,16 @@ final class CaptureRuntime {
             openMainWindow: { [weak self] in self?.showMainWindow() },
             saveClipboard: { [weak self] in self?.saveClipboard() })
 
+        let gate = CaptureGate()
         coordinator = CaptureCoordinator(
             capture: { try await Self.captureSelectedText() },
             present: { [weak self] in self?.present($0) },
-            failed: { [weak self] in self?.report($0) })
+            failed: { [weak self] in self?.report($0) }, gate: gate)
 
         clipboardCoordinator = CaptureCoordinator(
             capture: { try await Self.captureClipboard() },
             present: { [weak self] in self?.present($0) },
-            failed: { [weak self] in self?.reportQuietly($0) })
+            failed: { [weak self] in self?.reportQuietly($0) }, gate: gate)
 
         let hotKey = GlobalHotKey { [weak self] in
             guard let self, let coordinator else { return }
