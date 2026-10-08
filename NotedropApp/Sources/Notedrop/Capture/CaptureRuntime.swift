@@ -73,7 +73,7 @@ final class CaptureRuntime {
 
     func showMainWindow() {
         NSApp.activate(ignoringOtherApps: true)
-        if let window = NSApp.windows.first(where: { !($0 is NSPanel) && $0.canBecomeMain }) {
+        if let window = NSApp.windows.first(where: { $0.identifier == MainWindowTag.identifier }) {
             if window.isMiniaturized { window.deminiaturize(nil) }
             window.makeKeyAndOrderFront(nil)
         } else {
@@ -120,6 +120,23 @@ struct OpenMainWindowBinding: ViewModifier {
     let runtime: CaptureRuntime
 
     func body(content: Content) -> some View {
-        content.onAppear { runtime.openMainWindow = { openWindow(id: "main") } }
+        content
+            .background(MainWindowTag())
+            .onAppear { runtime.openMainWindow = { openWindow(id: "main") } }
+    }
+}
+
+/// Marks the hosting window so it can be found by identifier, not by "first normal window".
+struct MainWindowTag: NSViewRepresentable {
+    static let identifier = NSUserInterfaceItemIdentifier("notedrop.main")
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async { view.window?.identifier = Self.identifier }
+        return view
+    }
+
+    func updateNSView(_ view: NSView, context: Context) {
+        if view.window?.identifier != Self.identifier { view.window?.identifier = Self.identifier }
     }
 }
