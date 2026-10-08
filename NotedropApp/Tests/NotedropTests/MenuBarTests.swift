@@ -5,6 +5,7 @@ import Testing
 @Suite struct MenuBarTests {
     @Test func openLibraryIdIsRouted() {
         #expect(MenuBarAction(id: "open-library") == .openLibrary)
+        #expect(MenuBarAction(id: "save-clipboard") == .saveClipboard)
     }
 
     @Test func unknownIdsAreIgnored() {

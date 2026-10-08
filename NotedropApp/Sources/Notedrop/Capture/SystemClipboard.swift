@@ -7,7 +7,8 @@ struct SystemClipboard: ClipboardAccess {
 
     func read() throws -> ClipboardSnapshot {
         let board = NSPasteboard.general
-        return ClipboardSnapshot(text: board.string(forType: .string), png: Self.pngData(from: board))
+        let image = Self.image(from: board)
+        return ClipboardSnapshot(text: board.string(forType: .string), png: image.png, imageUnreadable: image.unreadable)
     }
 
     /// Text and PNG go back as one pasteboard item (checklist P-09).
@@ -21,10 +22,13 @@ struct SystemClipboard: ClipboardAccess {
         guard board.writeObjects([item]) else { throw NotedropError("clipboard_unavailable") }
     }
 
-    /// PNG as is, or TIFF converted to PNG (checklist K-04).
-    private static func pngData(from board: NSPasteboard) -> Data? {
-        if let png = board.data(forType: .png) { return png }
-        guard let tiff = board.data(forType: .tiff), let rep = NSBitmapImageRep(data: tiff) else { return nil }
-        return rep.representation(using: .png, properties: [:])
+    /// PNG as is, or TIFF converted to PNG (checklist K-04). `unreadable` means an image is there but can't be used (K-03).
+    private static func image(from board: NSPasteboard) -> (png: Data?, unreadable: Bool) {
+        if let png = board.data(forType: .png) { return (png, false) }
+        guard let tiff = board.data(forType: .tiff) else { return (nil, false) }
+        guard let rep = NSBitmapImageRep(data: tiff), let png = rep.representation(using: .png, properties: [:]) else {
+            return (nil, true)
+        }
+        return (png, false)
     }
 }

@@ -1,7 +1,8 @@
 import Foundation
 
-/// Menu bar items the app routes. Unknown ids are ignored (checklist T-02). `save-clipboard` arrives with STA-56.
+/// Menu bar items the app routes. Unknown ids are ignored (checklist T-02).
 enum MenuBarAction: String {
+    case saveClipboard = "save-clipboard"
     case openLibrary = "open-library"
 
     init?(id: String) { self.init(rawValue: id) }
