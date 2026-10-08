@@ -7,15 +7,23 @@ import NotedropCore
 struct FrontmostSourceCollector: SourceCollector {
     static let chromeBundleID = "com.google.Chrome"
 
-    func collect() async -> SourceResult {
-        guard let app = NSWorkspace.shared.frontmostApplication, let name = app.localizedName else {
+    /// The app that is frontmost right now. Called once per capture; everything after works on the result.
+    static func currentTarget() -> CaptureTarget? {
+        guard let app = NSWorkspace.shared.frontmostApplication else { return nil }
+        // 이름이 없어도 pid가 있으면 AX 읽기는 가능하므로 대상을 버리지 않는다.
+        let name = app.localizedName ?? app.bundleIdentifier ?? ""
+        return CaptureTarget(processID: app.processIdentifier, name: name, bundleID: app.bundleIdentifier)
+    }
+
+    func collect(from target: CaptureTarget?) async -> SourceResult {
+        guard let target else {
             return SourceResult(warnings: [CaptureWarning("metadata_failed")])
         }
-        var source = DropSource(appName: name)
+        var source = DropSource(appName: target.name)
         var warnings: [CaptureWarning] = []
 
-        source.windowTitle = Self.windowTitle(of: app)
-        if app.bundleIdentifier == Self.chromeBundleID {
+        source.windowTitle = Self.windowTitle(ofProcess: target.processID)
+        if target.bundleID == Self.chromeBundleID {
             if let url = await Self.chromeURL() {
                 source.url = url
             } else {
@@ -25,9 +33,9 @@ struct FrontmostSourceCollector: SourceCollector {
         return SourceResult(source: source, warnings: warnings)
     }
 
-    private static func windowTitle(of app: NSRunningApplication) -> String? {
+    private static func windowTitle(ofProcess processID: Int32) -> String? {
         guard AXIsProcessTrusted() else { return nil }
-        let element = AXUIElementCreateApplication(app.processIdentifier)
+        let element = AXUIElementCreateApplication(processID)
         AXUIElementSetMessagingTimeout(element, AXSelectedTextReader.timeout)
         var window: CFTypeRef?
         guard AXUIElementCopyAttributeValue(element, kAXFocusedWindowAttribute as CFString, &window) == .success,

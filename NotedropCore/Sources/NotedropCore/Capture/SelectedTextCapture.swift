@@ -10,26 +10,31 @@ public struct SelectedTextCapture: Sendable {
     private let clipboard: any ClipboardAccess
     private let sender: any CopyShortcutSender
     private let collector: any SourceCollector
+    private let frontmost: @Sendable () -> CaptureTarget?
     private let sleep: @Sendable (Duration) async -> Void
 
     public init(
         reader: any SelectedTextReader, clipboard: any ClipboardAccess, sender: any CopyShortcutSender,
-        collector: any SourceCollector, sleep: @escaping @Sendable (Duration) async -> Void
+        collector: any SourceCollector, frontmost: @escaping @Sendable () -> CaptureTarget?,
+        sleep: @escaping @Sendable (Duration) async -> Void
     ) {
         self.reader = reader
         self.clipboard = clipboard
         self.sender = sender
         self.collector = collector
+        self.frontmost = frontmost
         self.sleep = sleep
     }
 
     public func capture() async throws -> CaptureDraft {
-        // The frontmost app at this moment is the origin, so source goes first (checklist P-01).
-        let sourceResult = await collector.collect()
+        // The frontmost app at this moment is the origin. It is pinned once so source and selection can't come from
+        // different apps if focus moves mid-capture; source goes first (checklist P-01).
+        let target = frontmost()
+        let sourceResult = await collector.collect(from: target)
         var warnings = sourceResult.warnings
 
         let raw: String
-        if let selected = reader.readSelection(), !Self.isBlank(selected) {
+        if let selected = reader.readSelection(in: target), !Self.isBlank(selected) {
             raw = selected
         } else {
             let fallback = try await readThroughClipboard()

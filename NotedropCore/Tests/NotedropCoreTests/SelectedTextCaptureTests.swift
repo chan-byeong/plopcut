@@ -14,13 +14,19 @@ final class CallLog: @unchecked Sendable {
 struct FakeReader: SelectedTextReader {
     let log: CallLog
     var value: String?
-    func readSelection() -> String? { log.add("ax.read"); return value }
+    func readSelection(in target: CaptureTarget?) -> String? {
+        log.add("ax.read:\(target?.name ?? "none")")
+        return value
+    }
 }
 
 struct FakeCollector: SourceCollector {
     let log: CallLog
     var result = SourceResult(source: DropSource(appName: "Notes", windowTitle: "Ideas"), warnings: [])
-    func collect() async -> SourceResult { log.add("source.collect"); return result }
+    func collect(from target: CaptureTarget?) async -> SourceResult {
+        log.add("source.collect:\(target?.name ?? "none")")
+        return result
+    }
 }
 
 struct FakeSender: CopyShortcutSender {
@@ -90,14 +96,43 @@ final class PollCounter: @unchecked Sendable {
 @Suite struct SelectedTextCaptureTests {
     private func makeCapture(
         log: CallLog, reader: String? = nil, clipboard: FakeClipboard, sender: FakeSender? = nil,
-        collector: FakeCollector? = nil, counter: PollCounter = PollCounter()
+        collector: FakeCollector? = nil, counter: PollCounter = PollCounter(),
+        frontmost: @escaping @Sendable () -> CaptureTarget? = { CaptureTarget(processID: 1, name: "Notes") }
     ) -> SelectedTextCapture {
         SelectedTextCapture(
             reader: FakeReader(log: log, value: reader),
             clipboard: clipboard,
             sender: sender ?? FakeSender(log: log),
             collector: collector ?? FakeCollector(log: log),
+            frontmost: frontmost,
             sleep: { _ in counter.tick() })
+    }
+
+    // MARK: one pinned app (STA-50)
+
+    @Test func frontmostAppIsResolvedOnceAndSharedByCollectorAndReader() async throws {
+        let log = CallLog()
+        let resolved = CallLog()
+        // Every resolution would return a different app, as if focus moved during the capture.
+        let capture = makeCapture(
+            log: log, reader: "picked", clipboard: FakeClipboard(log: log),
+            frontmost: {
+                resolved.add("resolve")
+                return CaptureTarget(processID: Int32(resolved.all.count), name: "App\(resolved.all.count)")
+            })
+        _ = try await capture.capture()
+        #expect(resolved.all.count == 1)
+        #expect(log.all == ["source.collect:App1", "ax.read:App1"])
+    }
+
+    @Test func noFrontmostAppStillReachesTheFallback() async throws {
+        let log = CallLog()
+        let clipboard = FakeClipboard(log: log, snapshot: ClipboardSnapshot(text: "before", png: nil))
+        let sender = FakeSender(log: log) { clipboard.simulateCopy("copied") }
+        let capture = makeCapture(log: log, clipboard: clipboard, sender: sender, frontmost: { nil })
+        let draft = try await capture.capture()
+        #expect(draft.text == "copied")
+        #expect(log.all.prefix(2) == ["source.collect:none", "ax.read:none"])
     }
 
     // MARK: accessibility path (P-16)
@@ -108,7 +143,7 @@ final class PollCounter: @unchecked Sendable {
         let capture = makeCapture(log: log, reader: "picked\r\n", clipboard: clipboard)
         let draft = try await capture.capture()
         #expect(draft.text == "picked")
-        #expect(log.all == ["source.collect", "ax.read"])
+        #expect(log.all == ["source.collect:Notes", "ax.read:Notes"])
         #expect(clipboard.current.text == "before")
     }
 
@@ -118,8 +153,8 @@ final class PollCounter: @unchecked Sendable {
         let sender = FakeSender(log: log) { clipboard.simulateCopy("copied") }
         let capture = makeCapture(log: log, reader: nil, clipboard: clipboard, sender: sender)
         _ = try await capture.capture()
-        #expect(log.all.first == "source.collect")
-        #expect(log.all.firstIndex(of: "ax.read")! < log.all.firstIndex(of: "clipboard.read")!)
+        #expect(log.all.first == "source.collect:Notes")
+        #expect(log.all.firstIndex(of: "ax.read:Notes")! < log.all.firstIndex(of: "clipboard.read")!)
     }
 
     // MARK: fallback trigger (P-17)
