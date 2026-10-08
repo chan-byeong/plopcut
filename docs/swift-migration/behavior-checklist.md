@@ -31,7 +31,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | S-14 | 이미지 Drop도 제목·노트·태그를 수정할 수 있고 이미지 파일은 그대로 둔다. | 테스트: `update_image_drop_updates_metadata_note_tags_and_keeps_image` | 단위 | ☑ |
 | S-15 | Drop ID에 `/`, `\`, `..`가 있거나 비면 `invalid_drop_id`, 폴더가 없으면 `drop_not_found`. | `drop_folder_path` | 단위 | ☑ |
 | S-16 | 삭제는 폴더 전체를 휴지통으로 이동. 이동 후에도 폴더가 있으면 `delete_failed`이고 목록에 남는다. | 테스트: `delete_helper_removes_drop_from_scan_when_trash_mover_succeeds`, `delete_helper_leaves_drop_when_trash_mover_fails` | 단위(이동 동작 주입) + 수동 | ☑ |
-| S-17 | 저장 폴더 설정을 바꾸면 스캔과 저장이 새 폴더를 쓴다. | 테스트: `save_and_scan_use_configured_storage_root` | 단위 | ☑ |
+| S-17 | 저장 폴더 설정을 바꾸면 스캔과 저장이 새 폴더를 쓴다. | 테스트: `save_and_scan_use_configured_storage_root`, Swift `scanAndSaveUseTheFolderThatSettingsPointsAt`, `choosingAFolderSavesItKeepsOtherFieldsAndReloads` | 단위 | ☑ |
 | S-18 | 읽는 중 `content.md`/이미지/`note.md` 하나가 실패해도 Drop은 남기고 해당 경고만 추가. | `read_drop_folder` | 단위 | ☑ |
 | S-19 | `drops/`가 없으면 빈 목록(오류 아님). 저장 시에는 `drops/`를 만든다. | `scan_drops_from_root` | 단위 | ☑ |
 | S-20 | 이미지 Drop은 `imagePath`가 없어도 `image.png`를 기본으로 본다. | `read_drop_folder` | 픽스처: `legacy-minimal-image` | ☑ |
@@ -268,3 +268,15 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 메뉴 막대 `Save Clipboard...`로 텍스트 클립보드를 캡처한다. K-01, K-02, K-03, K-05는 단위 테스트(`ClipboardCaptureTests`)로 확인함. K-04(PNG/TIFF 변환)는 이미지 저장을 다루는 STA-57에서 확인한다. 지금은 이미지만 있는 클립보드를 `clipboard_image_unsupported`로 알리고, 텍스트와 이미지가 함께 있으면 텍스트만 저장한다(경고 없음).
 
 수동 확인이 남음(실제 앱): K-06(실패 시 `Error`만 보이고 메인 창이 뜨지 않음), 메뉴 항목에서 팝업이 열리고 저장되는지, Notedrop이 앞일 때 출처가 비는지.
+
+## 5단계 저장 폴더와 첫 실행 기록 (STA-53)
+
+설정 화면에 저장 폴더 경로와 `저장 폴더 선택` 버튼이 있다. 폴더를 바꾸면 `storageFolderPath`만 바뀌고 기존 Drop은 옮기지 않으며, 이후 스캔과 저장은 설정을 매번 읽어 새 폴더를 쓴다(S-17). 바꾸기 직전에 편집 중인 내용을 먼저 저장하고, 바꾼 뒤 Library를 다시 스캔한다. 선택을 취소하면 `folderCancelled` 안내가 나온다.
+
+첫 실행(`hasCompletedFirstRun == false`)에는 닫을 수 없는 모달이 뜬다. `기본 폴더 사용`은 폴더를 만들고 `folderConfirmed`, `폴더 선택`은 선택한 폴더를 저장하고 `folderSet`을 보인 뒤 `hasCompletedFirstRun = true`로 저장한다. 선택을 취소하거나 폴더를 쓸 수 없으면 모달이 남는다.
+
+폴더 판정(`StorageFolderCheck`): 폴더가 있으면 디렉터리이고 쓸 수 있어야 한다. 없는 폴더는 가장 가까운 상위 폴더가 쓸 수 있을 때만 통과한다(저장 때 `drops/`가 만들어지므로). 통과하지 못하면 설정 화면에 `storageFailure`를 보이고, 저장 팝업의 저장도 같은 판정으로 막는다.
+
+개발용 `NOTEDROP_STORAGE_FOLDER`는 설정보다 우선한다. 폴더 변경을 확인하려면 이 변수 없이 `NOTEDROP_SETTINGS_FILE`만 지정해 실행한다. `NOTEDROP_SETTINGS_FILE`은 이제 저장 폴더 해석에도 쓰인다.
+
+단위 테스트(`StorageFolderCheckTests` 7개, `StorageFolderModelTests`·`StorageRootResolutionTests` 14개)로 확인함. 수동 확인이 남음(실제 앱): 폴더 선택 대화상자, 선택 취소 안내, 빈 설정 파일에서 첫 실행 모달(기본 폴더/폴더 선택/취소 시 모달 유지), 폴더 변경 후 Library와 새 저장이 새 폴더를 쓰는지, 쓸 수 없는 폴더의 안내.

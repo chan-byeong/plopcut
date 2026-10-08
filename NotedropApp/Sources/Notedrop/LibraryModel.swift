@@ -59,17 +59,28 @@ final class LibraryModel {
 
     /// `NOTEDROP_SETTINGS_FILE` keeps dev runs and screenshots away from the user's real settings.json.
     static var defaultSettings: SettingsStore {
-        if let override = ProcessInfo.processInfo.environment["NOTEDROP_SETTINGS_FILE"] {
+        settingsStore(environment: ProcessInfo.processInfo.environment)
+    }
+
+    nonisolated static func settingsStore(environment: [String: String]) -> SettingsStore {
+        if let override = environment["NOTEDROP_SETTINGS_FILE"] {
             return SettingsStore(fileURL: URL(fileURLWithPath: override))
         }
         return SettingsStore()
     }
 
-    static let defaultStorageRoot: @Sendable () throws -> URL = {
-        if let override = ProcessInfo.processInfo.environment["NOTEDROP_STORAGE_FOLDER"] {
+    /// `NOTEDROP_STORAGE_FOLDER` wins over settings.json (dev and tests); otherwise the folder is read on every use,
+    /// so a folder changed in Settings is followed by the next scan and save (S-17).
+    nonisolated static func resolveStorageRoot(settings: SettingsStore, environment: [String: String]) throws -> URL {
+        if let override = environment["NOTEDROP_STORAGE_FOLDER"] {
             return URL(fileURLWithPath: override, isDirectory: true)
         }
-        return URL(fileURLWithPath: try SettingsStore().read().storageFolderPath, isDirectory: true)
+        return URL(fileURLWithPath: try settings.read().storageFolderPath, isDirectory: true)
+    }
+
+    static let defaultStorageRoot: @Sendable () throws -> URL = {
+        let environment = ProcessInfo.processInfo.environment
+        return try resolveStorageRoot(settings: settingsStore(environment: environment), environment: environment)
     }
 
     // MARK: Derived state
