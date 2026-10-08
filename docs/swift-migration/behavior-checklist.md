@@ -162,7 +162,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | N-01 | 시스템 언어가 `ko`로 시작하면 한국어, 아니면 영어. | `i18n.tsx` `resolveLocale` | 단위 | ☐ |
 | N-02 | 두 언어의 키 집합이 같다(한쪽에만 있는 문구 없음). | `i18n.tsx` `Dictionary` 타입 | 단위 | ☐ |
 | N-03 | 알려진 오류 코드는 지역화한 문구로, 그 밖의 코드 오류는 원본 메시지로, 문자열 오류는 그대로, 그 밖에는 `defaultError`. | `translateError` | 단위 | ☐ |
-| N-04 | 권한 상세 문구는 항목×상태(허용/없음)로 키가 있고, `알 수 없음`은 `permissionUnknownDetail`. | `permissionDetail` | 단위 | ☐ |
+| N-04 | 권한 상세 문구는 항목×상태(허용/없음)로 키가 있고, `알 수 없음`은 `permissionUnknownDetail`. | `permissionDetail` | 단위 | ☑ (`PermissionsModelTests.detailKeysFollowItemAndStatusAndUnknownIsShared`, `everyDetailAndStatusKeyHasBothLanguages`) |
 
 ## D. 결정이 필요한 차이와 알려진 공백
 
@@ -280,3 +280,11 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 개발용 `NOTEDROP_STORAGE_FOLDER`는 설정보다 우선한다. 폴더 변경을 확인하려면 이 변수 없이 `NOTEDROP_SETTINGS_FILE`만 지정해 실행한다. `NOTEDROP_SETTINGS_FILE`은 이제 저장 폴더 해석에도 쓰인다.
 
 단위 테스트(`StorageFolderCheckTests` 7개, `StorageFolderModelTests`·`StorageRootResolutionTests` 14개)로 확인함. 수동 확인이 남음(실제 앱): 폴더 선택 대화상자, 선택 취소 안내, 빈 설정 파일에서 첫 실행 모달(기본 폴더/폴더 선택/취소 시 모달 유지), 폴더 변경 후 Library와 새 저장이 새 폴더를 쓰는지, 쓸 수 없는 폴더의 안내.
+
+## 5단계 권한 상태 기록 (STA-54)
+
+설정 화면에 손쉬운 사용·클립보드·자동화 세 항목의 상태(허용/권한 필요/알 수 없음), 설명, 다음 행동을 보여 준다. 손쉬운 사용이 없으면 `시스템 설정 열기` 버튼이 시스템 설정의 손쉬운 사용 화면으로 이동한다. 자동화는 항상 `알 수 없음`이고 Chrome URL을 처음 읽을 때 macOS가 묻는다는 안내(`permissionAutomationNote`)를 붙인다. 앱이 다시 활성화될 때(`didBecomeActive`) 상태를 다시 읽는다.
+
+단위 테스트(`PermissionsModelTests`, 8개)로 확인함: 손쉬운 사용·클립보드 판정(A-01, A-02), 자동화 항상 알 수 없음(A-03), 항목×상태 문구 키와 두 언어 존재(N-04), 시스템 설정 버튼은 손쉬운 사용이 없을 때만, 갱신 시 변경 반영.
+
+수동 확인이 남음(실제 앱): A-01~A-04 모두. 손쉬운 사용을 켜고 끈 뒤 앱으로 돌아오면 화면이 갱신되는지, 버튼이 시스템 설정 손쉬운 사용 화면을 여는지, 권한이 없어도 앱이 종료되지 않는지. 클립보드는 `NSPasteboard`에 권한 조회 API가 없어 텍스트를 실제로 읽을 수 있으면 허용, 텍스트가 있는데 읽지 못하면 권한 필요, 비었거나 텍스트가 아니면 알 수 없음으로 표시한다(A-02). 설정 화면을 열 때와 앱이 활성화될 때 다시 읽는다.

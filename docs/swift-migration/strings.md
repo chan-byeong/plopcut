@@ -126,6 +126,8 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39)
 | `permissionAutomationGranted` | Chrome source URLs can be collected during capture. | 캡처 중 Chrome 출처 URL을 가져올 수 있습니다. |
 | `permissionAutomationMissing` | Allow browser automation when macOS asks for access. | macOS가 요청할 때 브라우저 자동화를 허용하세요. |
 | `permissionUnknownDetail` | Notedrop could not determine this permission status. | 이 권한 상태를 확인하지 못했습니다. |
+| `permissionAutomationNote` | macOS asks for access the first time Notedrop reads the Chrome URL. | Notedrop이 Chrome URL을 처음 읽을 때 macOS가 접근을 묻습니다. |
+| `openSystemSettings` | Open System Settings | 시스템 설정 열기 |
 | `saveText` | Save Text Drop | 텍스트 드롭 저장 |
 | `saveImage` | Save Image Drop | 이미지 드롭 저장 |
 | `unknownApp` | Unknown app | 알 수 없는 앱 |

@@ -24,6 +24,7 @@ struct SettingsView: View {
                 }
                 .pickerStyle(.radioGroup)
             }
+            PermissionsSection()
             Section(L10n.t("about")) {
                 LabeledContent(L10n.t("appVersion"), value: model.appVersion)
             }
