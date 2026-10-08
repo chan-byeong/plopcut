@@ -5,13 +5,16 @@ import SwiftUI
 struct NotedropApp: App {
     @State private var model: LibraryModel
     @State private var capture: CaptureRuntime
+    @State private var appearance: SettingsModel
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 
     init() {
         let settings = LibraryModel.defaultSettings
         let model = LibraryModel(settings: settings)
         _model = State(initialValue: model)
-        _capture = State(initialValue: CaptureRuntime(model: model, settings: settings, colorScheme: Self.devColorScheme))
+        let appearance = SettingsModel(store: settings)
+        _appearance = State(initialValue: appearance)
+        _capture = State(initialValue: CaptureRuntime(model: model, settings: settings, appearance: appearance))
         // settings.json owns the column widths (spec L-15). AppKit's own split autosave would restore widths that a
         // narrow window squeezed, so drop it before the window is built.
         let defaults = UserDefaults.standard
@@ -20,21 +23,12 @@ struct NotedropApp: App {
         }
     }
 
-    /// `NOTEDROP_APPEARANCE=light|dark` forces a theme for screenshots until the theme setting lands (stage 5).
-    static var devColorScheme: ColorScheme? {
-        switch ProcessInfo.processInfo.environment["NOTEDROP_APPEARANCE"] {
-        case "light": .light
-        case "dark": .dark
-        default: nil
-        }
-    }
-
     var body: some Scene {
         WindowGroup(id: "main") {
-            MainWindow(model: model)
+            MainWindow(model: model, settings: appearance)
                 .modifier(OpenMainWindowBinding(runtime: capture))
                 .frame(minWidth: 960, minHeight: 640)
-                .preferredColorScheme(Self.devColorScheme)
+                .preferredColorScheme(appearance.colorScheme)
                 .task {
                     CompositionMonitor.shared.install()
                     delegate.drain = { [model] in await model.editor.drain() }

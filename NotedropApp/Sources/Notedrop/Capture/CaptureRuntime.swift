@@ -16,10 +16,10 @@ final class CaptureRuntime {
     /// Set by the main window when it appears; opens the window again after it was closed.
     var openMainWindow: (() -> Void)?
 
-    init(model: LibraryModel, settings: SettingsStore, colorScheme: ColorScheme?) {
+    init(model: LibraryModel, settings: SettingsStore, appearance: SettingsModel) {
         self.model = model
         self.settings = settings
-        self.popup = SavePopupWindowController(colorScheme: colorScheme)
+        self.popup = SavePopupWindowController(settings: appearance)
     }
 
     func start() {

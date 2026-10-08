@@ -7,17 +7,17 @@ import SwiftUI
 final class SavePopupWindowController: NSObject, NSWindowDelegate {
     private var panel: NSPanel?
     private var model: SavePopupModel?
-    private let colorScheme: ColorScheme?
+    private let settings: SettingsModel
 
-    init(colorScheme: ColorScheme?) {
-        self.colorScheme = colorScheme
+    init(settings: SettingsModel) {
+        self.settings = settings
     }
 
     func show(_ model: SavePopupModel) {
         self.model = model
         let panel = panel ?? makePanel()
         self.panel = panel
-        panel.contentView = NSHostingView(rootView: SavePopupView(model: model).preferredColorScheme(colorScheme))
+        panel.contentView = NSHostingView(rootView: ThemedPopup(model: model, settings: settings))
         if !panel.isVisible { panel.center() }
         NSApp.activate(ignoringOtherApps: true)
         panel.makeKeyAndOrderFront(nil)
@@ -59,5 +59,15 @@ final class SavePopupWindowController: NSObject, NSWindowDelegate {
         if model?.isSaving == true { return false }
         model = nil
         return true
+    }
+}
+
+/// Re-reads the theme while the popup is open, so a change in Settings reaches it without reopening.
+private struct ThemedPopup: View {
+    let model: SavePopupModel
+    let settings: SettingsModel
+
+    var body: some View {
+        SavePopupView(model: model).preferredColorScheme(settings.colorScheme)
     }
 }

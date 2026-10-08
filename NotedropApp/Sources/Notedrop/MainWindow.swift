@@ -4,6 +4,7 @@ import SwiftUI
 
 struct MainWindow: View {
     @Bindable var model: LibraryModel
+    let settings: SettingsModel
     @State private var columns = NavigationSplitViewVisibility.all
     @State private var searchPresented = false
     /// In narrow windows the field only exists after the icon (or Cmd+F) opens it.
@@ -78,7 +79,7 @@ struct MainWindow: View {
             }
         } detail: {
             if model.collection == .settings {
-                SettingsPlaceholder()
+                SettingsView(model: settings)
             } else {
                 // A plain HStack instead of `.inspector`: toggling that modifier from layout code crashed AppKit constraints.
                 HStack(spacing: 0) {
@@ -162,13 +163,6 @@ struct MainWindow: View {
         }
     }
 }
-
-struct SettingsPlaceholder: View {
-    var body: some View {
-        ContentUnavailableView(L10n.t("settings"), systemImage: "gearshape", description: Text("Settings arrive in stage 5 (STA-40)."))
-    }
-}
-
 
 /// The toolbar search field. Hidden (icon only) in narrow windows; the query survives while hidden.
 struct ToolbarSearch: ViewModifier {
