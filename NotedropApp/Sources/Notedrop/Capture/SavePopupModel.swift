@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import NotedropCore
 import Observation
@@ -17,6 +18,8 @@ struct SaveRequest: Equatable, Sendable {
 final class SavePopupModel {
     let draft: CaptureDraft
     let recentTags: [String]
+    /// Decoded once; the view body runs on every keystroke and must not decode the PNG again.
+    @ObservationIgnored let previewImage: NSImage?
 
     /// For a `mixed` draft the user picks one; only that type is saved (spec 3.5, checklist D-02).
     var selectedType: DropType
@@ -36,6 +39,7 @@ final class SavePopupModel {
         onSaved: @escaping (Drop) -> Void, onCancel: @escaping () -> Void
     ) {
         self.draft = draft
+        self.previewImage = draft.imagePNG.flatMap { NSImage(data: $0) }
         self.selectedType = draft.type == .mixed ? .text : draft.type
         self.recentTags = recentTags
         self.tags = draft.tags
@@ -91,7 +95,7 @@ final class SavePopupModel {
         let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
         let saveImage = selectedType == .image
         let request = SaveRequest(
-            text: saveImage ? "" : draft.text ?? "", title: draft.title, source: draft.source,
+            text: saveImage ? "" : draft.text ?? "", title: saveImage ? (draft.imageTitle ?? draft.title) : draft.title, source: draft.source,
             note: trimmedNote.isEmpty ? nil : note, tags: tags, imagePNG: saveImage ? draft.imagePNG : nil)
         do {
             let drop = try await save(request)

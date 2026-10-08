@@ -40,7 +40,7 @@ struct SavePopupView: View {
     }
 
     @ViewBuilder private var preview: some View {
-        if model.selectedType == .image, let data = model.draft.imagePNG, let image = NSImage(data: data) {
+        if model.selectedType == .image, let image = model.previewImage {
             Image(nsImage: image)
                 .resizable().scaledToFit().frame(maxWidth: .infinity).frame(height: 120)
                 .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))

@@ -47,7 +47,11 @@ public struct ClipboardCapture: Sendable {
         let title = Naming.inferTitle(
             windowTitle: source.windowTitle, appName: source.appName, text: text,
             fallback: type == .image ? "Image Drop" : "Untitled Drop")
-        return CaptureDraft(type: type, title: title, text: text, imagePNG: png, source: source, warnings: warnings)
+        let imageTitle = type == .mixed
+            ? Naming.inferTitle(windowTitle: source.windowTitle, appName: source.appName, fallback: "Image Drop") : nil
+        return CaptureDraft(
+            type: type, title: title, text: text, imagePNG: png, source: source, warnings: warnings,
+            imageTitle: imageTitle)
     }
 
     private static func isPNG(_ data: Data) -> Bool {

@@ -82,7 +82,7 @@ final class CaptureRuntime {
         ).capture()
     }
 
-    private static func captureClipboard() async throws -> CaptureDraft {
+    private nonisolated static func captureClipboard() async throws -> CaptureDraft {
         try await ClipboardCapture(
             clipboard: SystemClipboard(), collector: FrontmostSourceCollector(),
             frontmost: FrontmostSourceCollector.currentTarget,

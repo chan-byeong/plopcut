@@ -61,6 +61,15 @@ import Testing
         #expect(captured.request?.text == "")
     }
 
+    @Test func choosingTheImageOfAMixedDraftUsesTheImageTitle() async {
+        let captured = Captured()
+        let draft = CaptureDraft(type: .mixed, title: "caption", text: "caption", imagePNG: Self.png, imageTitle: "Image Drop")
+        let m = model(draft, captured: captured)
+        m.selectedType = .image
+        await m.submit()
+        #expect(captured.request?.title == "Image Drop")
+    }
+
     // S-10: a rejected image keeps the popup open with the reason.
     @Test func aRejectedImageShowsTheReason() async {
         let draft = CaptureDraft(type: .image, title: "t", imagePNG: Self.png)

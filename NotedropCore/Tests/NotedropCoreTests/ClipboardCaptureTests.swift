@@ -77,6 +77,13 @@ private let png = Data([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00])
         #expect(!draft.warnings.contains(CaptureWarning("clipboard_image_unavailable")))
     }
 
+    @Test func mixedContentGetsAnImageTitleThatIsNotTheCaption() async throws {
+        let draft = try await capture(
+            StubClipboard(ClipboardSnapshot(text: "caption", png: png)), target: CaptureTarget(processID: 99, name: "Notedrop"))
+        #expect(draft.title == "caption")
+        #expect(draft.imageTitle == "Image Drop")
+    }
+
     // K-02, K-04
     @Test func imageOnlyBecomesAnImageDraft() async throws {
         let draft = try await capture(StubClipboard(ClipboardSnapshot(png: png)))

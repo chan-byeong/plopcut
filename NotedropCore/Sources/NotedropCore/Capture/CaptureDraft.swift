@@ -12,6 +12,8 @@ public struct CaptureDraft: Equatable, Sendable {
     public var title: String
     public var text: String?
     public var imagePNG: Data?
+    /// Title to use when the image of a `mixed` draft is the part that gets saved (the text-based title would be a caption).
+    public var imageTitle: String?
     public var source: DropSource
     public var note: String?
     public var tags: [String]
@@ -20,9 +22,10 @@ public struct CaptureDraft: Equatable, Sendable {
     public init(
         type: DropType, title: String, text: String? = nil, imagePNG: Data? = nil,
         source: DropSource = DropSource(), note: String? = nil, tags: [String] = [],
-        warnings: [CaptureWarning] = []
+        warnings: [CaptureWarning] = [], imageTitle: String? = nil
     ) {
         self.type = type
+        self.imageTitle = imageTitle
         self.title = title
         self.text = text
         self.imagePNG = imagePNG
