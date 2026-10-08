@@ -47,9 +47,9 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | C-05 | `paneWidths`는 읽고 쓸 때 180–320 / 300–560으로 고정, `recentTags`는 태그 규칙과 12개 제한. | 테스트: `updating_settings_persists_pane_widths_and_recent_tags` | 단위 | ☑ |
 | C-06 | 단축키 문자열은 Tauri 문법(`Shift+Cmd+K`)으로 저장. Swift가 이 문자열을 파싱해야 하며 파싱 불가면 저장 거부. 파일은 바뀌지 않아야 한다. | 테스트: `update_rejects_unparseable_selected_text_shortcut`, `update_rejecting_invalid_shortcut_leaves_persisted_settings_file_untouched` | 단위(앱): `ShortcutModelTests`로 거절된 입력이 필드에 남지 않음 확인. 단위: 수식어(`Shift`, `Cmd`/`Command`, `Ctrl`/`Control`, `Alt`/`Option`)와 키 이름 | ☑ |
 | C-07 | 원자적 쓰기(임시 파일 + 이름 변경)로 쓰고 쓰기 실패 시 임시 파일을 지운다. 동시 갱신은 직렬화. | `atomic_write_settings`, `SETTINGS_UPDATE_LOCK` | 단위 | ☐ |
-| C-08 | 단축키 변경 순서: 새 것 등록 → 이전 것 해제 → 설정 저장. 어느 단계가 실패해도 이전 단축키가 살아 있어야 한다. | 테스트: `changing_selected_text_shortcut_replaces_the_old_registration`, `failed_registration_keeps_the_previous_shortcut_active`, `persistence_failure_restores_the_previous_shortcut` | 단위(가짜 등록기): `ShortcutControllerTests` (등록→해제→저장 순서, 등록 실패·저장 실패 롤백, 롤백 실패 `shortcut_rollback_failed`) + 수동(실제 충돌) | ☐ |
-| C-09 | 시작 시 저장된 단축키 하나만 등록(다른 단축키는 등록하지 않음). 등록 실패는 보관 오류와 메뉴 막대 `Error`로 알린다. | 테스트: `startup_registers_only_the_selected_text_shortcut` | 단위: `ShortcutControllerTests.startupRegistersOnlyTheStoredShortcut` + 수동 | ☐ |
-| C-10 | `theme`가 `system`이면 앱 외형을 시스템에 맡기고, `light`/`dark`는 시스템을 덮어쓴다. | `useTheme.ts`. Swift: `SettingsModel.colorScheme`, 테스트 `colorSchemeFollowsTheme`, `changingThemePersistsAndKeepsOtherFields` | 단위(모델) + 수동(창 외형) | ☐ |
+| C-08 | 단축키 변경 순서: 새 것 등록 → 이전 것 해제 → 설정 저장. 어느 단계가 실패해도 이전 단축키가 살아 있어야 한다. | 테스트: `changing_selected_text_shortcut_replaces_the_old_registration`, `failed_registration_keeps_the_previous_shortcut_active`, `persistence_failure_restores_the_previous_shortcut` | 단위(가짜 등록기): `ShortcutControllerTests` (등록→해제→저장 순서, 등록 실패·저장 실패 롤백, 롤백 실패 `shortcut_rollback_failed`) + 수동(실제 충돌) | ☑ |
+| C-09 | 시작 시 저장된 단축키 하나만 등록(다른 단축키는 등록하지 않음). 등록 실패는 보관 오류와 메뉴 막대 `Error`로 알린다. | 테스트: `startup_registers_only_the_selected_text_shortcut` | 단위: `ShortcutControllerTests.startupRegistersOnlyTheStoredShortcut` + 수동 | ☑ |
+| C-10 | `theme`가 `system`이면 앱 외형을 시스템에 맡기고, `light`/`dark`는 시스템을 덮어쓴다. | `useTheme.ts`. Swift: `SettingsModel.colorScheme`, 테스트 `colorSchemeFollowsTheme`, `changingThemePersistsAndKeepsOtherFields` | 단위(모델) + 수동(창 외형) | ☑ |
 | C-11 | 읽은 `theme`이 잘못되면 `system`으로 보정, `storageFolderPath`가 공백이면 기본 폴더. | `read_app_settings_from_path` | 단위 | ☑ |
 | C-12 | 번들 ID를 바꾸면 손쉬운 사용·자동화 권한을 새로 허용해야 한다. 설정과 Drop은 영향이 없다. | — | 수동 | ☐ |
 
@@ -57,18 +57,18 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 
 | ID | 동작 | 근거 | 확인 방법 | ☐ |
 | --- | --- | --- | --- | --- |
-| P-01 | 출처 수집이 선택 텍스트 읽기(접근성·클립보드 폴백 모두)보다 **먼저**. 앞 앱은 캡처 시작 때 한 번만 정하고 출처 수집과 선택 읽기가 같은 앱을 쓴다(STA-50). | 테스트: `selected_text_capture_collects_source_first_and_restores_text_and_image`, `frontmostAppIsResolvedOnceAndSharedByCollectorAndReader` | 단위(호출 순서) | ☐ |
+| P-01 | 출처 수집이 선택 텍스트 읽기(접근성·클립보드 폴백 모두)보다 **먼저**. 앞 앱은 캡처 시작 때 한 번만 정하고 출처 수집과 선택 읽기가 같은 앱을 쓴다(STA-50). | 테스트: `selected_text_capture_collects_source_first_and_restores_text_and_image`, `frontmostAppIsResolvedOnceAndSharedByCollectorAndReader` | 단위(호출 순서) | ☑ |
 | P-02 | **(폴백 경로)** 복사 후 대기: 변경 횟수가 달라질 때까지 25 ms 폴링, 최대 700 ms. | `SELECTED_TEXT_COPY_TIMEOUT`, `POLL_INTERVAL` | 단위·수동 | ☐ |
-| P-03 | **(폴백 경로)** 복사한 텍스트가 이전 클립보드와 같아도 변경 횟수가 달라졌으면 성공. | 테스트: `selected_text_capture_accepts_text_that_matches_the_previous_clipboard` | 단위 | ☐ |
-| P-04 | **(폴백 경로)** 시간 초과, 빈 선택, 읽기 실패, 복사 시뮬레이션 실패 **모두에서** 이전 클립보드를 복원한다. 단, 변경 횟수가 그대로면(복사가 일어나지 않았으면) 클립보드를 다시 쓰지 않는다. 다시 쓰면 파일·RTF·여러 항목이 텍스트와 PNG로 줄어든다. | 테스트: `selected_text_capture_restores_clipboard_after_copy_timeout`, `…_after_empty_selection`, `…_after_read_failure`, `…_when_copy_shortcut_fails` | 단위 | ☐ |
-| P-05 | **(폴백 경로)** 복원 실패는 캡처 실패가 아니라 경고(`clipboard_restore_failed`)가 붙은 성공. | 테스트: `selected_text_is_returned_with_a_warning_when_restore_fails` | 단위 | ☐ |
-| P-06 | **(폴백 경로)** 백업이 실패해도(경고 `clipboard_backup_failed`) 캡처는 계속하고 복원을 시도한다. | 테스트: `selected_text_capture_attempts_restore_when_backup_fails` | 단위 | ☐ |
+| P-03 | **(폴백 경로)** 복사한 텍스트가 이전 클립보드와 같아도 변경 횟수가 달라졌으면 성공. | 테스트: `selected_text_capture_accepts_text_that_matches_the_previous_clipboard` | 단위 | ☑ |
+| P-04 | **(폴백 경로)** 시간 초과, 빈 선택, 읽기 실패, 복사 시뮬레이션 실패 **모두에서** 이전 클립보드를 복원한다. 단, 변경 횟수가 그대로면(복사가 일어나지 않았으면) 클립보드를 다시 쓰지 않는다. 다시 쓰면 파일·RTF·여러 항목이 텍스트와 PNG로 줄어든다. | 테스트: `selected_text_capture_restores_clipboard_after_copy_timeout`, `…_after_empty_selection`, `…_after_read_failure`, `…_when_copy_shortcut_fails` | 단위 | ☑ |
+| P-05 | **(폴백 경로)** 복원 실패는 캡처 실패가 아니라 경고(`clipboard_restore_failed`)가 붙은 성공. | 테스트: `selected_text_is_returned_with_a_warning_when_restore_fails` | 단위 | ☑ |
+| P-06 | **(폴백 경로)** 백업이 실패해도(경고 `clipboard_backup_failed`) 캡처는 계속하고 복원을 시도한다. | 테스트: `selected_text_capture_attempts_restore_when_backup_fails` | 단위 | ☑ |
 | P-07 | 선택된 텍스트가 없으면 `no_selected_text`(공백뿐인 텍스트 포함). 끝의 `\r`/`\n`은 제거. | `trimmed_capture_text` | 단위 | ☑ |
 | P-08 | 자동화·접근성 오류는 `permission_missing`으로 바꾸고 손쉬운 사용 권한 안내를 붙인다. | `capture_selected_text_with` | 수동: 권한 없이 실행 | ☑ |
-| P-09 | **(폴백 경로)** 백업 대상은 텍스트와 PNG 이미지. 이미지는 PNG로 정규화해 보관·복원한다. 복원은 텍스트와 이미지를 한 항목으로 쓴다. | `write_clipboard_snapshot` | 수동: 이미지만/텍스트만/둘 다 있던 클립보드 | ☐ |
+| P-09 | **(폴백 경로)** 백업 대상은 텍스트와 PNG 이미지. 이미지는 PNG로 정규화해 보관·복원한다. 복원은 텍스트와 이미지를 한 항목으로 쓴다. | `write_clipboard_snapshot` | 수동: 이미지만/텍스트만/둘 다 있던 클립보드 | ☑ |
 | P-10 | 결과 Draft는 `note` 없음, `tags` 빈 배열. | `capture_selected_text_with` | 단위 | ☑ |
 | P-11 | `modal`이면 팝업, `instant`이면 텍스트만 즉시 저장(노트 `""`, 태그 없음). | `instant_save_payload_from_draft`, `handle_capture_draft` | 단위: `CaptureConfirmationTests`, `CaptureRouterTests`(`instantTextIsSavedWithAnEmptyNoteAndNoTags`, `theModeIsReadAtEveryCapture`) + 수동 | ☑ |
-| P-12 | `instant`에서도 이미지·`mixed`는 팝업. (도구 막대 캡처 버튼은 D-05 결정으로 만들지 않는다.) | `handle_capture_draft` | 단위: `instantStillOpensThePopupForImagesAndMixedContent`, `instantImageAndMixedOpenThePopupAndSaveNothing` + 수동 | ☐ |
+| P-12 | `instant`에서도 이미지·`mixed`는 팝업. (도구 막대 캡처 버튼은 D-05 결정으로 만들지 않는다.) | `handle_capture_draft` | 단위: `instantStillOpensThePopupForImagesAndMixedContent`, `instantImageAndMixedOpenThePopupAndSaveNothing` + 수동 | ☑ |
 | P-13 | 선택 텍스트 캡처 실패: 오류 보관 + 메인 창 표시 + 메뉴 막대 `Error`. 보관 오류는 메인 창에서 **한 번만** 소비. | `emit_selected_text_capture_event`, 테스트: `pending_capture_error_is_returned_once` | 단위·수동 | ☐ |
 | P-14 | 별도 팝업 창이 이미 열려 있으면 단축키는 새 캡처를 하지 않고 열린 팝업을 앞으로 가져온다(결정 STA-47). 팝업이 열려 있으면 최전면 앱이 Notedrop 자신이라 선택 텍스트를 읽을 수 없기 때문이다. 레거시의 "새 Draft로 교체"와 다르다. | `open_capture_window` | 수동: 팝업을 연 채 단축키 재입력 | ☑ |
 | P-15 | 레거시는 클립보드 접근을 `swift -e` 서브프로세스로 했다. Swift 앱은 `NSPasteboard`를 직접 쓰므로 이 구조는 이어받지 않는다(같은 시맨틱만 유지). | `capture.rs` | — | ☐ |
@@ -82,9 +82,9 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | K-01 | 변경 횟수를 읽기 전후로 비교해 다르면 `clipboard_changed`. | 테스트: `ClipboardCaptureTests.rejectsContentChangedDuringRead`, `acceptsAnUnchangedCountAndAnUnreportedCount` | 단위 | ☑ |
 | K-02 | 분류: 텍스트만 `text`, 이미지만 `image`, 둘 다 `mixed`, 둘 다 없으면 `clipboard_empty`. | 테스트: `textOnlyBecomesATextDraft`, `mixedContentKeepsBothForThePopupToChooseFrom`, `imageOnlyBecomesAnImageDraft`, `imageFromNotedropHasNoSourceAndTheFallbackTitle`, `emptyOrBlankClipboardFailsAsEmpty`; 팝업에서 고른 유형만 저장: `SavePopupImageTests` | 단위 | ☑ |
 | K-03 | 이미지 디코딩 실패 시 텍스트가 있으면 텍스트로 진행하고 경고 `clipboard_image_unavailable`. 텍스트도 없으면 그 오류로 실패. | 테스트: `undecodableImageFallsBackToTextWithAWarning`, `undecodableImageWithoutTextFails`, `readFailureIsReportedAsUnavailable` | 단위 | ☑ |
-| K-04 | 이미지는 PNG가 있으면 PNG, 없으면 TIFF를 PNG로 변환해 사용. | `read_clipboard_snapshot` | 수동: 스크린샷(PNG)과 TIFF를 내는 앱 | ☐ |
+| K-04 | 이미지는 PNG가 있으면 PNG, 없으면 TIFF를 PNG로 변환해 사용. | `read_clipboard_snapshot` | 수동: 스크린샷(PNG)과 TIFF를 내는 앱 | ☑ |
 | K-05 | 최전면 앱이 Notedrop이면 출처를 비우고 제목을 다시 추론. 다른 앱이면 출처 유지. | 테스트: `omitsNotedropAsSourceAndReinfersTheTitle`, `keepsTheSourceOfAnotherApp` | 단위 | ☑ |
-| K-06 | 클립보드 캡처 실패는 오류 보관 + 메뉴 막대 `Error`만(메인 창을 띄우지 않음). | `CaptureRuntime.reportQuietly`(Error만 표시하고 오류를 보관, 메인 창은 띄우지 않음) | 수동 | ☐ |
+| K-06 | 클립보드 캡처 실패는 오류 보관 + 메뉴 막대 `Error`만(메인 창을 띄우지 않음). | `CaptureRuntime.reportQuietly`(Error만 표시하고 오류를 보관, 메인 창은 띄우지 않음) | 수동 | ☑ |
 
 ## M. 출처 수집
 
@@ -99,10 +99,10 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 
 | ID | 동작 | 근거 | 확인 방법 | ☐ |
 | --- | --- | --- | --- | --- |
-| A-01 | 손쉬운 사용: `AXIsProcessTrusted`. 없으면 System Settings > Privacy & Security > Accessibility 안내. | `permissions.rs` | 수동 | ☐ |
-| A-02 | 클립보드: 텍스트를 읽을 수 있으면 허용, 읽기 실패면 없음, 확인 불가면 알 수 없음. | `permissions.rs` | 수동 | ☐ |
-| A-03 | 자동화: 항상 `알 수 없음`. Chrome이 최전면일 때만 시스템이 묻는다는 안내. `Info.plist`에 `NSAppleEventsUsageDescription` 필요. | `permissions.rs` | 수동 | ☐ |
-| A-04 | 권한이 없어도 앱이 종료되지 않고 UI에 이유를 보여 준다. | PRD "macOS permissions" | 수동 | ☐ |
+| A-01 | 손쉬운 사용: `AXIsProcessTrusted`. 없으면 System Settings > Privacy & Security > Accessibility 안내. | `permissions.rs` | 수동 | ☑ |
+| A-02 | 클립보드: 텍스트를 읽을 수 있으면 허용, 읽기 실패면 없음, 확인 불가면 알 수 없음. | `permissions.rs` | 수동 | ☑ |
+| A-03 | 자동화: 항상 `알 수 없음`. Chrome이 최전면일 때만 시스템이 묻는다는 안내. `Info.plist`에 `NSAppleEventsUsageDescription` 필요. | `permissions.rs` | 수동 | ☑ |
+| A-04 | 권한이 없어도 앱이 종료되지 않고 UI에 이유를 보여 준다. | PRD "macOS permissions" | 수동 | ☑ |
 
 ## L. Library
 
@@ -118,10 +118,10 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | L-08 | 검색을 닫아도(Escape) 검색어와 결과 유지. 지우기는 전체 복원. `Cmd+F`는 검색 포커스. | `design-system.md` | 수동 | ☑ |
 | L-09 | 새로고침은 디스크를 다시 스캔한다. 다른 곳(팝업 창 등)의 저장 신호를 받아도 다시 스캔한다. | `useLibraryRefreshEvent.ts` | 수동 | ☑ |
 | L-10 | Save Popup에서 저장하면 Library가 새로고침되고 새 Drop이 선택된다. | `handleCaptureSaved` | 단위(`LibraryModel`) + 수동 | ☑ |
-| L-11 | 목록 우클릭 메뉴: 출처 열기(URL 있을 때), 내용 복사(텍스트일 때), Markdown 내보내기, 구분선, 휴지통. 우클릭하면 그 행을 먼저 선택. | `LibraryPane.tsx` | 수동 | ☐ |
-| L-12 | `Cmd+Backspace`는 삭제 확인 시트, 확인 후에만 휴지통으로 이동. | `LibraryPane.tsx`, `DeleteConfirmationSheet.tsx` | 수동 | ☐ |
-| L-13 | 출처 열기: URL이 비어 있으면 `source_url_missing`. 버튼은 URL이 없을 때 비활성. | `commands.rs` `open_source_url` | 단위·수동 | ☐ |
-| L-14 | Markdown 내보내기: 취소하면 파일을 쓰지 않는다. 형식은 spec 7장. | `markdown.rs`, 테스트: `markdown_generation_includes_drop_fields` | 단위 | ☐ |
+| L-11 | 목록 우클릭 메뉴: 출처 열기(URL 있을 때), 내용 복사(텍스트일 때), Markdown 내보내기, 구분선, 휴지통. 우클릭하면 그 행을 먼저 선택. | `LibraryPane.tsx` | 수동 | ☑ |
+| L-12 | `Cmd+Backspace`는 삭제 확인 시트, 확인 후에만 휴지통으로 이동. | `LibraryPane.tsx`, `DeleteConfirmationSheet.tsx` | 수동 | ☑ |
+| L-13 | 출처 열기: URL이 비어 있으면 `source_url_missing`. 버튼은 URL이 없을 때 비활성. | `commands.rs` `open_source_url` | 단위·수동 | ☑ |
+| L-14 | Markdown 내보내기: 취소하면 파일을 쓰지 않는다. 형식은 spec 7장. | `markdown.rs`, 테스트: `markdown_generation_includes_drop_fields` | 단위 | ☑ |
 | L-15 | 창 크기 때문에 줄어든 표시 너비를 `paneWidths`에 저장하지 않는다. 구분선 조절이 끝났을 때만 저장. | `MainWindow.tsx` | 수동 | ☑ |
 
 ## E. 편집
@@ -150,18 +150,18 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 
 | ID | 동작 | 근거 | 확인 방법 | ☐ |
 | --- | --- | --- | --- | --- |
-| T-01 | 템플릿 아이콘, 툴팁 `Notedrop`, 좌클릭은 메뉴가 아니라 메인 창 열기. 메뉴는 좌클릭이 아닌 방식(우클릭)으로 연다. | `tray.rs` | 수동 | ☐ |
-| T-02 | 메뉴 항목 ID는 `save-clipboard`, `open-library`. 알 수 없는 ID는 무시. | 테스트: `routes_stable_tray_menu_ids`, `save_clipboard_menu_action_starts_clipboard_capture` | 단위 | ☐ |
-| T-03 | 성공 `Saved`, 실패 `Error`를 900 ms 동안 제목과 툴팁에 표시하고 원복. | `show_feedback` | 단위: `MenuBarTests`(`errorShowsFor900msThenRestores`, `savedShowsFor900msThenRestores`) + 수동 | ☐ |
+| T-01 | 템플릿 아이콘, 툴팁 `Notedrop`, 좌클릭은 메뉴가 아니라 메인 창 열기. 메뉴는 좌클릭이 아닌 방식(우클릭)으로 연다. | `tray.rs` | 수동 | ☑ |
+| T-02 | 메뉴 항목 ID는 `save-clipboard`, `open-library`. 알 수 없는 ID는 무시. | 테스트: `routes_stable_tray_menu_ids`, `save_clipboard_menu_action_starts_clipboard_capture` | 단위 | ☑ |
+| T-03 | 성공 `Saved`, 실패 `Error`를 900 ms 동안 제목과 툴팁에 표시하고 원복. | `show_feedback` | 단위: `MenuBarTests`(`errorShowsFor900msThenRestores`, `savedShowsFor900msThenRestores`) + 수동 | ☑ |
 | T-04 | 메인 창을 열 때 보관된 캡처 오류를 확인하도록 신호를 보낸다. | `show_main_window` | 수동 | ☐ |
 
 ## N. 지역화
 
 | ID | 동작 | 근거 | 확인 방법 | ☐ |
 | --- | --- | --- | --- | --- |
-| N-01 | 시스템 언어가 `ko`로 시작하면 한국어, 아니면 영어. | `i18n.tsx` `resolveLocale` | 단위 | ☐ |
-| N-02 | 두 언어의 키 집합이 같다(한쪽에만 있는 문구 없음). | `i18n.tsx` `Dictionary` 타입 | 단위 | ☐ |
-| N-03 | 알려진 오류 코드는 지역화한 문구로, 그 밖의 코드 오류는 원본 메시지로, 문자열 오류는 그대로, 그 밖에는 `defaultError`. | `translateError` | 단위 | ☐ |
+| N-01 | 시스템 언어가 `ko`로 시작하면 한국어, 아니면 영어. | `i18n.tsx` `resolveLocale` | 단위 | ☑ |
+| N-02 | 두 언어의 키 집합이 같다(한쪽에만 있는 문구 없음). | `i18n.tsx` `Dictionary` 타입 | 단위 | ☑ |
+| N-03 | 알려진 오류 코드는 지역화한 문구로, 그 밖에는 `defaultError`. (레거시는 그 밖의 코드를 원본 메시지로, 문자열 오류를 그대로 보여 줬다. Swift는 `detail`이 로그용이라 의도적으로 다르게 간다. 아래 STA-61 기록 참고.) | `translateError` | 단위 | ☑ |
 | N-04 | 권한 상세 문구는 항목×상태(허용/없음)로 키가 있고, `알 수 없음`은 `permissionUnknownDetail`. | `permissionDetail` | 단위 | ☑ (`PermissionsModelTests.detailKeysFollowItemAndStatusAndUnknownIsShared`, `everyDetailAndStatusKeyHasBothLanguages`) |
 
 ## D. 결정이 필요한 차이와 알려진 공백
@@ -311,3 +311,37 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 단위 테스트로 확인함: 모드×유형 결정(`CaptureConfirmationTests`), 즉시 저장 요청 모양·팝업 경로·모드 재읽기·실패 보고(`CaptureRouterTests`), `Saved`/`Error` 900 ms와 교체(`MenuBarTests`).
 
 수동 확인이 남음(실제 앱): `instant`로 바꾼 뒤 텍스트 선택 캡처(`Shift+Cmd+C`)와 `클립보드 저장...`이 팝업 없이 저장되고 `Saved`가 보이며 Library에 새 Drop이 선택됨, 이미지·mixed는 `instant`에서도 팝업, `modal`로 되돌리면 다시 팝업, 저장 폴더를 쓸 수 없을 때 `Error`가 보이고 다음에 메인 창을 열면 오류가 한 번 나옴.
+
+## 5단계 수동 확인 기록 (STA-61)
+
+2026-10-08에 사용자가 실제 앱(ad-hoc 서명 디버그 빌드)에서 직접 확인했고 문제가 없다고 보고했다. 다음 항목을 ☑로 바꿨다.
+
+- 선택 텍스트 캡처: P-01(메모, Safari에서 출처와 선택 텍스트가 같은 앱), P-09(이미지만, 텍스트만, 둘 다 있던 클립보드가 캡처 뒤 그대로 복원), P-12(`instant`에서도 이미지·mixed는 팝업).
+- 클립보드 캡처: K-04(스크린샷 PNG와 TIFF 이미지 저장), K-06(실패 시 `Error`만 표시하고 메인 창은 뜨지 않음).
+- 설정: C-08(단축키 변경과 충돌 시 이전 단축키 유지), C-09(시작 시 저장된 단축키 하나만 등록), C-10(테마 즉시 적용과 `system` 복귀).
+- 권한: A-01~A-04.
+- 메뉴 막대: T-01, T-02, T-03(`Saved`와 `Error` 900 ms).
+
+확인하지 않은 항목(P-02, P-13, P-15, M-03, M-04, T-04, I-05, D 항목)은 ☐로 남겼다.
+
+## 단위 테스트 근거로 닫은 항목 (STA-61)
+
+단위 항목은 같은 내용을 확인하는 Swift 테스트가 통과해 ☑로 바꿨다.
+
+- P-03: `acceptsCopiedTextEqualToThePreviousClipboard`
+- P-04: `timesOutAfterTwentyEightPollsAndRestores`, `blankClipboardAfterCopyIsNoSelectedTextAndRestores`, `readFailureAfterCopyRestoresAndReportsClipboardUnavailable`, `copyFailureRestoresTheClipboard`, `unchangedClipboardIsNotRewrittenWhenNothingWasCopied`
+- P-05: `restoreFailureIsAWarningNotAFailure`
+- P-06: `backupFailureWarnsContinuesAndStillAttemptsRestore`
+- N-01: `LocalizationTests.koreanSystemLanguagesGetKoreanAndEverythingElseEnglish`
+- N-02: `LocalizationTests.everyPhraseHasBothLanguagesWithTheSamePlaceholders`. 표가 키마다 en·ko를 함께 가지므로 한쪽에만 있는 문구는 만들 수 없고, 테스트는 두 언어가 채워져 있고 자리표시자가 같은지 확인한다.
+- N-03: `LocalizationTests`의 알려진 코드 15개(코드별로 기대하는 문구 키까지 확인)와 알 수 없는 코드. **레거시와 다르게 정한 두 가지**: (1) 알 수 없는 코드의 오류는 레거시처럼 원본 메시지를 보여 주지 않고 기본 문구(`defaultError`)를 보여 준다. Swift의 `NotedropError.detail`은 사람용 문장이 아니라 로그용 원문(파일 경로, OS 영어 문구)이라 그대로 보여 주면 한국어 UI에 섞이고 경로가 노출된다. (2) "문자열 오류는 그대로"는 Swift에 문자열 오류 타입이 없어 해당 없음이고, `NotedropError`가 아닌 오류는 기본 문구로 가린다. 이 확인 중 `clipboard_restore_failed`, `automation_*` 문구를 추가했고 `empty_image`를 레거시처럼 `invalidImage`로 맞췄다.
+
+P-02는 실제 대기 시간을 보는 수동 항목이라 ☐로 남긴다.
+
+## Library 조작 수동 확인 기록 (STA-62)
+
+2026-10-08 사용자가 실제 앱에서 확인했다. L-11, L-12, L-13, L-14를 ☑로 바꿨다.
+
+- 처음 확인에서 우클릭 메뉴에 `Markdown 내보내기`와 구분선이 없고 `내용 복사`가 휴지통 뒤에 있었다. L-11 순서(출처 열기, 내용 복사, Markdown 내보내기, 구분선, 휴지통)로 고쳤다. 내보내기 로직은 상세 화면 버튼과 메뉴가 `LibraryModel.exportWithPanel`을 함께 쓴다.
+- `Cmd+Backspace`는 처음에 아무 반응이 없었다. 목록 뷰의 키 핸들러(`onKeyPress`)로는 `Cmd` 조합이 도달하지 않아서, 목록에 포커스가 있을 때만 활성화되는 메뉴 명령 `휴지통으로 이동`(⌘⌫, `TrashCommand`)으로 바꿔 동작을 확인했다. 노트·태그 입력창에서는 메뉴 항목이 비활성이라 글자 지우기가 그대로 동작한다.
+- 출처 열기(URL 없을 때 비활성)와 Markdown 내보내기 취소(파일 미생성)는 이상 없음.
