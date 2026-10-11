@@ -51,7 +51,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | C-09 | 시작 시 저장된 단축키 하나만 등록(다른 단축키는 등록하지 않음). 등록 실패는 보관 오류와 메뉴 막대 `Error`로 알린다. | 테스트: `startup_registers_only_the_selected_text_shortcut` | 단위: `ShortcutControllerTests.startupRegistersOnlyTheStoredShortcut` + 수동 | ☑ |
 | C-10 | `theme`가 `system`이면 앱 외형을 시스템에 맡기고, `light`/`dark`는 시스템을 덮어쓴다. | `useTheme.ts`. Swift: `SettingsModel.colorScheme`, 테스트 `colorSchemeFollowsTheme`, `changingThemePersistsAndKeepsOtherFields` | 단위(모델) + 수동(창 외형) | ☑ |
 | C-11 | 읽은 `theme`이 잘못되면 `system`으로 보정, `storageFolderPath`가 공백이면 기본 폴더. | `read_app_settings_from_path` | 단위 | ☑ |
-| C-12 | 번들 ID를 바꾸면 손쉬운 사용·자동화 권한을 새로 허용해야 한다. 설정과 Drop은 영향이 없다. | — | 수동 | ☐ |
+| C-12 | 번들 ID를 바꾸면 손쉬운 사용·자동화 권한을 새로 허용해야 한다. 설정과 Drop은 영향이 없다. | — | 수동 | ☑ |
 
 ## P. 캡처 (선택 텍스트)
 
@@ -69,7 +69,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | P-10 | 결과 Draft는 `note` 없음, `tags` 빈 배열. | `capture_selected_text_with` | 단위 | ☑ |
 | P-11 | `modal`이면 팝업, `instant`이면 텍스트만 즉시 저장(노트 `""`, 태그 없음). | `instant_save_payload_from_draft`, `handle_capture_draft` | 단위: `CaptureConfirmationTests`, `CaptureRouterTests`(`instantTextIsSavedWithAnEmptyNoteAndNoTags`, `theModeIsReadAtEveryCapture`) + 수동 | ☑ |
 | P-12 | `instant`에서도 이미지·`mixed`는 팝업. (도구 막대 캡처 버튼은 D-05 결정으로 만들지 않는다.) | `handle_capture_draft` | 단위: `instantStillOpensThePopupForImagesAndMixedContent`, `instantImageAndMixedOpenThePopupAndSaveNothing` + 수동 | ☑ |
-| P-13 | 선택 텍스트 캡처 실패: 오류 보관 + 메인 창 표시 + 메뉴 막대 `Error`. 보관 오류는 메인 창에서 **한 번만** 소비. | `emit_selected_text_capture_event`, 테스트: `pending_capture_error_is_returned_once` | 단위·수동 | ☐ |
+| P-13 | 선택 텍스트 캡처 실패: 오류 보관 + 메인 창 표시 + 메뉴 막대 `Error`. 보관 오류는 메인 창에서 **한 번만** 소비. | `emit_selected_text_capture_event`, 테스트: `pending_capture_error_is_returned_once` | 단위·수동 | ☑ |
 | P-14 | 별도 팝업 창이 이미 열려 있으면 단축키는 새 캡처를 하지 않고 열린 팝업을 앞으로 가져온다(결정 STA-47). 팝업이 열려 있으면 최전면 앱이 Notedrop 자신이라 선택 텍스트를 읽을 수 없기 때문이다. 레거시의 "새 Draft로 교체"와 다르다. | `open_capture_window` | 수동: 팝업을 연 채 단축키 재입력 | ☑ |
 | P-15 | 레거시는 클립보드 접근을 `swift -e` 서브프로세스로 했다. Swift 앱은 `NSPasteboard`를 직접 쓰므로 이 구조는 이어받지 않는다(같은 시맨틱만 유지). | `capture.rs` | — | ☑ |
 | P-16 | 접근성 읽기(`AXUIElementCreateApplication(최전면 앱)` → 포커스 요소 → `AXSelectedText`)가 비어 있지 않은 값을 주면 클립보드를 읽거나 쓰지 않고, `Cmd+C`도 보내지 않는다. 시스템 전역 요소는 쓰지 않는다(Chrome에서 실패). | [ax-probe.md](ax-probe.md) | 단위(가짜 호출 기록) + 수동: 메모·Chrome에서 캡처 전후 클립보드 `changeCount` 동일 | ☑ |
@@ -143,7 +143,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | I-02 | 태그 입력은 Enter 또는 쉼표로 등록, 여러 개를 쉼표로 한 번에. 이미 있는 태그는 안내(`tagAlreadyAdded`)하고 중복 추가 안 함. | `DropDetailPane.tsx` `registerTags` | 단위 | ☑ |
 | I-03 | 태그 칩 삭제 후 입력창에 포커스. | `removeTag` | 수동 | ☑ |
 | I-04 | 팝업 `Cmd+Enter` 저장(저장 중이면 무시), Escape 취소. 레거시는 `Cmd+Enter`에서 입력기 조합 여부를 검사하지 않는다(조합 중에도 동작). | `SavePopover.tsx` | 수동 | ☑ |
-| I-05 | 포커스 링은 컨트롤 모양을 따르는 둥근 링이고 레이아웃을 밀지 않는다. 컨테이너에는 링이 없다. 목록 행은 안쪽 링. | STA-38 CSS(실제 앱 미검증) | 수동 | ☐ |
+| I-05 | 포커스 링은 컨트롤 모양을 따르는 둥근 링이고 레이아웃을 밀지 않는다. 컨테이너에는 링이 없다. 목록 행은 안쪽 링. | STA-38 CSS(실제 앱 미검증) | 수동 | ☑ |
 | I-06 | 제목 인라인 이름 변경: Return 확정, Escape 되돌림, 둘 다 포커스를 목록에 돌린다. | STA-38(실제 앱 미검증) | 수동 | ☑ |
 
 ## T. 메뉴 막대
@@ -153,7 +153,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | T-01 | 템플릿 아이콘, 툴팁 `Notedrop`, 좌클릭은 메뉴가 아니라 메인 창 열기. 메뉴는 좌클릭이 아닌 방식(우클릭)으로 연다. | `tray.rs` | 수동 | ☑ |
 | T-02 | 메뉴 항목 ID는 `save-clipboard`, `open-library`. 알 수 없는 ID는 무시. | 테스트: `routes_stable_tray_menu_ids`, `save_clipboard_menu_action_starts_clipboard_capture` | 단위 | ☑ |
 | T-03 | 성공 `Saved`, 실패 `Error`를 900 ms 동안 제목과 툴팁에 표시하고 원복. | `show_feedback` | 단위: `MenuBarTests`(`errorShowsFor900msThenRestores`, `savedShowsFor900msThenRestores`) + 수동 | ☑ |
-| T-04 | 메인 창을 열 때 보관된 캡처 오류를 확인하도록 신호를 보낸다. | `show_main_window` | 수동 | ☐ |
+| T-04 | 메인 창을 열 때 보관된 캡처 오류를 확인하도록 신호를 보낸다. | `show_main_window` | 수동 | ☑ |
 
 ## N. 지역화
 
@@ -179,8 +179,8 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | D-07 | 메인 창을 닫았을 때 앱이 종료되는지, 메뉴 막대에 남는지가 레거시에서 확인되지 않았다. 메뉴 막대와 전역 단축키의 목적상 남는 편이 자연스럽다. | 메뉴 막대에 남는다. 마지막 창을 닫아도 종료하지 않고 전역 단축키와 메뉴 막대 항목을 유지한다. 종료는 Cmd+Q. (STA-52) | | ✔ |
 | D-08 | 로그인 시 자동 실행, Dock 아이콘 표시 여부는 정의되어 있지 않다. | 범위 밖. 필요하면 새 이슈. | | ☑ |
 | D-09 | `Design.md`와 `design-system.md`의 일부 문장은 AppKit 도구 막대, `compactSearch`, `inspectorOverlay` 같은 Tauri 구현 용어를 쓴다. | Swift 구현이 안정되면 문서에서 해당 구현 용어를 제거. | | ☑ |
-| D-10 | STA-38에서 도입한 SF Symbols 렌더링, 포커스 링, 제목 인라인 이름 변경, 목록 비포커스 선택 약화, 설정 화면 토글은 **실제 앱에서 확인되지 않았다.** | 레거시 앱에서 확인하지 말고 Swift 구현에서 기준(서체관리자)으로 직접 확인. | | ☐ |
-| D-11 | 라이트 테마의 도구 막대와 960 pt 너비 실화면 확인이 남아 있다. | Swift 구현에서 확인. | | ☐ |
+| D-10 | STA-38에서 도입한 SF Symbols 렌더링, 포커스 링, 제목 인라인 이름 변경, 목록 비포커스 선택 약화, 설정 화면 토글은 **실제 앱에서 확인되지 않았다.** | 레거시 앱에서 확인하지 말고 Swift 구현에서 기준(서체관리자)으로 직접 확인. | | ☑ |
+| D-11 | 라이트 테마의 도구 막대와 960 pt 너비 실화면 확인이 남아 있다. | Swift 구현에서 확인. | | ☑ |
 | D-12 | 문구 `shortcutFormatHint`가 "Tauri 형식"이라고 안내한다. 저장 문자열은 호환을 위해 같은 형식(`Shift+Cmd+K`)을 쓰지만 사용자에게 구현 용어를 보이면 안 된다. | 문구에서 Tauri를 빼고 형식 예시만 안내. | **결정(STA-55): `shortcutFormatHint`를 "수식키와 키를 +로 연결, 예: Shift+Cmd+K, F21–F24 미지원"으로 교체.** | ☑ |
 
 ## 4단계 수동 확인 기록 (STA-47, 2026-10-08)
@@ -365,3 +365,13 @@ P-02는 실제 대기 시간을 보는 수동 항목이라 ☐로 남긴다.
 - D-04: 이미지 Drop은 읽기에서 `drop.json`의 `imagePath`를 우선하고(없으면 `image.png`), 쓰기는 항상 `image.png`다.
 - D-08: 로그인 시 자동 실행과 Dock 아이콘 표시 여부는 범위 밖이다. 현재 동작(메뉴 막대에 남고 Dock에도 보임, 자동 실행 없음)을 유지하고 필요하면 새 이슈로 한다.
 - D-09: 디자인 문서의 Tauri 구현 용어 정리는 별도 이슈 STA-64로 이관했다.
+
+## B 묶음 수동 확인 기록 (STA-63)
+
+사용자가 실제 앱(ad-hoc 서명 디버그 빌드)에서 직접 확인했고 모두 문제가 없다고 보고했다.
+
+- P-13: 선택 없이 `Shift+Cmd+C` 시 메뉴 막대 `Error`, 메인 창 표시, 보관 오류 알림, 창을 닫고 다시 열면 알림이 다시 뜨지 않음.
+- T-04: 조용한 실패(`pbcopy < /dev/null` 뒤 `클립보드 저장...`) 후 메뉴 막대로 메인 창을 열면 보관 오류가 한 번 표시됨. 이 확인을 준비하다가 메뉴 막대로 열 때는 보관 오류를 보여 주지 않던 결함을 찾아 `CaptureRuntime.showMainWindow`에서 한 번 꺼내 보이도록 고쳤다.
+- C-12: 번들 ID를 바꾼 복사본에서 손쉬운 사용이 `권한 필요`로 나오고, Drop과 설정은 그대로.
+- I-05, D-10: SF Symbols, 포커스 링, 제목 인라인 이름 변경, 목록 비포커스 선택 약화, 설정 화면 토글.
+- D-11: 라이트 테마 도구 막대와 960 pt 최소 너비.
