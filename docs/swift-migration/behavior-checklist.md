@@ -45,9 +45,9 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | C-03 | 부분 갱신: 보낸 필드만 바꾸고 나머지는 유지, `updatedAt` 갱신. | 테스트: `updating_settings_persists_path_first_run_theme_and_updated_at`, `updating_settings_persists_shortcuts_without_changing_unrelated_fields` | 단위 | ☑ |
 | C-04 | `captureConfirmationMode` 키가 없으면 `modal`. 잘못된 값으로 갱신하면 거부. | 테스트: `missing_capture_confirmation_mode_defaults_to_modal`, `update_rejects_invalid_capture_confirmation_mode`, `changingCaptureModePersistsAndKeepsTheme` | 단위 | ☑ |
 | C-05 | `paneWidths`는 읽고 쓸 때 180–320 / 300–560으로 고정, `recentTags`는 태그 규칙과 12개 제한. | 테스트: `updating_settings_persists_pane_widths_and_recent_tags` | 단위 | ☑ |
-| C-06 | 단축키 문자열은 Tauri 문법(`Shift+Cmd+K`)으로 저장. Swift가 이 문자열을 파싱해야 하며 파싱 불가면 저장 거부. 파일은 바뀌지 않아야 한다. | 테스트: `update_rejects_unparseable_selected_text_shortcut`, `update_rejecting_invalid_shortcut_leaves_persisted_settings_file_untouched` | 단위(앱): `ShortcutModelTests`로 거절된 입력이 필드에 남지 않음 확인. 단위: 수식어(`Shift`, `Cmd`/`Command`, `Ctrl`/`Control`, `Alt`/`Option`)와 키 이름 | ☑ |
+| C-06 | 단축키 문자열은 Tauri 문법(`Shift+Cmd+K`)으로 저장. Swift가 이 문자열을 파싱해야 하며 파싱 불가면 저장 거부. 파일은 바뀌지 않아야 한다. Swift 설정 화면은 문자열 입력 대신 키 녹화로 받는다(STA-69): 입력란을 누르고 키 조합을 누르면 같은 문법의 문자열(`Ctrl+Option+Shift+Cmd+키` 순서)이 되고, 수식 키만 누르면 확정하지 않으며, 수식 키가 없거나 D-03 범위 밖의 키는 이유를 보이고 거부하고, Esc만 누르면 녹화를 취소한다. | 테스트: `update_rejects_unparseable_selected_text_shortcut`, `update_rejecting_invalid_shortcut_leaves_persisted_settings_file_untouched` | 단위(앱): `ShortcutRecordingTests`(허용 키 전체, 수식 키 순서, 수식 키가 아닌 플래그 무시, 수식 키만은 미리보기만, 수식 키 없음·범위 밖 거부, Esc 취소, 기록한 문자열이 누른 키로 등록됨), `ShortcutModelTests`(거부 이유 표시와 녹화 유지, 거절된 단축키가 필드에 남지 않음). 단위: 수식어(`Shift`, `Cmd`/`Command`, `Ctrl`/`Control`, `Alt`/`Option`)와 키 이름. 수동(STA-69): 실제 키 녹화 | ☐ |
 | C-07 | 원자적 쓰기(임시 파일 + 이름 변경)로 쓰고 쓰기 실패 시 임시 파일을 지운다. 동시 갱신은 직렬화. | `atomic_write_settings`, `SETTINGS_UPDATE_LOCK` | 단위 | ☑ |
-| C-08 | 단축키 변경 순서: 새 것 등록 → 이전 것 해제 → 설정 저장. 어느 단계가 실패해도 이전 단축키가 살아 있어야 한다. | 테스트: `changing_selected_text_shortcut_replaces_the_old_registration`, `failed_registration_keeps_the_previous_shortcut_active`, `persistence_failure_restores_the_previous_shortcut` | 단위(가짜 등록기): `ShortcutControllerTests` (등록→해제→저장 순서, 등록 실패·저장 실패 롤백, 롤백 실패 `shortcut_rollback_failed`) + 수동(실제 충돌) | ☑ |
+| C-08 | 단축키 변경 순서: 새 것 등록 → 이전 것 해제 → 설정 저장. 어느 단계가 실패해도 이전 단축키가 살아 있어야 한다. 이 순서는 설정 화면의 `저장` 버튼을 누를 때 한 번에 실행한다. 녹화·선택 중에는 실제 단축키와 설정 파일이 바뀌지 않고, `취소`나 설정 화면을 떠나면 고른 조합을 버리고 이전 단축키를 유지한다(STA-70). | 테스트: `changing_selected_text_shortcut_replaces_the_old_registration`, `failed_registration_keeps_the_previous_shortcut_active`, `persistence_failure_restores_the_previous_shortcut` | 단위(가짜 등록기): `ShortcutControllerTests` (등록→해제→저장 순서, 등록 실패·저장 실패 롤백, 롤백 실패 `shortcut_rollback_failed`), `ShortcutModelTests`(실제 `ShortcutController`와 가짜 등록기로 저장 전에는 등록·저장 호출 없음, 저장 때 등록→해제→저장, 녹화 취소·버리기 후 변화 없음) + 수동(실제 충돌, STA-70 저장 전 미적용) | ☐ |
 | C-09 | 시작 시 저장된 단축키 하나만 등록(다른 단축키는 등록하지 않음). 등록 실패는 보관 오류와 메뉴 막대 `Error`로 알린다. | 테스트: `startup_registers_only_the_selected_text_shortcut` | 단위: `ShortcutControllerTests.startupRegistersOnlyTheStoredShortcut` + 수동 | ☑ |
 | C-10 | `theme`가 `system`이면 앱 외형을 시스템에 맡기고, `light`/`dark`는 시스템을 덮어쓴다. | `useTheme.ts`. Swift: `SettingsModel.colorScheme`, 테스트 `colorSchemeFollowsTheme`, `changingThemePersistsAndKeepsOtherFields` | 단위(모델) + 수동(창 외형) | ☑ |
 | C-11 | 읽은 `theme`이 잘못되면 `system`으로 보정, `storageFolderPath`가 공백이면 기본 폴더. | `read_app_settings_from_path` | 단위 | ☑ |
@@ -295,6 +295,36 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 설정 화면의 `선택 텍스트 단축키` 섹션에서 바꾼다. 순서는 새 단축키 등록 → 이전 해제 → 설정 저장이며(`ShortcutController`), 등록 실패나 저장 실패면 이전 단축키가 계속 동작하고 설정 파일은 바뀌지 않는다. 저장 실패 뒤 이전 단축키를 다시 등록하지 못하면 `shortcut_rollback_failed`로 알린다. 거절된 입력은 필드에 남지 않고 동작 중인 단축키로 되돌아간다. 시작 시에는 저장된 단축키 하나만 등록하고, 실패하면 오류를 보관하고 메뉴 막대에 `Error`를 보인다(C-09). 새 오류 문구는 한국어·영어로 `shortcutRegistrationFailed`, `shortcutRollbackFailed`를 추가했고, 형식 오류는 `shortcutFormatHint`를 보인다. Carbon 핫키는 등록마다 고유 id를 붙여 교체 중 두 핫키가 동시에 살아 있어도 누른 쪽만 동작한다.
 
 수동 확인이 남음(실제 앱): 단축키 변경 직후 새 단축키로 캡처되고 이전 것은 반응하지 않는지, 다른 앱이 쓰는 조합으로 바꾸면 한국어 오류가 나오고 이전 단축키가 계속 되는지, 재실행 후 유지되는지, F21–F24 입력 시 형식 안내가 나오는지.
+
+## 단축키 키 녹화와 저장 전 미적용 기록 (STA-69, STA-70)
+
+STA-70 원인: 단축키 입력란 `TextField`에 `.onSubmit { model.apply() }`가 붙어 있었다(`ShortcutSection.swift`). 입력란에서 Return을 누르면 `ShortcutModel.apply()` → `CaptureRuntime.changeShortcut` → `ShortcutController.change`가 바로 실행되어 새 단축키 등록, 이전 해제, `settings.json` 저장까지 끝났다. `저장` 버튼을 누르지 않아도 적용된 것이다. 확인용 SwiftUI 프로브(macOS 26)에서 `onSubmit`은 Return에서만 불리고 포커스 이동에서는 불리지 않았다. 또 `ShortcutModel.text`는 앱 전체에서 하나라 저장하지 않고 설정 화면을 떠나도 입력한 문자열이 그대로 남아, 돌아오면 적용된 것처럼 보였다.
+
+바꾼 점:
+
+- 입력란을 키 녹화 필드로 바꿨다. 필드를 누르면 녹화가 시작되고, 누른 키 조합은 `ShortcutRecording.interpret`(키 코드와 수식 키 플래그를 받는 순수 함수)가 저장 문자열로 바꾼다. 키 이름은 등록할 때 쓰는 `KeyCodes` 표를 거꾸로 읽으므로 한글 입력 상태나 자판 배열과 관계없이 누른 물리 키로 등록된다. 수식 키는 `Ctrl+Option+Shift+Cmd` 순서로 쓰며, 레거시 파서(global-hotkey 0.8)가 읽는 토큰만 쓴다.
+- 수식 키만 누르면 필드에 `Shift+Cmd+`처럼 미리보기만 보이고 확정하지 않는다. 수식 키 없는 키는 `shortcutNeedsModifier`, D-03 범위 밖의 키(문장부호, 숫자 키패드, Help 등)는 `shortcutUnsupportedKey`를 보이고 녹화를 계속한다. Esc만 누르거나, 다른 곳을 클릭하거나, 다른 창이 키 창이 되거나(`NSWindow.didResignKeyNotification`), 다른 앱으로 전환하면 녹화를 끝낸다. 녹화가 끝나지 않은 채 포커스가 옮겨져 다른 창의 키 입력까지 삼키는 일을 막기 위해서다. F21–F24는 Mac 키보드로 누를 수 없고, 손으로 고친 설정 파일의 F21–F24는 지금처럼 등록에서 거부되어 `shortcutFormatHint`를 보인다.
+- 녹화 중에는 `NSEvent` 로컬 모니터가 키 입력을 먼저 가져가므로 메뉴 단축키(Cmd+Q, Cmd+W 등)와 포커스된 버튼(Space)으로 가지 않는다. 기록을 끝낸 키를 계속 누르고 있을 때 생기는 자동 반복도 버린다(Cmd+Q를 녹화하다 앱이 종료되지 않도록). 이 기억은 키를 떼거나, 수식 키가 바뀌거나, 새로 키를 누르거나, 클릭·포커스 이동·새 녹화 때 지운다. 그래서 키 떼기 이벤트를 놓쳐도 이후 입력을 계속 삼키지 않는다. 녹화 중 자동 반복은 해석하지 않고 버려서 거부 안내가 깜빡이지 않는다. 이 판정은 순수 상태기계 `RecorderKeyRouter`에 있고, `ShortcutKeyMonitor`는 `NSEvent`를 넘기고 결과만 적용한다.
+- 지금 등록된 전역 단축키는 Carbon이 키 입력을 가져간다. 녹화 중에 눌리면 캡처하지 않고 "지금 단축키 유지"로 처리해 고른 조합을 비우고 저장할 것이 없는 상태로 둔다(`CaptureRuntime.shortcutPressed` → `ShortcutModel.currentShortcutPressed`). 핫키 콜백은 `GlobalHotKey`가 메인 큐로 넘긴 뒤 `@MainActor` 동작을 부르므로 메인 액터에서 실행된다. 캡처 경로에서는 설정 화면이 이미 만든 모델만 확인하고, 모델을 새로 만들거나 설정을 읽지 않는다. 롤백 실패나 시작 시 등록 실패로 등록된 단축키가 없으면 핫키가 울리지 않는다. 이때 같은 조합은 일반 키로 녹화되어 저장 대기로 남고, 다시 저장할 수 있다.
+- 고른 조합은 `ShortcutModel.draft`에만 있고, `저장`을 눌러야 `ShortcutController.change`(등록 → 해제 → 저장)를 한 번 실행한다. 입력란 Return 적용(`onSubmit`)은 없앴다. `취소` 버튼과 설정 화면 이탈은 고른 조합을 버린다. 저장하지 않은 조합이 있으면 `shortcutUnsaved` 안내를 보인다. 같은 조합을 다시 골라도 저장할 수 있어서, `shortcut_rollback_failed` 뒤 다시 설정할 수 있다.
+- 새 문구(en/ko): `shortcutField`, `shortcutRecording`, `shortcutRecordHint`, `shortcutUnsaved`, `shortcutNeedsModifier`, `shortcutUnsupportedKey`.
+
+단위 테스트로 확인함: `ShortcutRecordingTests`(10개, `KeyCodes` 키 코드 중복 없음 포함), `RecorderKeyRouterTests`(9개, 포커스 이동·클릭 시 녹화 종료, 자동 반복과 키 떼기 유실 처리), `ShortcutModelTests`(15개, 실제 `ShortcutController`와 가짜 등록기로 저장 전에는 등록·저장이 호출되지 않음, 지금 단축키를 눌렀을 때 저장 대기 없음, 롤백 실패 뒤 같은 조합 재저장을 확인).
+
+적용하지 않은 것: 등록 실패나 롤백 실패 뒤에도 고른 조합을 남겨 재시도를 쉽게 하는 안은 적용하지 않았다. STA-55와 C-06의 "거절된 입력은 필드에 남지 않는다"를 지키기 위해서다. 실패 뒤에는 동작 중인 단축키로 되돌린다.
+
+수동 확인이 남음(실제 앱): 아래 확인 전까지 C-06, C-08을 ☐로 둔다.
+
+1. 설정 → `선택 텍스트 단축키` 필드를 누르면 테두리가 강조되고 `키를 누르세요…`가 보인다. Shift+Cmd를 누르고 있으면 `Shift+Cmd+`가 보이고 떼면 다시 안내로 돌아간다.
+2. Shift+Cmd+K를 누르면 필드가 `Shift+Cmd+K`, `아직 저장하지 않았습니다…` 안내가 보인다. 이 상태에서 다른 앱의 텍스트를 선택하고 Shift+Cmd+C를 누르면 캡처되고 Shift+Cmd+K는 반응하지 않는다. `settings.json`의 `selectedTextShortcut`은 그대로다.
+3. `저장`을 누르면 Shift+Cmd+K로 캡처되고 Shift+Cmd+C는 반응하지 않으며 `settings.json`이 바뀐다. 재실행 후에도 유지된다.
+4. 녹화 중 K만 누르면 수식 키 안내, Cmd+-(빼기)나 숫자 키패드 키는 쓸 수 없는 키 안내가 나오고 녹화가 계속된다. Esc를 누르면 녹화가 끝나고 필드는 이전 값이다.
+5. 녹화 중 Cmd+Q, Cmd+W, Cmd+,를 누르면 앱이 종료되거나 창이 닫히지 않고 필드에 그 조합이 보인다. Cmd+Q를 길게 누르고 있어도 앱이 종료되지 않는다. 저장하지 않고 `취소`.
+6. Shift+Cmd+K를 고른 뒤 다시 녹화하면서 지금 단축키(Shift+Cmd+C)를 누르면 캡처나 팝업이 뜨지 않고, 필드는 `Shift+Cmd+C`, 미저장 안내는 사라지고 `저장`은 비활성이다.
+7. 조합을 고른 뒤 저장하지 않고 사이드바에서 Library로 갔다가 설정으로 돌아오면 필드가 이전 단축키이고, 이전 단축키로 캡처된다. `취소` 버튼도 같다.
+8. 다른 앱이 쓰는 조합을 녹화하고 저장하면 `shortcutRegistrationFailed` 문구, 필드는 이전 값, 이전 단축키 동작.
+9. 한글 입력 상태에서 녹화해도 영문 키 이름(예: `Shift+Cmd+K`)으로 기록된다.
+10. 녹화 중 다른 Notedrop 창이나 다른 앱 창을 클릭하거나 키 창을 바꾸면 녹화가 끝나고, 그 창에서 키 입력(Library 목록 이동, 노트 입력)과 전역 단축키 캡처가 정상 동작한다.
 
 ## 5단계 이미지와 mixed 저장 기록 (STA-57)
 

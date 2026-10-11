@@ -56,15 +56,26 @@ final class CaptureRuntime {
     // MARK: Shortcut
 
     /// The settings field for the shortcut; its change goes register -> release -> save (checklist C-08).
-    private(set) lazy var shortcutModel = ShortcutModel(
-        initial: (try? settings.read().selectedTextShortcut) ?? SettingsStore.defaultShortcut,
-        apply: { [weak self] in try self?.changeShortcut($0) })
+    var shortcutModel: ShortcutModel {
+        if let createdShortcutModel { return createdShortcutModel }
+        let model = ShortcutModel(
+            initial: (try? settings.read().selectedTextShortcut) ?? SettingsStore.defaultShortcut,
+            apply: { [weak self] in try self?.changeShortcut($0) })
+        createdShortcutModel = model
+        return model
+    }
+
+    /// Only the Settings screen creates the model; a hot key press must not create it (or read settings) on the way.
+    private var createdShortcutModel: ShortcutModel?
 
     private func changeShortcut(_ text: String) throws {
         try shortcuts.change(to: text) { [settings] in _ = try settings.update(SettingsUpdate(selectedTextShortcut: $0)) }
     }
 
+    /// Runs on the main actor: `GlobalHotKey` hops to the main queue before calling its `@MainActor` action.
     private func shortcutPressed() {
+        // While Settings records a new shortcut, pressing the live one keeps it instead of capturing (STA-69).
+        if createdShortcutModel?.currentShortcutPressed() == true { return }
         guard let coordinator else { return }
         // Notedrop is frontmost while its popup is open, so a capture would read Notedrop itself. Show the
         // popup instead (a deliberate difference from checklist P-14, which expects the draft to be replaced).

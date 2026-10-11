@@ -111,6 +111,20 @@ enum StringTable {
         "shortcutRollbackFailed": (
             en: "The shortcut could not be saved and the previous one could not be restored. Set a shortcut again.",
             ko: "단축키를 저장하지 못했고 이전 단축키도 복원하지 못했습니다. 단축키를 다시 설정하세요."),
+        "shortcutField": (en: "Shortcut", ko: "단축키"),
+        "shortcutRecording": (en: "Press keys…", ko: "키를 누르세요…"),
+        "shortcutRecordHint": (
+            en: "Click the field and press the new key combination. Esc cancels the recording.",
+            ko: "입력란을 클릭하고 새 키 조합을 누르세요. Esc를 누르면 녹화를 취소합니다."),
+        "shortcutUnsaved": (
+            en: "Not saved yet. The current shortcut keeps working until you press Save.",
+            ko: "아직 저장하지 않았습니다. 저장을 누르기 전까지 기존 단축키가 그대로 동작합니다."),
+        "shortcutNeedsModifier": (
+            en: "Hold Shift, Cmd, Ctrl or Option together with the key.",
+            ko: "Shift, Cmd, Ctrl, Option 중 하나 이상을 함께 누르세요."),
+        "shortcutUnsupportedKey": (
+            en: "That key can't be used. Use a letter, a number, F1–F20, an arrow, Space, Enter, Tab, Esc, Backspace, Delete, Home, End, Page Up or Page Down.",
+            ko: "이 키는 쓸 수 없습니다. 문자, 숫자, F1–F20, 방향키, Space, Enter, Tab, Esc, Backspace, Delete, Home, End, Page Up, Page Down 중에서 고르세요."),
         "captureConfirmation": (en: "Save confirmation", ko: "저장 확인"),
         "modal": (en: "Show popup", ko: "팝업 표시"),
         "instant": (en: "Save text instantly", ko: "텍스트 즉시 저장"),
