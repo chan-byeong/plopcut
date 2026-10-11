@@ -23,6 +23,7 @@ struct SavePopupView: View {
                 fields.padding(.horizontal, 16).padding(.top, 4)
             }
             .scrollBounceBehavior(.basedOnSize)
+            .slimScrollers()
             .layoutPriority(1)
             buttons.padding(.horizontal, 16)
         }
@@ -76,6 +77,7 @@ struct SavePopupView: View {
                 Text(model.draft.text ?? "")
                     .font(.body).frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled).padding(8)
             }
+            .slimScrollers()
             .frame(height: Self.previewHeight)
             .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
         }

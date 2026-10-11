@@ -76,6 +76,7 @@ struct LibraryListView: View {
                 }
             }
             .listStyle(.inset)
+            .slimScrollers()
             .focused(listFocused)
             .focusedValue(\.trashSelectedDrop, model.selectedID == nil ? nil : { if let id = model.selectedID { model.pendingDeleteID = id } })
             .contextMenu(forSelectionType: String.self) { ids in

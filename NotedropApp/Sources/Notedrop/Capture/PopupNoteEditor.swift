@@ -46,6 +46,7 @@ struct PopupNoteEditor: NSViewRepresentable {
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = false
         scrollView.documentView = textView
+        SlimScroller.apply(to: scrollView)
         return scrollView
     }
 
