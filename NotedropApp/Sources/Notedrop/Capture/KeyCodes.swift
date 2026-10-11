@@ -15,6 +15,12 @@ enum KeyCodes {
 
     static func keyCode(for key: String) -> UInt32? { table[key] }
 
+    /// The key name for a pressed key, read the same way registration maps it back, so a recorded shortcut fires on
+    /// the key that was pressed whatever the keyboard layout or input source (Korean input included).
+    static func key(forKeyCode code: UInt16) -> String? { names[UInt32(code)] }
+
+    private static let names: [UInt32: String] = Dictionary(uniqueKeysWithValues: table.map { ($1, $0) })
+
     private static let table: [String: UInt32] = [
         "A": 0, "S": 1, "D": 2, "F": 3, "H": 4, "G": 5, "Z": 6, "X": 7, "C": 8, "V": 9, "B": 11, "Q": 12, "W": 13,
         "E": 14, "R": 15, "Y": 16, "T": 17, "O": 31, "U": 32, "I": 34, "P": 35, "L": 37, "J": 38, "K": 40, "N": 45,

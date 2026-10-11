@@ -65,6 +65,8 @@ final class CaptureRuntime {
     }
 
     private func shortcutPressed() {
+        // While Settings records a new shortcut, pressing the live one picks it instead of capturing (STA-69).
+        if shortcutModel.currentShortcutPressed() { return }
         guard let coordinator else { return }
         // Notedrop is frontmost while its popup is open, so a capture would read Notedrop itself. Show the
         // popup instead (a deliberate difference from checklist P-14, which expects the draft to be replaced).

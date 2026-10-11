@@ -109,6 +109,12 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39)
 | `shortcutFormatHint` | Join modifiers and a key with +, for example Shift+Cmd+K. F21–F24 are not supported. | 수식키와 키를 +로 연결하세요. 예: Shift+Cmd+K (F21–F24는 지원하지 않습니다) |
 | `shortcutRegistrationFailed` | Could not register that shortcut. Another app may already use it. The previous shortcut still works. | 이 단축키를 등록하지 못했습니다. 다른 앱이 이미 사용 중일 수 있습니다. 이전 단축키는 그대로 동작합니다. |
 | `shortcutRollbackFailed` | The shortcut could not be saved and the previous one could not be restored. Set a shortcut again. | 단축키를 저장하지 못했고 이전 단축키도 복원하지 못했습니다. 단축키를 다시 설정하세요. |
+| `shortcutField` | Shortcut | 단축키 |
+| `shortcutRecording` | Press keys… | 키를 누르세요… |
+| `shortcutRecordHint` | Click the field and press the new key combination. Esc cancels the recording. | 입력란을 클릭하고 새 키 조합을 누르세요. Esc를 누르면 녹화를 취소합니다. |
+| `shortcutUnsaved` | Not saved yet. The current shortcut keeps working until you press Save. | 아직 저장하지 않았습니다. 저장을 누르기 전까지 기존 단축키가 그대로 동작합니다. |
+| `shortcutNeedsModifier` | Hold Shift, Cmd, Ctrl or Option together with the key. | Shift, Cmd, Ctrl, Option 중 하나 이상을 함께 누르세요. |
+| `shortcutUnsupportedKey` | That key can't be used. Use a letter, a number, F1–F20, an arrow, Space, Enter, Tab, Esc, Backspace, Delete, Home, End, Page Up or Page Down. | 이 키는 쓸 수 없습니다. 문자, 숫자, F1–F20, 방향키, Space, Enter, Tab, Esc, Backspace, Delete, Home, End, Page Up, Page Down 중에서 고르세요. |
 | `captureConfirmation` | Save confirmation | 저장 확인 |
 | `modal` | Show popup | 팝업 표시 |
 | `instant` | Save text instantly | 텍스트 즉시 저장 |
