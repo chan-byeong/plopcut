@@ -15,13 +15,15 @@ struct StorageFolderSection: View {
             }
             Button(L10n.t("chooseFolder")) { Task { await model.chooseFolder() } }
             if let problem = model.problem {
-                Text(problem).foregroundStyle(.red)
+                Text(problem).font(.caption).foregroundStyle(.red).listRowBackground(Color.clear)
             }
-            StorageFolderNoticeText(notice: model.notice)
+            StorageFolderNoticeText(notice: model.notice).listRowBackground(Color.clear)
         }
     }
 }
 
+/// Status line under the folder controls. Rendered as caption-sized subtext with no background;
+/// only failures keep a color (red) to signal the difference in meaning.
 struct StorageFolderNoticeText: View {
     let notice: StorageFolderNotice?
 
@@ -30,13 +32,13 @@ struct StorageFolderNoticeText: View {
         case .none:
             EmptyView()
         case .cancelled:
-            Text(L10n.t("folderCancelled")).foregroundStyle(.secondary)
+            Text(L10n.t("folderCancelled")).font(.caption).foregroundStyle(.secondary)
         case .updated:
-            Text(L10n.t("folderSet")).foregroundStyle(.secondary)
+            Text(L10n.t("folderSet")).font(.caption).foregroundStyle(.secondary)
         case .confirmed:
-            Text(L10n.t("folderConfirmed")).foregroundStyle(.secondary)
+            Text(L10n.t("folderConfirmed")).font(.caption).foregroundStyle(.secondary)
         case .failed(let message):
-            Text(message).foregroundStyle(.red)
+            Text(message).font(.caption).foregroundStyle(.red)
         }
     }
 }
