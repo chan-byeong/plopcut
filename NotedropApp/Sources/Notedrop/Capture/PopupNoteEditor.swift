@@ -92,7 +92,10 @@ final class PopupNoteEditorControl {
 
 /// Keeps the text view at least as tall as the visible area, so a click below the last line still focuses the note.
 final class NoteScrollView: NSScrollView {
+    /// The thin scroller is set on every tile. AppKit tiles after it gets a new scroller, as when the system's scroll
+    /// bar setting changes, and a new scroller starts regular (STA-68).
     override func tile() {
+        SlimScroller.setControlSize(on: self)
         super.tile()
         guard let textView = documentView as? NSTextView else { return }
         let height = contentSize.height

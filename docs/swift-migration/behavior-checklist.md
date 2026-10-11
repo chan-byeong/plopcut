@@ -420,3 +420,13 @@ P-02는 실제 대기 시간을 보는 수동 항목이라 ☐로 남긴다.
 코드 리뷰 반영: 노트에서 Tab·Shift+Tab은 탭 문자 대신 태그 필드와 노트 사이를 오간다(기존 `TextEditor`는 탭 문자를 넣었다. 레거시 textarea는 포커스 이동). Option+Tab은 탭 문자. `Cmd+Enter` 저장은 먼저 조합 중인 글자를 확정한다. 포커스 상태 변경은 다음 차례로 미룬다. 단위: `SavePopupWindowTests.NoteEditor`(Return, Tab, Escape, `Cmd+Enter` 포함).
 
 수동 확인이 남음(실제 앱): 한글 노트 입력(줄바꿈, 문장 중간 커서, 노트↔태그 포커스 이동), 자리 표시 문구 위치, 텍스트·이미지·mixed 팝업에서 잘림 없음, 태그 칩이 늘 때 창이 아래로 커지고 화면 아래에 닿으면 입력 영역이 스크롤되는지, 실제 한글 입력기에서 조합 중 `Cmd+Enter`, Tab 이동, Escape, 라이트·다크 테마.
+
+## 스크롤 막대 두께 기록 (STA-68)
+
+AppKit의 레거시 스크롤 막대는 너비 17(knob 11)이고 `controlSize = .small`이면 13(knob 7)이다. `.mini`도 세로 스크롤러는 13이라 `.small`을 쓴다. 이 값은 이 기기(시스템 설정 스크롤 막대 '항상')에서 `NSHostingView`에 띄운 `ScrollView`와 `List`로 재서 확인했다. 스크롤러 서브클래스로 더 얇게 만드는 방법은 막대와 knob를 직접 그려야 해서 택하지 않았다. `SlimScroller`(`.slimScrollers()`)는 스크롤러의 `controlSize`만 바꾼다. 스크롤 막대 스타일(legacy/overlay)과 자동 숨김, 드래그는 시스템 설정을 따른다. overlay 스타일의 막대는 원래 얇고 스크롤할 때만 나타나므로 줄어드는 효과는 legacy 스타일(마우스 연결 또는 '항상')에서 나타난다.
+
+검토 반영: `PopupNoteEditor`의 스크롤 뷰는 `tile()`마다 작은 스크롤러를 다시 설정한다(새 스크롤러는 regular로 시작하고 AppKit이 그 뒤에 `tile()`을 부른다). 프로브는 레이아웃과 시스템 스크롤 막대 설정 변경 알림에서 다시 적용하고, 대상을 못 찾으면 같은 크기에서 4번까지만 창을 훑는다. 프로브는 마우스와 접근성에서 숨긴다. 툴바가 있는 분할 보기에 Library 목록을 띄운 테스트 창(제목 막대 투명, `fullSizeContentView`)에서도 목록의 스크롤러가 작게 바뀌었다. 겹침 기준은 0.75다.
+
+적용: Save Popup(바깥 입력 영역, 텍스트 미리보기, `PopupNoteEditor`), Library Drop 목록, Drop 본문, 인스펙터와 그 노트 `TextEditor`. 사이드바 목록은 제외했다. 단위: `SlimScrollerTests`.
+
+수동 확인이 남음(실제 앱): 시스템 설정 → 모양 → 스크롤 막대 표시를 '항상'으로 두고 Save Popup 세 영역과 Library 목록의 막대가 이전보다 얇은지, knob를 마우스로 끌 수 있는지, '스크롤할 때'와 '마우스나 트랙패드 연결에 따라 자동'에서 막대가 시스템 방식대로 나타나고 사라지는지, 라이트·다크 테마.

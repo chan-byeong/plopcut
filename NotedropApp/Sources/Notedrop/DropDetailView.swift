@@ -22,6 +22,7 @@ struct DropDetailView: View {
                 }
                 .padding(24).frame(maxWidth: .infinity, alignment: .leading)
             }
+            .slimScrollers()
         } else {
             ContentUnavailableView(L10n.t("selectHint"), systemImage: "text.cursor")
         }
@@ -105,6 +106,7 @@ struct InspectorView: View {
                 .padding(16).frame(maxWidth: .infinity, alignment: .leading)
             }
         }
+        .slimScrollers()
     }
 
     // MARK: Note
@@ -117,7 +119,7 @@ struct InspectorView: View {
                 saveStatus
             }
             TextEditor(text: Binding(get: { editor.draft.note }, set: { editor.setNote($0) }))
-                .font(.body).scrollContentBackground(.hidden)
+                .font(.body).scrollContentBackground(.hidden).slimScrollers()
                 .padding(4).frame(minHeight: 96)
                 .background(Color(nsColor: .textBackgroundColor), in: RoundedRectangle(cornerRadius: 6))
                 .overlay(RoundedRectangle(cornerRadius: 6).stroke(noteFocused ? Color.accentColor : Color.secondary.opacity(0.3), lineWidth: noteFocused ? 2 : 1))
