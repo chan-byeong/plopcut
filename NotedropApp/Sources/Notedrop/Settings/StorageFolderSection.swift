@@ -5,7 +5,7 @@ struct StorageFolderSection: View {
     @Environment(StorageFolderModel.self) private var model
 
     var body: some View {
-        Section(L10n.t("storageFolder")) {
+        Section {
             LabeledContent(L10n.t("storageFolder")) {
                 Text(model.path)
                     .textSelection(.enabled)
@@ -14,16 +14,23 @@ struct StorageFolderSection: View {
                     .foregroundStyle(.secondary)
             }
             Button(L10n.t("chooseFolder")) { Task { await model.chooseFolder() } }
-            if let problem = model.problem {
-                Text(problem).font(.caption).foregroundStyle(.red).listRowBackground(Color.clear)
+        } header: {
+            Text(L10n.t("storageFolder"))
+        } footer: {
+            // A Section footer is plain subtext under the card: no row background, and it takes the standard
+            // footnote style. Failures keep red because their meaning differs from a plain status.
+            VStack(alignment: .leading, spacing: 2) {
+                if let problem = model.problem {
+                    Text(problem).foregroundStyle(.red)
+                }
+                StorageFolderNoticeText(notice: model.notice)
             }
-            StorageFolderNoticeText(notice: model.notice).listRowBackground(Color.clear)
+            .accessibilityAddTraits(.updatesFrequently)
         }
     }
 }
 
-/// Status line under the folder controls. Rendered as caption-sized subtext with no background;
-/// only failures keep a color (red) to signal the difference in meaning.
+/// Status line for the folder controls. Only failures carry a color; the rest is secondary subtext.
 struct StorageFolderNoticeText: View {
     let notice: StorageFolderNotice?
 
@@ -32,13 +39,13 @@ struct StorageFolderNoticeText: View {
         case .none:
             EmptyView()
         case .cancelled:
-            Text(L10n.t("folderCancelled")).font(.caption).foregroundStyle(.secondary)
+            Text(L10n.t("folderCancelled")).foregroundStyle(.secondary)
         case .updated:
-            Text(L10n.t("folderSet")).font(.caption).foregroundStyle(.secondary)
+            Text(L10n.t("folderSet")).foregroundStyle(.secondary)
         case .confirmed:
-            Text(L10n.t("folderConfirmed")).font(.caption).foregroundStyle(.secondary)
+            Text(L10n.t("folderConfirmed")).foregroundStyle(.secondary)
         case .failed(let message):
-            Text(message).font(.caption).foregroundStyle(.red)
+            Text(message).foregroundStyle(.red)
         }
     }
 }
