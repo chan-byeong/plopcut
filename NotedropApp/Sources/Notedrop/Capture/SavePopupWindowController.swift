@@ -1,7 +1,8 @@
 import AppKit
 import SwiftUI
 
-/// The separate Save Popup window (spec 2.1): 430x560, fixed size, always on top, centered, no title.
+/// The separate Save Popup window (spec 2.1): fixed size, always on top, centered, no title.
+/// The hosting view adds the transparent title bar's height to `SavePopupView.contentSize`.
 /// One window is reused; a new draft replaces the previous one (checklist P-14).
 @MainActor
 final class SavePopupWindowController: NSObject, NSWindowDelegate {
@@ -33,7 +34,7 @@ final class SavePopupWindowController: NSObject, NSWindowDelegate {
 
     private func makePanel() -> NSPanel {
         let panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 430, height: 560),
+            contentRect: NSRect(origin: .zero, size: SavePopupView.contentSize),
             styleMask: [.titled, .closable, .fullSizeContentView], backing: .buffered, defer: false)
         panel.titleVisibility = .hidden
         panel.titlebarAppearsTransparent = true
