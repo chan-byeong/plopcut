@@ -6,15 +6,34 @@ import NotedropCore
 struct SavePopupView: View {
     /// The content below the window's title bar for a draft without warnings, tag chips or many recent tags.
     /// Content that needs more height (warnings, tag chips, recent tags, an error) makes the window taller instead
-    /// of being cut off at the bottom (STA-67).
+    /// of being cut off (STA-67), up to `maxHeight`; past that the fields scroll and the buttons stay at the bottom.
     static let contentSize = CGSize(width: 430, height: 388)
     private static let previewHeight: CGFloat = 96
 
     @Bindable var model: SavePopupModel
+    /// The tallest the content may get: the screen's visible height minus the title bar.
+    var maxHeight: CGFloat = .infinity
     @FocusState private var tagFocused: Bool
     @State private var noteFocused = false
+    @State private var noteControl = PopupNoteEditorControl()
 
     var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            ScrollView {
+                fields.padding(.horizontal, 16).padding(.top, 4)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            .layoutPriority(1)
+            buttons.padding(.horizontal, 16)
+        }
+        .padding(.bottom, 16)
+        .frame(width: Self.contentSize.width)
+        .frame(minHeight: min(Self.contentSize.height, maxHeight), maxHeight: maxHeight, alignment: .top)
+        .fixedSize(horizontal: false, vertical: true)
+        .onChange(of: tagFocused) { _, _ in CompositionMonitor.shared.reset() }
+    }
+
+    private var fields: some View {
         VStack(alignment: .leading, spacing: 12) {
             header
             VStack(alignment: .leading, spacing: 6) {
@@ -27,13 +46,7 @@ struct SavePopupView: View {
             if let message = model.errorMessage {
                 Text(message).font(.callout).foregroundStyle(.red).accessibilityAddTraits(.isStaticText)
             }
-            buttons.frame(maxHeight: .infinity, alignment: .bottom)
         }
-        .padding(.horizontal, 16).padding(.top, 4).padding(.bottom, 16)
-        .frame(width: Self.contentSize.width)
-        .frame(minHeight: Self.contentSize.height, alignment: .top)
-        .fixedSize(horizontal: false, vertical: true)
-        .onChange(of: tagFocused) { _, _ in CompositionMonitor.shared.reset() }
     }
 
     private var header: some View {
@@ -98,7 +111,7 @@ struct SavePopupView: View {
             Text(L10n.t("note")).font(.callout.weight(.semibold))
             PopupNoteEditor(
                 text: $model.note, placeholder: L10n.t("optionalNote"), accessibilityLabel: L10n.t("note"),
-                onFocusChange: { focused in
+                control: noteControl, onFocusChange: { focused in
                     noteFocused = focused
                     CompositionMonitor.shared.reset()
                 }
@@ -154,7 +167,11 @@ struct SavePopupView: View {
         HStack {
             Spacer()
             Button(L10n.t("cancel")) { model.cancel() }.keyboardShortcut(.cancelAction)
-            Button(L10n.t("save")) { Task { await model.submit() } }
+            Button(L10n.t("save")) {
+                // Cmd+Enter can arrive while a syllable is still being composed (checklist I-04).
+                noteControl.commitComposition()
+                Task { await model.submit() }
+            }
                 .keyboardShortcut(.return, modifiers: .command)
                 .buttonStyle(.borderedProminent)
                 .disabled(model.isSaving)

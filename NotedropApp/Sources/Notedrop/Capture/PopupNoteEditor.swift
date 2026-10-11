@@ -12,7 +12,9 @@ struct PopupNoteEditor: NSViewRepresentable {
     @Binding var text: String
     let placeholder: String
     let accessibilityLabel: String
-    var onFocusChange: (Bool) -> Void = { _ in }
+    /// Lets the popup close an open composition before it saves.
+    var control: PopupNoteEditorControl? = nil
+    var onFocusChange: @MainActor (Bool) -> Void = { _ in }
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -35,7 +37,8 @@ struct PopupNoteEditor: NSViewRepresentable {
         textView.setAccessibilityLabel(accessibilityLabel)
         textView.delegate = context.coordinator
         textView.onEdit = { [weak coordinator = context.coordinator] in coordinator?.publish($0) }
-        textView.onFocusChange = { [weak coordinator = context.coordinator] in coordinator?.parent.onFocusChange($0) }
+        textView.onFocusChange = { [weak coordinator = context.coordinator] in coordinator?.focusChanged($0) }
+        control?.textView = textView
 
         // Same scroll setup as `TextEditor`, so the scroller looks as before.
         let scrollView = NoteScrollView()
@@ -49,8 +52,14 @@ struct PopupNoteEditor: NSViewRepresentable {
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         context.coordinator.parent = self
         guard let textView = scrollView.documentView as? NoteTextView else { return }
+        control?.textView = textView
         if textView.placeholder != placeholder { textView.placeholder = placeholder }
-        // Writing during a composition would drop the syllable being typed.
+        if textView.accessibilityLabel() != accessibilityLabel { textView.setAccessibilityLabel(accessibilityLabel) }
+        // The text view is the source of truth while the popup is open: every edit, marked text included, is
+        // published to the binding, and the end of a composition (`unmarkText`, or the IME's `insertText`) publishes
+        // again, so the binding matches the view once the composition ends. Only a value set from outside during a
+        // composition is skipped here, on purpose: writing it would drop the syllable being typed. Nothing else in
+        // the popup writes the note while it is being edited.
         if !textView.hasMarkedText(), textView.string != text { textView.string = text }
     }
 
@@ -62,7 +71,23 @@ struct PopupNoteEditor: NSViewRepresentable {
         func publish(_ string: String) {
             if parent.text != string { parent.text = string }
         }
+
+        /// Focus changes arrive inside `becomeFirstResponder`, which can run during a SwiftUI update; the popup's
+        /// state changes on the next turn instead.
+        func focusChanged(_ focused: Bool) {
+            Task { @MainActor [weak self] in self?.parent.onFocusChange(focused) }
+        }
     }
+}
+
+/// A handle the popup uses to reach its note editor.
+@MainActor
+final class PopupNoteEditorControl {
+    fileprivate(set) weak var textView: NoteTextView?
+
+    /// Ends an open composition, keeping the visible characters, so `Cmd+Enter` saves what the field shows and a
+    /// later commit from the input method has nothing left to replace.
+    func commitComposition() { textView?.commitComposition() }
 }
 
 /// Keeps the text view at least as tall as the visible area, so a click below the last line still focuses the note.
@@ -84,8 +109,8 @@ final class NoteTextView: NSTextView {
             needsDisplay = true
         }
     }
-    var onEdit: ((String) -> Void)?
-    var onFocusChange: ((Bool) -> Void)?
+    var onEdit: (@MainActor (String) -> Void)?
+    var onFocusChange: (@MainActor (Bool) -> Void)?
     /// Takes keyboard focus the first time the view is in a window: the popup opens on the note (spec 3.5).
     var focusOnFirstWindow = true
 
@@ -131,6 +156,29 @@ final class NoteTextView: NSTextView {
         edited()
     }
 
+    /// Asks the input method to finish; if it leaves the marked text in place, keeps those characters as typed.
+    func commitComposition() {
+        guard hasMarkedText() else { return }
+        inputContext?.discardMarkedText()
+        if hasMarkedText() { unmarkText() }
+    }
+
+    /// Tab and Shift+Tab move between the popup's fields instead of typing a tab, like the legacy textarea.
+    /// Option+Tab still types one (`insertTabIgnoringFieldEditor`).
+    override func insertTab(_ sender: Any?) {
+        window?.selectNextKeyView(sender)
+    }
+
+    override func insertBacktab(_ sender: Any?) {
+        window?.selectPreviousKeyView(sender)
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        // The placeholder color is resolved when it is drawn.
+        needsDisplay = true
+    }
+
     private func edited() {
         // The placeholder can extend past the changed glyphs, so redraw the whole view.
         needsDisplay = true
@@ -141,12 +189,10 @@ final class NoteTextView: NSTextView {
         super.viewDidMoveToWindow()
         guard focusOnFirstWindow, let window else { return }
         focusOnFirstWindow = false
-        // After the hosting view finishes inserting its views; the run loop also runs this inside a nested loop.
-        RunLoop.main.perform { [weak self] in
-            MainActor.assumeIsolated {
-                guard let self, self.window === window else { return }
-                window.makeFirstResponder(self)
-            }
+        // After the hosting view finishes inserting its views.
+        Task { @MainActor [weak self] in
+            guard let self, self.window === window else { return }
+            window.makeFirstResponder(self)
         }
     }
 

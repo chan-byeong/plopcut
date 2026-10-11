@@ -142,7 +142,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | I-01 | **한글 입력기 조합 중 Enter/쉼표로 태그를 등록하지 않는다.** | `DropDetailPane.tsx` `isComposingKey`, `SavePopover.tsx` | 수동: 한글로 태그 입력 후 Enter(조합 확정 Enter는 등록 아님) | ☑ |
 | I-02 | 태그 입력은 Enter 또는 쉼표로 등록, 여러 개를 쉼표로 한 번에. 이미 있는 태그는 안내(`tagAlreadyAdded`)하고 중복 추가 안 함. | `DropDetailPane.tsx` `registerTags` | 단위 | ☑ |
 | I-03 | 태그 칩 삭제 후 입력창에 포커스. | `removeTag` | 수동 | ☑ |
-| I-04 | 팝업 `Cmd+Enter` 저장(저장 중이면 무시), Escape 취소. 레거시는 `Cmd+Enter`에서 입력기 조합 여부를 검사하지 않는다(조합 중에도 동작). 웹 textarea처럼 조합 중인 글자도 노트 값에 들어 있으므로 Swift 노트도 화면에 보이는 글자(조합 중 글자 포함)를 저장한다(STA-66). | `SavePopover.tsx`, 단위: `SavePopupNoteEditorTests.theNoteHoldsWhatTheFieldShowsWhileComposing` | 수동 | ☑ |
+| I-04 | 팝업 `Cmd+Enter` 저장(저장 중이면 무시), Escape 취소. 레거시는 `Cmd+Enter`에서 입력기 조합 여부를 검사하지 않는다(조합 중에도 동작). 웹 textarea처럼 조합 중인 글자도 노트 값에 들어 있으므로 Swift 노트도 화면에 보이는 글자(조합 중 글자 포함)를 저장한다(STA-66). | `SavePopover.tsx`, 단위: `SavePopupWindowTests.NoteEditor.savingClosesAnOpenCompositionAndKeepsItsCharacters` | 수동 | ☑ |
 | I-05 | 포커스 링은 컨트롤 모양을 따르는 둥근 링이고 레이아웃을 밀지 않는다. 컨테이너에는 링이 없다. 목록 행은 안쪽 링. | STA-38 CSS(실제 앱 미검증) | 수동 | ☑ |
 | I-06 | 제목 인라인 이름 변경: Return 확정, Escape 되돌림, 둘 다 포커스를 목록에 돌린다. | STA-38(실제 앱 미검증) | 수동 | ☑ |
 
@@ -383,8 +383,10 @@ P-02는 실제 대기 시간을 보는 수동 항목이라 ☐로 남긴다.
 - 한 키 입력에서 앞 음절을 확정하고 다음 음절을 조합으로 여는 순간(예: `한` 확정 + `ㄱ` 조합), 다음 화면 갱신에서 `TextEditor`가 바인딩 값을 텍스트 뷰에 다시 써서 조합 중인 글자가 사라지고 커서가 한 칸 앞으로 돌아갔다. 조합만 있고 바인딩이 바뀌지 않은 갱신에서는 생기지 않았다.
 - 자리 표시 문구가 커서보다 5 pt 아래에 있었다(`padding(9)`, 커서는 위 여백 0). 조합 중에는 바인딩이 비어 있어 첫 음절과 자리 표시 문구가 겹쳤다.
 
-노트 입력을 `PopupNoteEditor`(AppKit `NSTextView`)로 바꿨다. 조합 중에는 텍스트 뷰에 쓰지 않고, 바인딩에는 보이는 글자(조합 포함)를 넣으며, 자리 표시 문구는 텍스트 뷰가 커서 위치에 직접 그린다. 단위: `SavePopupNoteEditorTests`.
+노트 입력을 `PopupNoteEditor`(AppKit `NSTextView`)로 바꿨다. 조합 중에는 텍스트 뷰에 쓰지 않고, 바인딩에는 보이는 글자(조합 포함)를 넣으며, 자리 표시 문구는 텍스트 뷰가 커서 위치에 직접 그린다. 단위: `SavePopupWindowTests.NoteEditor`.
 
-컴팩트 배치(STA-67): 실제 창 높이는 제목 막대 32를 더한 592였고, 경고·태그 칩·최근 태그가 많으면 고정 프레임 밖으로 넘쳐 버튼과 제목이 잘렸다. 표시 항목은 그대로 두고 유형 선택을 제목 줄로, 출처 레이블을 값 옆으로 옮겼으며 간격·미리보기(120→96)·노트(78→60) 높이를 줄였다. 높이는 내용에 맞춰 최소 388(창 420)이고 내용이 늘면 아래로 커진다. 단위: `SavePopupLayoutTests`.
+컴팩트 배치(STA-67): 실제 창 높이는 제목 막대 32를 더한 592였고, 경고·태그 칩·최근 태그가 많으면 고정 프레임 밖으로 넘쳐 버튼과 제목이 잘렸다. 표시 항목은 그대로 두고 유형 선택을 제목 줄로, 출처 레이블을 값 옆으로 옮겼으며 간격·미리보기(120→96)·노트(78→60) 높이를 줄였다. 높이는 내용에 맞춰 최소 388(창 420)이고 내용이 늘면 아래로 커진다. 창은 화면의 보이는 영역보다 커지지 않고 그 안에 머물며, 넘치는 입력 영역은 스크롤되고 저장·취소 버튼은 아래에 고정된다. 커진 창을 새 Draft로 다시 열면 그 Draft의 크기로 중앙에 놓인다. 단위: `SavePopupWindowTests.Layout`.
 
-수동 확인이 남음(실제 앱): 한글 노트 입력(줄바꿈, 문장 중간 커서, 노트↔태그 포커스 이동), 자리 표시 문구 위치, 텍스트·이미지·mixed 팝업에서 잘림 없음, 태그 칩이 늘 때 창이 아래로 커지는지, `Cmd+Enter`·Escape, 라이트·다크 테마.
+코드 리뷰 반영: 노트에서 Tab·Shift+Tab은 탭 문자 대신 태그 필드와 노트 사이를 오간다(기존 `TextEditor`는 탭 문자를 넣었다. 레거시 textarea는 포커스 이동). Option+Tab은 탭 문자. `Cmd+Enter` 저장은 먼저 조합 중인 글자를 확정한다. 포커스 상태 변경은 다음 차례로 미룬다. 단위: `SavePopupWindowTests.NoteEditor`(Return, Tab, Escape, `Cmd+Enter` 포함).
+
+수동 확인이 남음(실제 앱): 한글 노트 입력(줄바꿈, 문장 중간 커서, 노트↔태그 포커스 이동), 자리 표시 문구 위치, 텍스트·이미지·mixed 팝업에서 잘림 없음, 태그 칩이 늘 때 창이 아래로 커지고 화면 아래에 닿으면 입력 영역이 스크롤되는지, 실제 한글 입력기에서 조합 중 `Cmd+Enter`, Tab 이동, Escape, 라이트·다크 테마.
