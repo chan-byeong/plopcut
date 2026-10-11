@@ -123,6 +123,7 @@ final class CaptureRuntime {
         } else {
             openMainWindow?()
         }
+        model.presentPendingCaptureError()  // T-04: a kept error is shown when the window opens, once
     }
 
     // MARK: Routing and Save Popup
