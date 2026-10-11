@@ -4,18 +4,41 @@ import NotedropCore
 
 /// The Save Popup content (spec 3.5): preview, source, note, tags, Save and Cancel.
 struct SavePopupView: View {
+    /// The content below the window's title bar for a draft without warnings, tag chips or many recent tags.
+    /// Content that needs more height (warnings, tag chips, recent tags, an error) makes the window taller instead
+    /// of being cut off (STA-67), up to `maxHeight`; past that the fields scroll and the buttons stay at the bottom.
+    static let contentSize = CGSize(width: 430, height: 388)
+    private static let previewHeight: CGFloat = 96
+
     @Bindable var model: SavePopupModel
-    @FocusState private var focus: Field?
-    private enum Field { case note, tag }
+    /// The tallest the content may get: the screen's visible height minus the title bar.
+    var maxHeight: CGFloat = .infinity
+    @FocusState private var tagFocused: Bool
+    @State private var noteFocused = false
+    @State private var noteControl = PopupNoteEditorControl()
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text(L10n.t(model.selectedType == .image ? "saveImage" : "saveText")).font(.headline)
-            if model.isMixed { typePicker }
-            preview
-            VStack(alignment: .leading, spacing: 2) {
-                Text(L10n.t("source")).font(.caption).foregroundStyle(.secondary)
-                Text(model.sourceSummary).font(.callout).lineLimit(2).textSelection(.enabled)
+        VStack(alignment: .leading, spacing: 12) {
+            ScrollView {
+                fields.padding(.horizontal, 16).padding(.top, 4)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            .layoutPriority(1)
+            buttons.padding(.horizontal, 16)
+        }
+        .padding(.bottom, 16)
+        .frame(width: Self.contentSize.width)
+        .frame(minHeight: min(Self.contentSize.height, maxHeight), maxHeight: maxHeight, alignment: .top)
+        .fixedSize(horizontal: false, vertical: true)
+        .onChange(of: tagFocused) { _, _ in CompositionMonitor.shared.reset() }
+    }
+
+    private var fields: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            header
+            VStack(alignment: .leading, spacing: 6) {
+                preview
+                source
             }
             warnings
             noteField
@@ -23,12 +46,15 @@ struct SavePopupView: View {
             if let message = model.errorMessage {
                 Text(message).font(.callout).foregroundStyle(.red).accessibilityAddTraits(.isStaticText)
             }
-            Spacer(minLength: 0)
-            buttons
         }
-        .padding(20)
-        .frame(width: 430, height: 560)
-        .onAppear { focus = .note }
+    }
+
+    private var header: some View {
+        HStack {
+            Text(L10n.t(model.selectedType == .image ? "saveImage" : "saveText")).font(.headline)
+            Spacer(minLength: 8)
+            if model.isMixed { typePicker }
+        }
     }
 
     private var typePicker: some View {
@@ -36,13 +62,13 @@ struct SavePopupView: View {
             Text(L10n.t("text")).tag(DropType.text)
             Text(L10n.t("image")).tag(DropType.image)
         }
-        .pickerStyle(.segmented)
+        .pickerStyle(.segmented).labelsHidden().fixedSize()
     }
 
     @ViewBuilder private var preview: some View {
         if model.selectedType == .image, let image = model.previewImage {
             Image(nsImage: image)
-                .resizable().scaledToFit().frame(maxWidth: .infinity).frame(height: 120)
+                .resizable().scaledToFit().frame(maxWidth: .infinity).frame(height: Self.previewHeight)
                 .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
                 .accessibilityLabel(L10n.t("image"))
         } else {
@@ -50,9 +76,17 @@ struct SavePopupView: View {
                 Text(model.draft.text ?? "")
                     .font(.body).frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled).padding(8)
             }
-            .frame(height: 120)
+            .frame(height: Self.previewHeight)
             .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
         }
+    }
+
+    private var source: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text(L10n.t("source")).font(.caption).foregroundStyle(.secondary)
+            Text(model.sourceSummary).font(.callout).lineLimit(2).textSelection(.enabled)
+        }
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     @ViewBuilder private var warnings: some View {
@@ -74,26 +108,26 @@ struct SavePopupView: View {
 
     private var noteField: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(L10n.t("note")).font(.headline)
-            TextEditor(text: $model.note)
-                .font(.body).frame(height: 70).scrollContentBackground(.hidden).padding(4)
-                .overlay(RoundedRectangle(cornerRadius: 6).stroke(focus == .note ? Color.accentColor : Color.secondary.opacity(0.3), lineWidth: focus == .note ? 2 : 1))
-                .overlay(alignment: .topLeading) {
-                    if model.note.isEmpty { Text(L10n.t("optionalNote")).foregroundStyle(.secondary).padding(9).allowsHitTesting(false) }
+            Text(L10n.t("note")).font(.callout.weight(.semibold))
+            PopupNoteEditor(
+                text: $model.note, placeholder: L10n.t("optionalNote"), accessibilityLabel: L10n.t("note"),
+                control: noteControl, onFocusChange: { focused in
+                    noteFocused = focused
+                    CompositionMonitor.shared.reset()
                 }
-                .focused($focus, equals: .note)
-                .accessibilityLabel(L10n.t("note"))
+            )
+            .frame(height: 52).padding(4)
+            .overlay(RoundedRectangle(cornerRadius: 6).stroke(noteFocused ? Color.accentColor : Color.secondary.opacity(0.3), lineWidth: noteFocused ? 2 : 1))
         }
     }
 
     private var tagField: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(L10n.t("tags")).font(.headline)
+        VStack(alignment: .leading, spacing: 4) {
+            Text(L10n.t("tags")).font(.callout.weight(.semibold))
             HStack {
                 TextField(L10n.t("tagPlaceholder"), text: $model.tagInput)
-                    .focused($focus, equals: .tag)
+                    .focused($tagFocused)
                     .onSubmit { register() }
-                    .onChange(of: focus) { _, _ in CompositionMonitor.shared.reset() }
                     .onChange(of: model.tagInput) { old, value in
                         if !value.isEmpty { model.tagMessage = nil }
                         // Same rule as the detail pane: a typed comma registers, a pasted list registers.
@@ -105,13 +139,15 @@ struct SavePopupView: View {
                     .disabled(model.tagInput.trimmingCharacters(in: .whitespaces).isEmpty)
             }
             if let message = model.tagMessage { Text(message).font(.caption).foregroundStyle(.orange) }
-            FlowLayout {
-                ForEach(model.tags, id: \.self) { tag in
-                    Button { model.removeTag(tag); focus = .tag } label: {
-                        Label("#\(tag)", systemImage: "xmark").labelStyle(.titleAndIcon).font(.caption)
+            if !model.tags.isEmpty {
+                FlowLayout {
+                    ForEach(model.tags, id: \.self) { tag in
+                        Button { model.removeTag(tag); tagFocused = true } label: {
+                            Label("#\(tag)", systemImage: "xmark").labelStyle(.titleAndIcon).font(.caption)
+                        }
+                        .buttonStyle(.bordered).controlSize(.small)
+                        .accessibilityLabel("\(L10n.t("removeTag")) #\(tag)")
                     }
-                    .buttonStyle(.bordered).controlSize(.small)
-                    .accessibilityLabel("\(L10n.t("removeTag")) #\(tag)")
                 }
             }
             let suggestions = model.recentTags.filter { !model.tags.contains($0) }
@@ -124,13 +160,18 @@ struct SavePopupView: View {
                 }
             }
         }
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     private var buttons: some View {
         HStack {
             Spacer()
             Button(L10n.t("cancel")) { model.cancel() }.keyboardShortcut(.cancelAction)
-            Button(L10n.t("save")) { Task { await model.submit() } }
+            Button(L10n.t("save")) {
+                // Cmd+Enter can arrive while a syllable is still being composed (checklist I-04).
+                noteControl.commitComposition()
+                Task { await model.submit() }
+            }
                 .keyboardShortcut(.return, modifiers: .command)
                 .buttonStyle(.borderedProminent)
                 .disabled(model.isSaving)
@@ -141,6 +182,6 @@ struct SavePopupView: View {
     private func register() {
         if CompositionMonitor.shared.shouldIgnoreRegistration { return }
         model.registerTagInput()
-        focus = .tag
+        tagFocused = true
     }
 }
