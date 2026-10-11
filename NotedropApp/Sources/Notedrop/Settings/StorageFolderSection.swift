@@ -5,7 +5,7 @@ struct StorageFolderSection: View {
     @Environment(StorageFolderModel.self) private var model
 
     var body: some View {
-        Section(L10n.t("storageFolder")) {
+        Section {
             LabeledContent(L10n.t("storageFolder")) {
                 Text(model.path)
                     .textSelection(.enabled)
@@ -14,14 +14,23 @@ struct StorageFolderSection: View {
                     .foregroundStyle(.secondary)
             }
             Button(L10n.t("chooseFolder")) { Task { await model.chooseFolder() } }
-            if let problem = model.problem {
-                Text(problem).foregroundStyle(.red)
+        } header: {
+            Text(L10n.t("storageFolder"))
+        } footer: {
+            // A Section footer is plain subtext under the card: no row background, and it takes the standard
+            // footnote style. Failures keep red because their meaning differs from a plain status.
+            VStack(alignment: .leading, spacing: 2) {
+                if let problem = model.problem {
+                    Text(problem).foregroundStyle(.red)
+                }
+                StorageFolderNoticeText(notice: model.notice)
             }
-            StorageFolderNoticeText(notice: model.notice)
+            .accessibilityAddTraits(.updatesFrequently)
         }
     }
 }
 
+/// Status line for the folder controls. Only failures carry a color; the rest is secondary subtext.
 struct StorageFolderNoticeText: View {
     let notice: StorageFolderNotice?
 
