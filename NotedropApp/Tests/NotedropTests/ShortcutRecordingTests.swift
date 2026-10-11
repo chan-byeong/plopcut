@@ -71,6 +71,17 @@ import Testing
         #expect(record(kVK_ANSI_K, [.function]) == .rejected(.needsModifier))
     }
 
+    /// The reverse lookup must not lose a key to a shared key code.
+    @Test func everyKeyNameHasItsOwnKeyCode() {
+        let names = KeyCodes.allKeyNames
+        let codes = names.compactMap { KeyCodes.keyCode(for: $0) }
+        #expect(codes.count == names.count)
+        #expect(Set(codes).count == names.count)
+        for name in names {
+            #expect(KeyCodes.key(forKeyCode: UInt16(KeyCodes.keyCode(for: name) ?? 0xFFFF)) == name, "\(name)")
+        }
+    }
+
     /// Keys outside D-03: punctuation, keypad keys (keypad Enter would otherwise register Return), Help, ISO extras.
     @Test func keysOutsideTheAllowedRangeAreRejected() {
         for code in [kVK_ANSI_Minus, kVK_ANSI_LeftBracket, kVK_ANSI_Grave, kVK_ANSI_Keypad1, kVK_ANSI_KeypadEnter,

@@ -57,10 +57,12 @@ final class ShortcutModel {
     }
 
     /// The registered hot key fired. Carbon consumes that key press, so while recording it means the user pressed the
-    /// working shortcut. Returns true when the press was taken by the recorder and must not start a capture.
+    /// working shortcut: keep it, with nothing left to save. Returns true when the press was taken by the recorder and
+    /// must not start a capture. (When nothing is registered, e.g. after `shortcut_rollback_failed`, the hot key
+    /// cannot fire; the press reaches `handle` as an ordinary key and stays pending so it can be saved again.)
     func currentShortcutPressed() -> Bool {
         guard isRecording else { return false }
-        handle(.recorded(saved))
+        discard()
         return true
     }
 

@@ -15,6 +15,7 @@ private final class Recorder: ShortcutRegistrar {
 
     var events: [String] = []
     var failing: Set<String> = []
+    var saveFails = false
 
     func register(_ shortcut: Shortcut) throws -> any ShortcutRegistration {
         if failing.contains(shortcut.key) {
@@ -30,7 +31,10 @@ private final class Recorder: ShortcutRegistrar {
         let controller = ShortcutController(registrar: self)
         try controller.start(initial)
         return ShortcutModel(initial: initial) { [unowned self] text in
-            try controller.change(to: text) { self.events.append("save \($0)") }
+            try controller.change(to: text) {
+                if self.saveFails { throw NotedropError("settings_unwritable") }
+                self.events.append("save \($0)")
+            }
         }
     }
 }
@@ -149,16 +153,22 @@ private final class Recorder: ShortcutRegistrar {
         #expect(model.errorMessage == nil)
     }
 
-    /// The live hot key swallows its own key press, so the recorder hears it through the hot key instead.
-    @Test func pressingTheWorkingShortcutWhileRecordingChoosesIt() {
-        let model = ShortcutModel(initial: "Shift+Cmd+C", apply: { _ in })
+    /// The live hot key swallows its own key press, so the recorder hears it through the hot key instead. The press
+    /// proves that shortcut is registered and working, so it means "keep it": nothing is left to save.
+    @Test func pressingTheWorkingShortcutWhileRecordingKeepsItWithNothingToSave() {
+        let model = ShortcutModel(initial: "Shift+Cmd+C", apply: { _ in Issue.record("must not apply") })
         #expect(!model.currentShortcutPressed())  // not recording: the press is a capture
         model.startRecording()
         model.handle(.recorded("Shift+Cmd+K"))
+        #expect(model.hasUnsavedChange)
         model.startRecording()
+        model.handle(.rejected(.unsupportedKey))
         #expect(model.currentShortcutPressed())
         #expect(!model.isRecording)
         #expect(model.displayText == "Shift+Cmd+C")
+        #expect(!model.hasUnsavedChange)
+        #expect(model.errorMessage == nil)
+        model.apply()
     }
 
     // MARK: Failures keep the working shortcut (STA-55)
@@ -196,15 +206,28 @@ private final class Recorder: ShortcutRegistrar {
         #expect(model.displayText == "Shift+Cmd+J")
     }
 
-    /// After `shortcut_rollback_failed` nothing is registered; choosing the old keys again must still be savable.
-    @Test func theWorkingShortcutCanBeSavedAgain() {
-        var applied: [String] = []
-        let model = ShortcutModel(initial: "Shift+Cmd+C") { applied.append($0) }
+    /// After `shortcut_rollback_failed` nothing is registered, so the hot key cannot fire and the press reaches the
+    /// recorder as an ordinary key. Choosing the old keys again must stay pending and be savable.
+    @Test func afterARollbackFailureTheOldKeysCanBeSavedAgain() throws {
+        let recorder = Recorder()
+        let model = try recorder.model()
+        model.startRecording()
+        model.handle(.recorded("Shift+Cmd+K"))
+        recorder.saveFails = true
+        recorder.failing = ["C"]  // someone took the old shortcut meanwhile
+        model.apply()
+        #expect(isText(model.errorMessage, ofKey: "shortcutRollbackFailed"))
+        #expect(model.displayText == "Shift+Cmd+C")
+
+        recorder.saveFails = false
+        recorder.failing = []
         model.startRecording()
         model.handle(.recorded("Shift+Cmd+C"))
         #expect(model.hasUnsavedChange)
         model.apply()
-        #expect(applied == ["Shift+Cmd+C"])
+        #expect(Array(recorder.events.suffix(2)) == ["register C", "save Shift+Cmd+C"])
+        #expect(!model.hasUnsavedChange)
+        #expect(model.errorMessage == nil)
     }
 
     @Test func shortcutMessagesHaveBothLanguages() {

@@ -19,7 +19,11 @@ enum KeyCodes {
     /// the key that was pressed whatever the keyboard layout or input source (Korean input included).
     static func key(forKeyCode code: UInt16) -> String? { names[UInt32(code)] }
 
-    private static let names: [UInt32: String] = Dictionary(uniqueKeysWithValues: table.map { ($1, $0) })
+    static var allKeyNames: [String] { Array(table.keys) }
+
+    /// Never traps on a duplicated key code (that would crash the app); uniqueness is checked by
+    /// `ShortcutRecordingTests.everyKeyNameHasItsOwnKeyCode` instead.
+    private static let names: [UInt32: String] = Dictionary(table.map { ($1, $0) }, uniquingKeysWith: { first, _ in first })
 
     private static let table: [String: UInt32] = [
         "A": 0, "S": 1, "D": 2, "F": 3, "H": 4, "G": 5, "Z": 6, "X": 7, "C": 8, "V": 9, "B": 11, "Q": 12, "W": 13,
