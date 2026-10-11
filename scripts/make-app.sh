@@ -7,8 +7,10 @@ cd "$(dirname "$0")/../NotedropApp"
 swift build -c "$CONFIG"
 APP=.build/Notedrop.app
 rm -rf "$APP"
-mkdir -p "$APP/Contents/MacOS"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp ".build/$CONFIG/Notedrop" "$APP/Contents/MacOS/Notedrop"
+# App icon, reused for the Dock and the empty Library logo (Bundle.main "AppIcon").
+cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 # SwiftPM stamps the SDK as the deployment target (14.0), which keeps macOS on the pre-Liquid-Glass window style.
 # Restamp with the real SDK so system chrome matches native apps.
 SDK_VERSION="$(xcrun --show-sdk-version)"
@@ -21,6 +23,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleName</key><string>Notedrop</string>
   <key>CFBundleDevelopmentRegion</key><string>en</string>
   <key>CFBundleLocalizations</key><array><string>en</string><string>ko</string></array>
+  <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>CFBundleExecutable</key><string>Notedrop</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>0.1.0</string>
