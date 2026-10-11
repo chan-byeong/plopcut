@@ -54,6 +54,7 @@ enum StringTable {
         "loadingDrops": (en: "Loading drops…", ko: "드롭 불러오는 중…"),
         "noMatches": (en: "No drops match the current filters", ko: "현재 필터와 일치하는 드롭이 없습니다"),
         "noDrops": (en: "No saved drops yet. Capture text with Shift + Cmd + C.", ko: "저장된 드롭이 없습니다. Shift + Cmd + C로 텍스트를 캡처하세요."),
+        "appLogo": (en: "Notedrop logo", ko: "Notedrop 로고"),
         "selectedDrop": (en: "Selected drop", ko: "선택한 드롭"),
         "drop": (en: "drop", ko: "드롭"),
         "unsaved": (en: "Unsaved changes", ko: "저장되지 않은 변경"),
