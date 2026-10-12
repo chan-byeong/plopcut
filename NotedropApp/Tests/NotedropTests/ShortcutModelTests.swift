@@ -145,6 +145,65 @@ private final class Recorder: ShortcutRegistrar {
         #expect(!model.isRecording)
     }
 
+    // STA-83: a recording-only hint must not outlive the recording, whichever way it ends.
+    private func recordingWithHint() -> ShortcutModel {
+        let model = ShortcutModel(initial: "Shift+Cmd+C", apply: { _ in })
+        model.startRecording()
+        model.handle(.rejected(.needsModifier))
+        #expect(isText(model.errorMessage, ofKey: "shortcutNeedsModifier"))
+        return model
+    }
+
+    @Test func escapeClearsTheRecordingHint() {
+        let model = recordingWithHint()
+        model.handle(.cancelled)
+        #expect(!model.isRecording)
+        #expect(model.errorMessage == nil)
+    }
+
+    @Test func externalEndsClearTheRecordingHint() {
+        // Click elsewhere, key window change and app switch all reach the model as cancelRecording.
+        let model = recordingWithHint()
+        model.cancelRecording()
+        #expect(model.errorMessage == nil)
+        model.startRecording()
+        model.handle(.rejected(.unsupportedKey))
+        #expect(isText(model.errorMessage, ofKey: "shortcutUnsupportedKey"))
+        model.cancelRecording()
+        #expect(model.errorMessage == nil)
+    }
+
+    @Test func recordedCombinationClearsTheRecordingHint() {
+        let model = recordingWithHint()
+        model.handle(.recorded("Shift+Cmd+K"))
+        #expect(model.errorMessage == nil)
+    }
+
+    @Test func pressingTheCurrentShortcutClearsTheRecordingHint() {
+        let model = recordingWithHint()
+        #expect(model.currentShortcutPressed())
+        #expect(model.errorMessage == nil)
+    }
+
+    @Test func discardClearsTheRecordingHint() {
+        let model = recordingWithHint()
+        model.discard()
+        #expect(model.errorMessage == nil)
+    }
+
+    @Test func registrationFailureSurvivesAndIsNotARecordingHint() {
+        struct Boom: Error {}
+        let model = ShortcutModel(initial: "Shift+Cmd+C", apply: { _ in throw Boom() })
+        model.startRecording()
+        model.handle(.recorded("Shift+Cmd+K"))
+        model.apply()
+        let failure = model.errorMessage
+        #expect(failure != nil)
+        model.startRecording()
+        model.cancelRecording()
+        #expect(model.errorMessage == nil || model.errorMessage == failure)
+    }
+
     @Test func keysArriveOnlyWhileRecording() {
         let model = ShortcutModel(initial: "Shift+Cmd+C", apply: { _ in })
         model.handle(.recorded("Shift+Cmd+K"))

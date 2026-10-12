@@ -15,6 +15,8 @@ final class ShortcutModel {
     /// Modifiers held during a recording, such as `Shift+Cmd+`.
     private(set) var heldModifiers: String?
     private(set) var errorMessage: String?
+    /// True while `errorMessage` is a recording-only hint (needs modifier, unsupported key). Those end with the recording.
+    private var errorIsRecordingHint = false
     private let applyChange: (String) throws -> Void
 
     init(initial: String, apply: @escaping (String) throws -> Void) {
@@ -31,10 +33,16 @@ final class ShortcutModel {
         errorMessage = nil
     }
 
-    /// Ends the recording in progress only; a combination chosen earlier stays pending.
+    /// Ends the recording in progress only; a combination chosen earlier stays pending. Every way a recording ends
+    /// (Esc, click, key window change, app switch, a recorded combination, the current shortcut) comes through here,
+    /// so the recording-only hint goes with it. Other messages (registration failures) stay.
     func cancelRecording() {
         isRecording = false
         heldModifiers = nil
+        if errorIsRecordingHint {
+            errorMessage = nil
+            errorIsRecordingHint = false
+        }
     }
 
     func modifiersChanged(_ preview: String?) {
@@ -53,6 +61,7 @@ final class ShortcutModel {
             cancelRecording()
         case .rejected(let reason):
             errorMessage = L10n.t(reason.messageKey)
+            errorIsRecordingHint = true
         }
     }
 
