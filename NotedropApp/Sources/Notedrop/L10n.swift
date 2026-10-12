@@ -47,9 +47,40 @@ enum ErrorText {
         case "shortcut_registration_failed": L10n.t("shortcutRegistrationFailed")
         case "shortcut_rollback_failed": L10n.t("shortcutRollbackFailed")
         case "permission_missing": L10n.t("permissionAccessibilityMissing")
+        case "settings_invalid", "settings_unreadable", "settings_unwritable": L10n.t("settingsFailure")
+        case "delete_failed": L10n.t("deleteFailed")
+        case "drop_not_found", "invalid_drop_id": L10n.t("dropNotFound")
+        case "export_failed": L10n.t("exportFailed")
+        case "save_failed": L10n.t("saveFailed")
         case "empty_text": L10n.t("noCaptured")
         case "invalid_image", "empty_image": L10n.t("invalidImage")
         default: nil
         }
+    }
+}
+
+/// The next step offered next to an error message (STA-78): a way forward, not only a reason.
+enum ErrorRecovery: Equatable {
+    case openAccessibilitySettings
+    case openNotedropSettings
+
+    var titleKey: String {
+        switch self {
+        case .openAccessibilitySettings: "openSystemSettings"
+        case .openNotedropSettings: "openSettings"
+        }
+    }
+
+    static func forCode(_ code: String) -> ErrorRecovery? {
+        switch code {
+        case "permission_missing": .openAccessibilitySettings
+        case "invalid_storage_folder", "storage_unwritable", "storage_unreadable",
+            "settings_invalid", "settings_unreadable", "settings_unwritable": .openNotedropSettings
+        default: nil
+        }
+    }
+
+    static func forError(_ error: Error) -> ErrorRecovery? {
+        forCode((error as? NotedropError)?.code ?? "")
     }
 }

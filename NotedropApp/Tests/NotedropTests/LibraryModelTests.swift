@@ -187,4 +187,36 @@ struct FakeTrash: TrashMover {
         #expect(!model.exportMarkdown(of: drop, to: root.appendingPathComponent("missing/dir/out.md")))
         #expect(model.alertMessage != nil)
     }
+
+    // STA-78: a stored permission failure is shown with a button that opens the Accessibility pane.
+    @Test func missingPermissionAlertOpensTheAccessibilityPane() {
+        var opened: URL?
+        let model = LibraryModel(storageRoot: { URL(fileURLWithPath: "/nonexistent") }, openURL: { opened = $0 })
+        model.pendingCapture.store(NotedropError("permission_missing"))
+        model.presentPendingCaptureError()
+        #expect(model.alertMessage != nil)
+        #expect(model.alertRecovery == .openAccessibilitySettings)
+        model.performRecovery()
+        #expect(opened?.absoluteString == "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")
+        #expect(model.alertMessage == nil && model.alertRecovery == nil)
+    }
+
+    @Test func storageFailureAlertOpensNotedropSettings() {
+        let model = LibraryModel(storageRoot: { URL(fileURLWithPath: "/nonexistent") }, openURL: { _ in })
+        model.pendingCapture.store(NotedropError("storage_unwritable", detail: "/secret/path"))
+        model.presentPendingCaptureError()
+        #expect(model.alertRecovery == .openNotedropSettings)
+        #expect(model.alertMessage?.contains("/secret") == false)
+        model.performRecovery()
+        #expect(model.collection == .settings)
+    }
+
+    @Test func alertsWithoutAFixHaveNoButtonAndDismissingClearsIt() {
+        let model = LibraryModel(storageRoot: { URL(fileURLWithPath: "/nonexistent") }, openURL: { _ in })
+        model.showAlert(forCode: "no_selected_text")
+        #expect(model.alertMessage != nil && model.alertRecovery == nil)
+        model.showAlert(forCode: "permission_missing")
+        model.alertMessage = nil
+        #expect(model.alertRecovery == nil)
+    }
 }

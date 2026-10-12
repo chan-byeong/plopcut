@@ -183,6 +183,10 @@ enum StringTable {
         "clipboardRestoreFailed": (en: "The capture succeeded, but the previous clipboard could not be restored.", ko: "캡처는 완료했지만 이전 클립보드를 복원하지 못했습니다."),
         "automationFailed": (en: "Source metadata could not be collected. You can still save the drop.", ko: "출처 메타데이터를 가져오지 못했습니다. 드롭은 계속 저장할 수 있습니다."),
         "invalidImage": (en: "The clipboard image could not be read.", ko: "클립보드 이미지를 읽지 못했습니다."),
-        "storageFailure": (en: "The storage folder is missing or not writable.", ko: "저장 폴더가 없거나 쓸 수 없습니다."),
+        "storageFailure": (en: "The storage folder is missing or not writable. Choose another folder in Settings.", ko: "저장 폴더가 없거나 쓸 수 없습니다. 설정에서 다른 폴더를 선택하세요."),
+        "settingsFailure": (en: "Settings could not be read or saved. Check the storage folder in Settings.", ko: "설정을 읽거나 저장하지 못했습니다. 설정에서 저장 폴더를 확인하세요."),
+        "deleteFailed": (en: "The drop could not be moved to the Trash. It is still in the Library.", ko: "드롭을 휴지통으로 이동하지 못했습니다. 드롭은 라이브러리에 그대로 있습니다."),
+        "dropNotFound": (en: "This drop no longer exists. Refresh the library.", ko: "이 드롭이 더 이상 없습니다. 라이브러리를 새로고침하세요."),
+        "exportFailed": (en: "The Markdown file could not be written. Choose another location.", ko: "Markdown 파일을 쓰지 못했습니다. 다른 위치를 선택하세요."),
     ]
 }
