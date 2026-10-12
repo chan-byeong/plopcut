@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build and test (macOS)
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Cache SwiftPM build products
+        uses: actions/cache@v4
+        with:
+          path: |
+            NotedropCore/.build
+            NotedropApp/.build
+          key: ${{ runner.os }}-spm-${{ hashFiles('NotedropCore/Package.swift', 'NotedropApp/Package.swift', 'NotedropCore/**/*.swift', 'NotedropApp/**/*.swift') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Print toolchain
+        run: swift --version
+
+      - name: Build NotedropCore
+        working-directory: NotedropCore
+        run: swift build
+
+      - name: Test NotedropCore
+        working-directory: NotedropCore
+        run: swift test
+
+      - name: Build NotedropApp
+        working-directory: NotedropApp
+        run: swift build
+
+      - name: Test NotedropApp
+        working-directory: NotedropApp
+        run: swift test
+
+      - name: Build app bundle
+        run: sh scripts/make-app.sh debug
