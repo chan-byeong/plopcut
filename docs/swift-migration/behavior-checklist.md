@@ -211,7 +211,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 
 ## 부분 확인 (STA-41)
 
-- S-16: 휴지통 이동 주입으로 성공·실패 단위 테스트만 확인했습니다. 실제 `FileManager.trashItem` 동작은 수동 확인이 남아 있습니다.
+- S-16: 휴지통 이동 주입으로 성공·실패 단위 테스트만 확인했습니다. 실제 `FileManager.trashItem` 동작은 STA-77에서 확인했습니다(아래 기록).
 - C-01: 고정 경로 계산(`SettingsStore.defaultFileURL`)은 구현했지만 테스트하지 않았습니다.
 - C-04: 설정 갱신 API가 열거형이라 잘못된 값은 컴파일 단계에서 막힙니다. 읽을 때의 거부만 테스트했습니다.
 - C-07: `Data.write(.atomic)`(임시 파일 + 이름 변경)를 쓰며 fsync는 하지 않습니다. 쓰기 실패 시 임시 파일 정리는 테스트하지 않았습니다.
@@ -430,3 +430,81 @@ AppKit의 레거시 스크롤 막대는 너비 17(knob 11)이고 `controlSize = 
 적용: Save Popup(바깥 입력 영역, 텍스트 미리보기, `PopupNoteEditor`), Library Drop 목록, Drop 본문, 인스펙터와 그 노트 `TextEditor`. 사이드바 목록은 제외했다. 단위: `SlimScrollerTests`.
 
 수동 확인이 남음(실제 앱): 시스템 설정 → 모양 → 스크롤 막대 표시를 '항상'으로 두고 Save Popup 세 영역과 Library 목록의 막대가 이전보다 얇은지, knob를 마우스로 끌 수 있는지, '스크롤할 때'와 '마우스나 트랙패드 연결에 따라 자동'에서 막대가 시스템 방식대로 나타나고 사라지는지, 라이트·다크 테마.
+
+## 저장소 호환성 검증 기록 (STA-77)
+
+S·C 항목을 픽스처 **복사본**으로 다시 확인하고 항목마다 Swift 테스트 근거를 남겼다. 새 테스트는
+`NotedropCore/Tests/NotedropCoreTests/CompatibilityTests.swift`에 있다. 나머지는 기존 `DropStoreTests.swift`,
+`NamingTests.swift`, `SettingsTests.swift`(Core)와 앱 테스트다.
+
+| ID | 근거 (Swift 테스트) |
+| --- | --- |
+| S-01 | `savesTextDropInContractFormat`, `savedFilesMatchTheFixtureShape`, `editingAMinimalTextDropWritesTheFullContract`, `editingAMinimalImageDropRecordsImagePng` |
+| S-02 | `minimalTextDropGetsDefaults`, `aMissingRequiredKeySkipsOnlyThatDrop`(필수 키 5개 각각), `nullOptionalKeysReadLikeMissingKeys` |
+| S-03 | `scansFixturesInExpectedOrder`, `everyFixtureScansAsTheReadmeExpects`(경고 1개, 메시지에 `broken-json`) |
+| S-04 | `scansFixturesInExpectedOrder`(같은 `createdAt`은 `id` 내림차순), `newDropsSortAmongLegacyDrops` |
+| S-05 | `TimestampTests.stringOrderMatchesTimeOrder`, `closeTimesSortAsStrings`(마이크로초 간격 50개), `nowIsNineDigitsAndAfterLegacyStamps`, `savesTextDropInContractFormat` |
+| S-06 | `idFormat`, `collidingIdsGetNumericSuffix` |
+| S-07 | `slugRules`, `slugLowercasesBeforeFiltering` |
+| S-08 | `TitleTests.priority`, `truncatesTo80`, `savesImageDrop` |
+| S-09 | `savesTextDropInContractFormat`, `rejectsBlankText` |
+| S-10 | `rejectsEmptyAndNonPngImages` |
+| S-11 | `savesTextDropInContractFormat`, `newImageDropsAlwaysGetANoteFile`, `clearingNoteOverwritesFile` |
+| S-12 | `blankNoteIsNoNoteAndRealNoteIsKept`, `whitespaceOnlyNoteIsNoNote` |
+| S-13 | `updatesFieldsAndKeepsCreatedAt`, `blankTitleLeavesFilesUntouched`, `everyFixtureDropSurvivesAnEditAndRescan` |
+| S-14 | `imageDropKeepsImageOnUpdate`, `everyFixtureDropSurvivesAnEditAndRescan` |
+| S-15 | `rejectsBadAndUnknownIds`, `deleteValidatesId`, `blankIdsAreInvalid` |
+| S-16 | `deleteRemovesDropFromScan`, `failedMoveLeavesDropAndReportsDeleteFailed`, 앱 `LibraryModelTests.failedDeleteKeepsTheDropAndReports` + 수동(아래) |
+| S-17 | `storageRootChangeIsRespected`, 앱 `scanAndSaveUseTheFolderThatSettingsPointsAt`, `choosingAFolderSavesItKeepsOtherFieldsAndReloads` |
+| S-18 | `unreadableNoteKeepsDropWithWarning`, `missingContentKeepsDropWithWarning`, `missingImageKeepsDropWithWarning` |
+| S-19 | `missingDropsFolderIsEmpty`, `aDropsEntryThatIsNotAFolderIsUnreadable`, `anUnlistableDropsFolderIsUnreadable`, `savesTextDropInContractFormat`(`drops/` 생성) |
+| S-20 | `minimalImageDropDefaultsToImagePng`, `everyFixtureScansAsTheReadmeExpects` |
+| C-01 | `theSettingsFileLivesInApplicationSupportWhateverTheStorageFolderIs` |
+| C-02 | `missingFileCreatesDefaults`, `brokenAndIncompleteFilesAreInvalid`, `readsFullFixture` |
+| C-03 | `partialUpdateKeepsOtherFieldsAndBumpsTimestamp`, 앱 `changingCaptureModePersistsAndKeepsTheme`, `changingThemePersistsAndKeepsOtherFields` |
+| C-04 | `legacyFixtureFillsDefaultsAndFixesTheme`(키 없음 → `modal`), `brokenAndIncompleteFilesAreInvalid`(잘못된 값 → `settings_invalid`). 갱신 API는 열거형이라 잘못된 값을 만들 수 없다. |
+| C-05 | `clampFixtureNormalizes`, `clampsPaneWidthsAndNormalizesRecentTags` |
+| C-06 | 저장소 부분만: `rejectsUnparseableShortcutWithoutWriting`(파일 그대로), `ShortcutTests`. ☐ 유지(아래). |
+| C-07 | `aFailedWriteKeepsTheOldFileAndLeavesNoTempFile`, `writtenFileUsesContractKeysAndLeavesNoTempFiles`, `concurrentUpdatesAreSerialized` |
+| C-08 | 단위: `ShortcutControllerTests`, `ShortcutModelTests`. ☐ 유지(아래). |
+| C-09 | `ShortcutControllerTests.startupRegistersOnlyTheStoredShortcut` |
+| C-10 | 앱 `colorSchemeFollowsTheme`, `changingThemePersistsAndKeepsOtherFields` |
+| C-11 | `legacyFixtureFillsDefaultsAndFixesTheme`(`sepia` → `system`), `clampFixtureNormalizes`(공백 경로 → 기본 폴더) |
+| C-12 | 수동(STA-63 기록) |
+
+### 고친 결함 (레거시와 다르던 곳)
+
+- `imagePath`가 없는 레거시 이미지 Drop을 수정하면 `drop.json`에 `"imagePath": null`을 썼다. 읽을 때는 `image.png`로 보므로
+  화면은 정상이었지만 S-01·스펙 1.2(이미지 Drop은 `"image.png"`)와 어긋났다. 레거시처럼 `image.png`를 기록한다.
+- 스캔이 심볼릭 링크로 된 Drop 폴더를 건너뛰었다. 레거시 `is_dir`와 Swift의 수정·삭제 경로(`existingFolder`)는 링크를 따라가므로
+  목록에만 빠져 있었다. 스캔도 링크를 따라간다.
+- 공백뿐인 Drop ID가 `drop_not_found`였다. 레거시처럼 `invalid_drop_id`다(S-15 "비면").
+- slug가 ASCII 여부를 소문자 변환 **전에** 판정해, 소문자가 ASCII인 문자(켈빈 기호 `K` → `k`)를 버렸다. 레거시처럼 먼저 소문자로
+  바꾼 뒤 걸러낸다. 새 Drop ID에만 영향이 있고 기존 폴더 읽기와는 무관하다.
+
+### 레거시와 다르지만 그대로 둔 것
+
+- `drop.json` 서식: Swift `JSONEncoder`는 키를 알파벳 순으로 쓰고 `"key" : value`(콜론 앞 공백)로 쓴다. 레거시는 구조체 순서와
+  `"key": value`다. 들여쓰기 2칸, 키 집합, `null` 규칙, 이스케이프하지 않은 `/`와 한글은 같고 JSON으로는 동일하다. 레거시 앱도
+  그대로 읽는다. 맞추려면 직렬화기를 직접 써야 해서 바꾸지 않았다.
+- 시각: `Date`의 정밀도가 마이크로초라 새 시각의 소수 9자리 중 끝 3자리는 항상 `000`이다. 자리 수는 9자리로 같아 정렬은 맞다.
+- `content.md`나 이미지 파일이 **없을** 때 Swift는 `drop_content_unreadable`/`drop_image_unreadable` 경고를 남긴다. 레거시는
+  파일이 있는데 읽지 못할 때만 경고했다. 사용자에게 알리는 편이 낫다고 보고 유지한다(`missingContentKeepsDropWithWarning`).
+- 이미지 경로가 폴더 밖(`..`, 절대 경로)을 가리키면 읽지 않고 경고한다(`unsafeImagePathIsNotFollowed`). 레거시는 그대로 따라갔다.
+
+### 수동 확인 (2026-10-12)
+
+- 실제 레거시 폴더: `~/Documents/Notedrop`을 임시 위치로 복사하고, `NOTEDROP_COMPAT_FOLDER=<복사본> swift test --filter
+  RealFolderCopyTests`로 확인했다. 테스트는 그 복사본을 다시 복사해서 쓴다. Drop 7개(모두 텍스트, 전체 키, 9자리 시각)가 경고 없이 읽혔고,
+  모두 수정한 뒤 다시 스캔해도 ID 순서·제목·태그·노트·본문·출처·`createdAt`이 같았고 `drop.json`은 계약 키 집합이었다. 원본은
+  `diff -rq`로 바뀌지 않았음을 확인했다. 이 폴더에는 이미지 Drop이 없어 이미지는 픽스처로만 확인했다.
+- S-16: 픽스처 Drop 폴더의 임시 복사본을 `FileManager.trashItem`(`SystemTrashMover`와 같은 API)으로 옮기면 원래 위치에서 사라지고
+  `~/.Trash`에 생겼다(확인 뒤 휴지통에서 그 항목만 지움). 실패 경로는 주입 테스트로만 확인했다.
+
+### 남은 항목
+
+- C-06, C-08: 저장소·설정 파일 쪽 동작(파싱 불가면 거부하고 파일 그대로, 등록→해제→저장 순서와 롤백)은 단위 테스트로 확인했다.
+  남은 것은 STA-69·STA-70의 실제 키 녹화와 전역 단축키 수동 확인 10단계(위 "단축키 키 녹화와 저장 전 미적용 기록")라 사람이
+  실제 앱에서 해야 한다. 그때까지 ☐로 둔다.
+- 실제 앱 화면에서 복사본 폴더를 열어 보는 확인(위 "호환성 검증 절차" 2~4단계)은 이번에 하지 않았다. 같은 스캔·수정 경로를 테스트로
+  확인했다.

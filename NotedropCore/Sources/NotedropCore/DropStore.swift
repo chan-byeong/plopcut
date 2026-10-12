@@ -57,7 +57,10 @@ public struct DropStore: Sendable {
         var drops: [Drop] = []
         var warnings: [ScanWarning] = []
         for entry in entries {
-            guard (try? entry.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else { continue }
+            // Follows symlinks, like legacy `is_dir` and `existingFolder`, so a linked drop folder is listed.
+            var entryIsDirectory: ObjCBool = false
+            guard fileManager.fileExists(atPath: entry.path, isDirectory: &entryIsDirectory),
+                  entryIsDirectory.boolValue else { continue }
             do {
                 let (drop, dropWarnings) = try readFolder(entry)
                 drops.append(drop)
@@ -207,6 +210,8 @@ public struct DropStore: Sendable {
             newText = body
         }
         if let tags = change.tags { meta.tags = Tags.normalize(tags) }
+        // A legacy image drop may omit `imagePath`; rewrite it with the default it was read with (S-01, S-20).
+        if meta.type == .image, meta.imagePath == nil { meta.imagePath = "image.png" }
         meta.updatedAt = Timestamp.format(clock())
 
         do {

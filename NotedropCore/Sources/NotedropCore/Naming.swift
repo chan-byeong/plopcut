@@ -8,13 +8,14 @@ public enum Naming {
     public static func slug(_ title: String) -> String {
         var out = ""
         var pendingDash = false
-        for scalar in title.unicodeScalars {
+        // Lowercase first, then keep ASCII letters and digits (legacy `slugify`), so a character
+        // whose lowercase is ASCII, such as the Kelvin sign, still counts.
+        for scalar in title.lowercased().unicodeScalars {
             if out.count >= maxSlugLength { break }
-            let lowered = Character(scalar).lowercased()
-            if scalar.isASCII, lowered.allSatisfy({ $0.isLetter || $0.isNumber }) {
+            if scalar.isASCII, Character(scalar).isLetter || Character(scalar).isNumber {
                 if pendingDash, !out.isEmpty { out.append("-") }
                 pendingDash = false
-                if out.count < maxSlugLength { out.append(lowered) }
+                if out.count < maxSlugLength { out.unicodeScalars.append(scalar) }
             } else {
                 pendingDash = true
             }
@@ -30,9 +31,9 @@ public enum Naming {
             p.year, p.month, p.day, p.hour, p.minute, p.second, p.nanosecond, slug(title))
     }
 
-    /// Rejects empty IDs and anything that could escape the drops folder.
+    /// Rejects empty or blank IDs and anything that could escape the drops folder.
     public static func isValidDropID(_ id: String) -> Bool {
-        !id.isEmpty && id != "." && !id.contains("/") && !id.contains("\\") && !id.contains("..")
+        id.trimmedNonEmpty != nil && id != "." && !id.contains("/") && !id.contains("\\") && !id.contains("..")
     }
 
     /// First non-empty of: explicit title, window title, app name, first non-empty body line, `fallback`.
