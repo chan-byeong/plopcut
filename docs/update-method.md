@@ -5,7 +5,7 @@ Status: **decided — manual download (owner, STA-75).**
 ## Decision: manual download
 
 Notedrop checks for updates **never**. Users download the new `Notedrop.dmg`
-from the release page and replace the app.
+from the Releases page of the public release repository and replace the app.
 
 Reasons:
 
@@ -58,5 +58,7 @@ Each item below needs an owner decision. Items struck through are decided.
 4. **Distribution and release process.** How the DMG is built, signed, checked by
    macOS, and published is not decided on this branch. It will be described in
    `docs/release.md` (coming). The README does not claim anything about it.
-5. **Where the user docs are published.** The issue requires the user docs to be
-   published at the release location. That location is not chosen yet.
+5. ~~**Where the user docs are published.**~~ Decided (owner, STA-75): a separate
+   **public release repository** holds the user README, install guide, privacy note and
+   the DMGs in its GitHub Releases. The source repository stays private. The release
+   repository's name waits for the final service name (see the bundle ID decision).

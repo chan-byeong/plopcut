@@ -6,6 +6,8 @@ Tracked by STA-76. Nothing secret is committed: the signing identity and notary 
 
 Decided (owner, STA-75): Notedrop is distributed as a **Developer ID signed, notarized DMG**, downloaded directly. Mac App Store distribution is on hold: it requires App Sandbox, which conflicts with capturing selected text through the Accessibility API, sending the copy key event and reading the Chrome URL through Apple Events. Revisit it only if a sandbox-compatible product is decided.
 
+Publishing (decided, STA-75): the source repository stays private. DMGs and the user docs go to a separate public release repository, as assets of its GitHub Releases and its README. Its name waits for the final service name.
+
 ## Files
 
 | File | Role |

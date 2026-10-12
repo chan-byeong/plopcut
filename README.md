@@ -28,8 +28,8 @@ clipboard or the selected text only when you ask it to capture.
 
 Requirements: a Mac running macOS. The minimum supported macOS version is 14.
 
-1. Download `Notedrop.dmg` from the release page. *Link: coming with the
-   first release (see `docs/release.md`, coming).*
+1. Download `Notedrop.dmg` from the Releases page of the public Notedrop release
+   repository. *Link: added with the first release.*
 2. Open the disk image and drag **Notedrop** into **Applications**.
 3. Open Notedrop from Applications.
 

@@ -21,7 +21,7 @@ Notedrop은 백그라운드에서 클립보드를 감시하지 않습니다. 사
 
 요구 사항: macOS 14 이상이 설치된 Mac.
 
-1. 릴리스 페이지에서 `Notedrop.dmg`를 내려받습니다. *링크: 첫 릴리스와 함께 공개 예정(`docs/release.md`, 준비 중 참고).*
+1. Notedrop 공개 배포 저장소의 Releases 페이지에서 `Notedrop.dmg`를 내려받습니다. *링크: 첫 릴리스와 함께 추가합니다.*
 2. 디스크 이미지를 열고 **Notedrop**을 **응용 프로그램(Applications)** 폴더로 끌어 놓습니다.
 3. 응용 프로그램에서 Notedrop을 엽니다.
 
