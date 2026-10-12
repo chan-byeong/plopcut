@@ -3,13 +3,12 @@ import NotedropCore
 
 /// The app's one support log (STA-80): `~/Library/Logs/Notedrop/notedrop.log`, local only, never uploaded.
 enum AppLog {
-    /// Unit tests run inside the app's code and must not write to the user's real log.
-    static let shared: EventLogging = isRunningTests ? NullEventLog() : FileEventLog()
+    /// Only the packaged app writes the real log. `swift test`, `swift run` and any other host process get a no-op,
+    /// so tests can never touch the user's log, whatever test framework or environment they run under.
+    static let shared: EventLogging = isPackagedApp ? FileEventLog() : NullEventLog()
 
-    private static var isRunningTests: Bool {
-        let env = ProcessInfo.processInfo.environment
-        return env["XCTestConfigurationFilePath"] != nil || env["XCTestBundlePath"] != nil
-            || NSClassFromString("XCTestCase") != nil || Bundle.allBundles.contains { $0.bundlePath.hasSuffix(".xctest") }
+    private static var isPackagedApp: Bool {
+        Bundle.main.bundlePath.hasSuffix(".app") && Bundle.main.bundleIdentifier != nil
     }
 
     /// First line of a session: version, build and macOS version, nothing about the user.
