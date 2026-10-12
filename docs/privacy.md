@@ -16,7 +16,8 @@ previous file, `notedrop.log.1`; about 1 MB each). It stays on your Mac and is
 never uploaded. Settings has a `Show Log in Finder` row.
 
 - **Contains:** timestamp, app version, build and macOS version at start, the
-  code of errors shown to you (such as `storage_unreadable`, `permission_missing`,
+  code of errors shown to you, in an alert or inline (a failed autosave or a
+  failed save in the save popup), such as `storage_unreadable`, `permission_missing`,
   `save_failed`), and permission status changes.
 - **Never contains:** drop text, images, notes, titles, tags, URLs, clipboard
   data, or file paths. The log API accepts only fixed event types, and error

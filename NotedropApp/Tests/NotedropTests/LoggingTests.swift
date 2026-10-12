@@ -3,7 +3,7 @@ import NotedropCore
 import Testing
 @testable import Notedrop
 
-private final class Recorder: EventLogging, @unchecked Sendable {
+final class LogRecorder: EventLogging, @unchecked Sendable {
     private let lock = NSLock()
     private var stored: [LogEvent] = []
     var events: [LogEvent] { lock.withLock { stored } }
@@ -21,7 +21,7 @@ private final class MutableChecker: PermissionChecking, @unchecked Sendable {
     // STA-80: only status changes are logged, by item and status name.
     @Test func permissionChangesAreLoggedOnce() {
         let checker = MutableChecker()
-        let recorder = Recorder()
+        let recorder = LogRecorder()
         let model = PermissionsModel(checker: checker, openURL: { _ in }, log: recorder)
         model.refresh()
         #expect(recorder.events.isEmpty)
@@ -32,7 +32,7 @@ private final class MutableChecker: PermissionChecking, @unchecked Sendable {
     }
 
     @Test func appStartLogsVersionBuildAndMacOSOnly() {
-        let recorder = Recorder()
+        let recorder = LogRecorder()
         AppLog.logStart(info: ["CFBundleShortVersionString": "1.2.0", "CFBundleVersion": "45"], log: recorder)
         guard case let .appStart(version, build, macOS)? = recorder.events.first else {
             Issue.record("no app_start event")

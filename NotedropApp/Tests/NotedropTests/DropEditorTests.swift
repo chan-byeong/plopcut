@@ -78,13 +78,14 @@ actor SaveRecorder {
     }
     final class SavedBox { var drops: [Drop] = []; var failures: [String] = [] }
 
-    func makeRig(_ initial: Drop = DropEditorTests.drop()) -> Rig {
+    func makeRig(_ initial: Drop = DropEditorTests.drop(), log: EventLogging = NullEventLog()) -> Rig {
         let clock = ManualClock(), recorder = SaveRecorder(), box = SavedBox()
         let editor = DropEditor(
             sleep: { try await clock.sleep(for: $0) },
             save: { id, update in try await recorder.save(id, update, base: initial) },
             onSaved: { box.drops.append($0) },
-            onBackgroundFailure: { box.failures.append($0) })
+            onBackgroundFailure: { box.failures.append($0) },
+            log: log)
         editor.show(initial)
         return Rig(editor: editor, clock: clock, recorder: recorder, saved: box)
     }
@@ -153,6 +154,37 @@ actor SaveRecorder {
         await rig.editor.retry()
         #expect(await rig.recorder.calls.count == 2)
         #expect(rig.editor.state == .saved)
+    }
+
+    // STA-84: a failed autosave is logged by code only, once, not again while retries keep failing.
+    @Test func failedAutosaveLogsTheCodeOnceAndNeverTheContent() async throws {
+        let log = LogRecorder()
+        let rig = makeRig(log: log)
+        await rig.recorder.setFailure(NotedropError("storage_unwritable", detail: "/Users/me/secret/path"))
+        rig.editor.setNote("private note text")
+        rig.editor.setTitle("Private title")
+        rig.editor.setNote("private note text 2")
+        await rig.editor.flush()
+        #expect(log.events == [.error(code: "storage_unwritable")])
+        await rig.editor.flush()
+        await rig.editor.retry()
+        await rig.editor.retry()
+        #expect(log.events == [.error(code: "storage_unwritable")])
+        #expect(log.events.map(\.line) == ["error code=storage_unwritable"])
+    }
+
+    @Test func autosaveFailureAfterARecoveryIsLoggedAgain() async throws {
+        let log = LogRecorder()
+        let rig = makeRig(log: log)
+        await rig.recorder.setFailure(NotedropError("storage_unwritable"))
+        rig.editor.setNote("a")
+        await rig.editor.flush()
+        await rig.recorder.setFailure(nil)
+        await rig.editor.retry()
+        await rig.recorder.setFailure(NotedropError("storage_unwritable"))
+        rig.editor.setNote("b")
+        await rig.editor.flush()
+        #expect(log.events.count == 2)
     }
 
     @Test func editingAfterAFailureArmsTheDebounceAgain() async throws {

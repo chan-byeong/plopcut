@@ -526,9 +526,9 @@ S·C 항목을 픽스처 **복사본**으로 다시 확인하고 항목마다 Sw
 앱에 로그가 없었다. `~/Library/Logs/Notedrop/notedrop.log`에 시각이 붙은 한 줄씩 덧붙인다. 외부 전송 없음(spec 제품 경계: 텔레메트리 없음).
 
 - 구현: `NotedropCore/EventLog.swift`(`EventLogging` 프로토콜, `FileEventLog`, `LogEvent`), 앱의 `AppLog`. 1MB에 이르면 `notedrop.log.1`로 넘기고 새 파일을 시작한다(이전 파일 1개만 유지). 잠금으로 스레드 안전하며 쓰기 실패는 조용히 무시한다.
-- 기록: 앱 시작(버전·빌드·macOS 버전), 화면에 표시된 오류의 코드, 권한 상태 변경(바뀔 때만). `LogEvent`가 고정된 형태만 받고 문자열은 `[A-Za-z0-9._-]` 40자 이하만 통과(아니면 `invalid`), `NotedropError.detail`은 읽지 않는다. 드롭 내용·노트·제목·태그·URL·클립보드·경로는 기록하지 않는다.
+- 기록: 앱 시작(버전·빌드·macOS 버전), 화면에 표시된 오류의 코드(알림창뿐 아니라 STA-84: Library 노트·제목·태그 자동 저장 실패 `DropEditor`, 저장 팝업의 저장 실패 `SavePopupModel`. 자동 저장은 실패로 바뀔 때 한 번만 기록하고 `다시 시도`가 계속 실패해도 다시 쓰지 않으며, 다른 Drop으로 옮겨 알림창이 뜨는 경우는 이중 기록하지 않는다), 권한 상태 변경(바뀔 때만). `LogEvent`가 고정된 형태만 받고 문자열은 `[A-Za-z0-9._-]` 40자 이하만 통과(아니면 `invalid`), `NotedropError.detail`은 읽지 않는다. 드롭 내용·노트·제목·태그·URL·클립보드·경로는 기록하지 않는다.
 - UI: Settings 정보 구역에 `Finder에서 로그 보기`(`showLogInFinder`, en/ko). 로그가 없으면 폴더를 연다.
 - 문서: README.md, README.ko.md, `docs/privacy.md`에 위치·내용·로컬 보관·신고 방법(사용자가 직접 첨부)을 적었다.
-- 단위: `EventLogTests`(덧붙이기와 시각, 회전, 쓰기 실패 무시, 동시 쓰기, 민감 문구가 코드만 남는지), `LoggingTests`(권한 변경 한 번만 기록, 시작 줄, 문구, 테스트가 실제 로그에 쓰지 않음).
+- 단위: `EventLogTests`(덧붙이기와 시각, 회전, 쓰기 실패 무시, 동시 쓰기, 민감 문구가 코드만 남는지), `DropEditorTests`·`SavePopupModelTests`(주입한 `EventLogging`에 코드 한 줄만, 내용·경로 없음), `LoggingTests`(권한 변경 한 번만 기록, 시작 줄, 문구, 테스트가 실제 로그에 쓰지 않음).
 
 수동 확인이 남음(실제 앱): `Finder에서 로그 보기`가 파일을 선택해 Finder를 여는지(로그가 없을 때는 폴더), 처음 실행 후 시작 줄이 생기는지, 손쉬운 사용을 끄고 캡처했을 때 `permission_missing` 줄이 생기고 문구·경로가 없는지, 설정에서 권한을 바꾼 뒤 돌아왔을 때 권한 변경 줄, 로그 폴더를 읽기 전용으로 만들어도 앱이 정상 동작하는지, 1MB를 넘긴 뒤 `.1` 파일 생성, 한국어·영어 시스템 언어의 단추 문구.

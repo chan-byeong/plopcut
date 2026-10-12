@@ -33,11 +33,14 @@ final class SavePopupModel {
     private let save: @Sendable (SaveRequest) async throws -> Drop
     private let onSaved: (Drop) -> Void
     private let onCancel: () -> Void
+    private let log: EventLogging
 
     init(
         draft: CaptureDraft, recentTags: [String], save: @escaping @Sendable (SaveRequest) async throws -> Drop,
-        onSaved: @escaping (Drop) -> Void, onCancel: @escaping () -> Void
+        onSaved: @escaping (Drop) -> Void, onCancel: @escaping () -> Void,
+        log: EventLogging = AppLog.shared
     ) {
+        self.log = log
         self.draft = draft
         self.previewImage = draft.imagePNG.flatMap { NSImage(data: $0) }
         self.selectedType = draft.type == .mixed ? .text : draft.type
@@ -101,6 +104,7 @@ final class SavePopupModel {
             let drop = try await save(request)
             onSaved(drop)
         } catch {
+            log.log(error: error)
             errorMessage = ErrorText.message(for: error)
         }
     }
