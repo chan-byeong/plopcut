@@ -140,9 +140,33 @@ struct FilterPopover: View {
 struct DropRow: View {
     let drop: Drop
 
+    /// The type symbol: the text glyph or a photo. It stays the leading icon when no source app icon is known.
+    static func typeSymbol(for type: DropType) -> String { type == .image ? "photo" : "textformat" }
+
+    /// The source app's icon with a small type badge in its lower right corner, so text and image drops can still be
+    /// told apart. The app name is printed under the title, so the icon itself is decoration. Without an app icon the
+    /// type symbol alone is shown, as before.
+    @ViewBuilder private var leadingIcon: some View {
+        if let icon = SourceAppIcons.shared.icon(forAppNamed: drop.source.appName) {
+            // Gray with extra contrast keeps each logo's shape readable without competing with the title.
+            Image(nsImage: icon).resizable().grayscale(1).contrast(1.3).opacity(0.92)
+                .frame(width: 18, height: 18)
+                .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 4, style: .continuous).stroke(.separator, lineWidth: 0.5))
+                .accessibilityLabel(L10n.t(drop.type == .image ? "image" : "text"))
+                .frame(width: 22, height: 20, alignment: .leading)
+                .padding(.top, 1)
+        } else {
+            // The same 22 x 20 box as above, so the title starts at the same place with or without an app icon.
+            Image(systemName: Self.typeSymbol(for: drop.type)).foregroundStyle(.secondary)
+                .frame(width: 22, height: 20, alignment: .leading)
+                .padding(.top, 1)
+        }
+    }
+
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
-            Image(systemName: drop.type == .image ? "photo" : "textformat").foregroundStyle(.secondary).frame(width: 18).padding(.top, 2)
+            leadingIcon
             VStack(alignment: .leading, spacing: 2) {
                 HStack {
                     Text(drop.title).fontWeight(.semibold).lineLimit(1)

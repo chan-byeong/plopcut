@@ -38,6 +38,7 @@ struct NotedropApp: App {
                 .frame(minWidth: 960, minHeight: 640)
                 .task {
                     CompositionMonitor.shared.install()
+                    _ = SourceAppIcons.shared  // starts building the app index before the list needs it
                     delegate.drain = { [model] in await model.editor.drain() }
                     delegate.showSaveFailure = { [model] in model.alertMessage = L10n.t("saveFailed") }
                     delegate.hasUnsavedEdits = { [model] in model.editor.hasUnsavedEdits }
