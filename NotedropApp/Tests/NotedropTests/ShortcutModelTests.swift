@@ -199,9 +199,9 @@ private final class Recorder: ShortcutRegistrar {
         model.apply()
         let failure = model.errorMessage
         #expect(failure != nil)
-        model.startRecording()
+        // Ending a recording (any path) must not wipe a registration failure; only recording hints go.
         model.cancelRecording()
-        #expect(model.errorMessage == nil || model.errorMessage == failure)
+        #expect(model.errorMessage == failure)
     }
 
     @Test func keysArriveOnlyWhileRecording() {
