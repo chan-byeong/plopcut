@@ -57,7 +57,9 @@ extension SavePopupWindowTests {
 
         @Test(arguments: [DropType.text, .image, .mixed])
         func extraRowsMakeThePopupTallerInsteadOfCuttingItOff(type: DropType) async throws {
-            let controller = SavePopupWindowController()
+            // A fixed, roomy screen: on a small real screen (CI runners) the window is moved to stay on it.
+            let screen = NSRect(x: 0, y: 0, width: 1600, height: 1200)
+            let controller = SavePopupWindowController(visibleFrame: { _ in screen })
             let popup = model(try Self.fullDraft(type), recent: (1...12).map { "recent-tag-\($0)" })
             let window = try await show(popup, in: controller)
             defer { controller.close() }
