@@ -81,6 +81,26 @@ All drops and settings stay on your Mac. Notedrop does not send data
 externally and contains no telemetry. Details and the basis for this claim:
 [docs/privacy.md](docs/privacy.md).
 
+## Log file and reporting a problem
+
+Notedrop keeps a small local log to help with support. It is a plain text file at
+`~/Library/Logs/Notedrop/notedrop.log` (the previous one is `notedrop.log.1`;
+each file is at most about 1 MB). In Notedrop, open **Settings** and choose
+**Show Log in Finder**.
+
+- **It stays on your Mac.** Nothing is uploaded or sent automatically.
+- **It contains only:** a timestamp, app version, build and macOS version at
+  start, the code of an error that was shown to you (for example
+  `storage_unreadable`, `permission_missing`, `save_failed`), and permission
+  status changes.
+- **It never contains** drop text, images, notes, titles, tags, URLs, clipboard
+  data or file paths.
+
+To report a problem, attach `notedrop.log` (and `notedrop.log.1` if it exists)
+to your message yourself, with a short description of what you did. You can
+open the file first to check it. Deleting the files is safe; Notedrop creates a
+new one.
+
 ## Features not in this release
 
 Database storage, cloud sync, OCR, AI features, collaboration, mobile apps,

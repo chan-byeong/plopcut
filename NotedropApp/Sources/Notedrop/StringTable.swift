@@ -134,6 +134,7 @@ enum StringTable {
         "modal": (en: "Show popup", ko: "팝업 표시"),
         "instant": (en: "Save text instantly", ko: "텍스트 즉시 저장"),
         "appVersion": (en: "App version", ko: "앱 버전"),
+        "showLogInFinder": (en: "Show Log in Finder", ko: "Finder에서 로그 보기"),
         "permissionStatus": (en: "Permission status", ko: "권한 상태"),
         "loadingPermissions": (en: "Loading permissions…", ko: "권한 확인 중…"),
         "accessibility": (en: "Accessibility", ko: "손쉬운 사용"),

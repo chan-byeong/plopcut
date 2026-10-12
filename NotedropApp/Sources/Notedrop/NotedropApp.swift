@@ -10,6 +10,7 @@ struct NotedropApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 
     init() {
+        AppLog.logStart()
         let settings = LibraryModel.defaultSettings
         let model = LibraryModel(settings: settings)
         _model = State(initialValue: model)

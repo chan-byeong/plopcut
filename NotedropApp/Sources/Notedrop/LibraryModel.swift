@@ -155,6 +155,7 @@ final class LibraryModel {
             drops = []
             warnings = []
             dropsChanged(rebuildIndex: true)
+            AppLog.shared.log(error: error)
             loadError = (error as? NotedropError)?.code ?? error.localizedDescription
         }
         reselect()
@@ -177,6 +178,7 @@ final class LibraryModel {
 
     /// Shows an error with its recovery button when there is one.
     func showAlert(forCode code: String, prefix: String = "") {
+        AppLog.shared.log(.error(code: code))
         alertMessage = prefix + ErrorText.message(forCode: code)
         alertRecovery = ErrorRecovery.forCode(code)
     }
