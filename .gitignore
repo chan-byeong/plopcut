@@ -16,3 +16,4 @@ Packages/
 
 # Browser automation scratch output
 .playwright-mcp
+dist/
