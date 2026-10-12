@@ -1,8 +1,8 @@
 # Update method and open decisions
 
-Status: **proposed — needs owner confirmation.**
+Status: **decided — manual download (owner, STA-75).**
 
-## Proposed decision: manual download
+## Decision: manual download
 
 Notedrop checks for updates **never**. Users download the new `Notedrop.dmg`
 from the release page and replace the app.
@@ -47,19 +47,14 @@ first, then implement the update flow as its own issue.
 
 ## Open decisions
 
-Each item below needs an owner decision. None of them has been decided here.
+Each item below needs an owner decision. Items struck through are decided.
 
-1. **Update method.** Confirm manual download (proposed) or choose Sparkle.
+1. ~~**Update method.**~~ Decided: manual download.
 2. **License.** **TBD (placeholder).** No license has been chosen. The README
    says all rights are reserved until one is chosen. The owner must pick a
    license and add a `LICENSE` file.
-3. **Minimum macOS version.** Sources disagree:
-   - `docs/swift-migration/spec.md` says macOS 13 or later (from the legacy bundle).
-   - `NotedropCore/Package.swift` targets macOS 13, but `NotedropApp/Package.swift`
-     targets macOS 14.
-   - `scripts/make-app.sh` writes `LSMinimumSystemVersion` 14.0.
-   The README leaves this as "to be confirmed". Pick one value and make the
-   manifests and the bundle match.
+3. ~~**Minimum macOS version.**~~ Decided: macOS 14. `spec.md`, both `Package.swift` files and
+   `make-app.sh` now agree.
 4. **Distribution and release process.** How the DMG is built, signed, checked by
    macOS, and published is not decided on this branch. It will be described in
    `docs/release.md` (coming). The README does not claim anything about it.

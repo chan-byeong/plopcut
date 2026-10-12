@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "NotedropCore",
-    platforms: [.macOS(.v13)],
+    platforms: [.macOS(.v14)],
     products: [.library(name: "NotedropCore", targets: ["NotedropCore"])],
     targets: [
         .target(name: "NotedropCore"),

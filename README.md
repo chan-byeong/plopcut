@@ -26,8 +26,7 @@ clipboard or the selected text only when you ask it to capture.
 
 ## Install
 
-Requirements: a Mac running macOS. The minimum supported macOS version is
-still to be confirmed (see [docs/update-method.md](docs/update-method.md#open-decisions)).
+Requirements: a Mac running macOS. The minimum supported macOS version is 14.
 
 1. Download `Notedrop.dmg` from the release page. *Link: coming with the
    first release (see `docs/release.md`, coming).*
@@ -92,8 +91,7 @@ See [docs/release-scope.md](docs/release-scope.md).
 ## Updates
 
 This release has no automatic update check. Download new versions manually.
-This is the proposed default and needs owner confirmation; see
-[docs/update-method.md](docs/update-method.md).
+See [docs/update-method.md](docs/update-method.md).
 
 ## License
 

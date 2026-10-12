@@ -27,7 +27,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39)
 
 ### 플랫폼
 
-macOS 13 이상(레거시 번들의 `minimumSystemVersion`). Apple Silicon과 Intel을 모두 지원합니다. 앱 이름은 `Notedrop`,
+macOS 14 이상(STA-75에서 소유자가 확정. 레거시 번들은 13이었다). Apple Silicon과 Intel을 모두 지원합니다. 앱 이름은 `Notedrop`,
 레거시 번들 ID는 `app.notedrop.dev`입니다. 번들 ID를 바꾸면 사용자는 손쉬운 사용·자동화 권한을 다시 허용해야 합니다.
 
 ## 용어

@@ -19,8 +19,7 @@ Notedrop은 백그라운드에서 클립보드를 감시하지 않습니다. 사
 
 ## 설치
 
-요구 사항: macOS가 설치된 Mac. 지원하는 최소 macOS 버전은 아직 확정되지 않았습니다
-([docs/update-method.md](docs/update-method.md#open-decisions) 참고).
+요구 사항: macOS 14 이상이 설치된 Mac.
 
 1. 릴리스 페이지에서 `Notedrop.dmg`를 내려받습니다. *링크: 첫 릴리스와 함께 공개 예정(`docs/release.md`, 준비 중 참고).*
 2. 디스크 이미지를 열고 **Notedrop**을 **응용 프로그램(Applications)** 폴더로 끌어 놓습니다.
@@ -77,7 +76,7 @@ Notedrop은 데이터베이스를 사용하지 않으며, 이 파일을 외부�
 ## 업데이트
 
 이번 릴리스에는 자동 업데이트 확인 기능이 없습니다. 새 버전은 직접 내려받아 설치합니다.
-이는 제안된 기본값이며 소유자의 확인이 필요합니다. [docs/update-method.md](docs/update-method.md)를 참고하세요.
+[docs/update-method.md](docs/update-method.md)를 참고하세요.
 
 ## 라이선스
 
