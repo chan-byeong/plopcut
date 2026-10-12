@@ -4,7 +4,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39)
 
 레거시 `src/i18n/i18n.tsx`에서 그대로 추출한 사용자 문구입니다. 키는 [스펙](spec.md)과 [체크리스트](behavior-checklist.md)가 참조하는 이름입니다. 시스템 언어가 `ko`로 시작하면 한국어, 아니면 영어를 씁니다. 두 언어의 키 집합은 같습니다(158개). `shortcutFormatHint`만 구현 용어(Tauri)를 말하므로 Swift 구현의 단축키 형식에 맞게 고쳐 씁니다(체크리스트 D-12). `{count}` 같은 자리 표시자는 치환합니다.
 
-Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA-72, 로고 접근성 라벨).
+Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA-72, 로고 접근성 라벨), `settingsFailure`·`deleteFailed`·`dropNotFound`·`exportFailed`(STA-78, 알려진 오류 코드의 문구).
 
 | 키 | en | ko |
 | --- | --- | --- |
@@ -175,4 +175,8 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `clipboardRestoreFailed` | The capture succeeded, but the previous clipboard could not be restored. | 캡처는 완료했지만 이전 클립보드를 복원하지 못했습니다. |
 | `automationFailed` | Source metadata could not be collected. You can still save the drop. | 출처 메타데이터를 가져오지 못했습니다. 드롭은 계속 저장할 수 있습니다. |
 | `invalidImage` | The clipboard image could not be read. | 클립보드 이미지를 읽지 못했습니다. |
-| `storageFailure` | The storage folder is missing or not writable. | 저장 폴더가 없거나 쓸 수 없습니다. |
+| `storageFailure` | The storage folder is missing or not writable. Choose another folder in Settings. | 저장 폴더가 없거나 쓸 수 없습니다. 설정에서 다른 폴더를 선택하세요. |
+| `settingsFailure` | Settings could not be read or saved. Check the storage folder in Settings. | 설정을 읽거나 저장하지 못했습니다. 설정에서 저장 폴더를 확인하세요. |
+| `deleteFailed` | The drop could not be moved to the Trash. It is still in the Library. | 드롭을 휴지통으로 이동하지 못했습니다. 드롭은 라이브러리에 그대로 있습니다. |
+| `dropNotFound` | This drop no longer exists. Refresh the library. | 이 드롭이 더 이상 없습니다. 라이브러리를 새로고침하세요. |
+| `exportFailed` | The Markdown file could not be written. Choose another location. | Markdown 파일을 쓰지 못했습니다. 다른 위치를 선택하세요. |

@@ -38,7 +38,10 @@ final class LibraryModel {
     private(set) var editor: DropEditor!
     /// One-line confirmation (trash, export) shown briefly; `alertMessage` is an error the user must dismiss.
     var notice: String?
-    var alertMessage: String?
+    var alertMessage: String? { didSet { if alertMessage == nil { alertRecovery = nil } } }
+    /// The button offered with `alertMessage` when the user can fix the cause (STA-78), e.g. open System Settings.
+    var alertRecovery: ErrorRecovery?
+    private let openURL: (URL) -> Void
     /// The drop waiting for the "Move to Trash?" confirmation.
     var pendingDeleteID: String?
     /// A capture failure waiting for the main window; shown once (spec 3.3, checklist P-13).
@@ -46,8 +49,10 @@ final class LibraryModel {
 
     init(
         storageRoot: @escaping @Sendable () throws -> URL = LibraryModel.defaultStorageRoot,
-        settings: SettingsStore? = nil, trash: TrashMover = SystemTrashMover()
+        settings: SettingsStore? = nil, trash: TrashMover = SystemTrashMover(),
+        openURL: @escaping (URL) -> Void = { NSWorkspace.shared.open($0) }
     ) {
+        self.openURL = openURL
         self.storageRoot = storageRoot
         self.settings = settings
         self.trash = trash
@@ -56,7 +61,7 @@ final class LibraryModel {
         editor = DropEditor(
             save: { id, update in try DropStore(root: try storageRoot(), trash: trashMover).update(id: id, update) },
             onSaved: { [weak self] in self?.apply($0) },
-            onBackgroundFailure: { [weak self] code in self?.alertMessage = ErrorText.message(forCode: code) })
+            onBackgroundFailure: { [weak self] code in self?.showAlert(forCode: code) })
     }
 
     /// `NOTEDROP_SETTINGS_FILE` keeps dev runs and screenshots away from the user's real settings.json.
@@ -160,7 +165,25 @@ final class LibraryModel {
     /// Shows the stored capture failure, once, as `{pendingFailed}: {message}`.
     func presentPendingCaptureError() {
         guard let error = pendingCapture.take() else { return }
-        alertMessage = "\(L10n.t("pendingFailed")): \(ErrorText.message(for: error))"
+        showAlert(forCode: error.code, prefix: "\(L10n.t("pendingFailed")): ")
+    }
+
+    /// Shows an error with its recovery button when there is one.
+    func showAlert(forCode code: String, prefix: String = "") {
+        alertMessage = prefix + ErrorText.message(forCode: code)
+        alertRecovery = ErrorRecovery.forCode(code)
+    }
+
+    /// Runs the button next to the alert, then the alert is dismissed by the system.
+    func performRecovery() {
+        guard let recovery = alertRecovery else { return }
+        switch recovery {
+        case .openAccessibilitySettings:
+            if let url = PermissionsModel.accessibilitySettingsURL { openURL(url) }
+        case .openNotedropSettings:
+            collection = .settings
+        }
+        alertMessage = nil
     }
 
     /// A saved edit replaces the drop in the list; the selection stays on it.
@@ -185,7 +208,7 @@ final class LibraryModel {
             notice = L10n.t("trashSuccess")
             return true
         case .failure(let error):
-            alertMessage = ErrorText.message(for: error)
+            showAlert(forCode: (error as? NotedropError)?.code ?? "")
             return false
         }
     }
@@ -210,7 +233,7 @@ final class LibraryModel {
             notice = L10n.t("exportSuccess")
             return true
         } catch {
-            alertMessage = ErrorText.message(for: NotedropError("export_failed", detail: error.localizedDescription))
+            showAlert(forCode: "export_failed")
             return false
         }
     }

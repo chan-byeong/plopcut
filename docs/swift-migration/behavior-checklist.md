@@ -508,3 +508,15 @@ S·C 항목을 픽스처 **복사본**으로 다시 확인하고 항목마다 Sw
   실제 앱에서 해야 한다. 그때까지 ☐로 둔다.
 - 실제 앱 화면에서 복사본 폴더를 열어 보는 확인(위 "호환성 검증 절차" 2~4단계)은 이번에 하지 않았다. 같은 스캔·수정 경로를 테스트로
   확인했다.
+
+## 권한 누락과 오류 UX 점검 (STA-78)
+
+점검 결과: 오류 7종(선택 텍스트 없음, 클립보드 비어 있음, 복원 실패, 저장 폴더 문제, 이미지 쓰기 실패, 메타데이터 실패, 권한 누락)은 이미 코드별 지역화 문구가 있었다. 빠진 것은 (1) 문구 없이 `defaultError`로 떨어지던 코드(`settings_*`, `delete_failed`, `drop_not_found`, `invalid_drop_id`, `export_failed`, `save_failed`)와 (2) 오류 알림의 다음 행동이었다.
+
+- 문구 추가(en/ko, `strings.md`와 `StringTable.swift`): `settingsFailure`, `deleteFailed`, `dropNotFound`, `exportFailed`. `storageFailure`에 "설정에서 다른 폴더를 선택하세요" 안내를 더했다.
+- 다음 행동: 메인 창 오류 알림에 `permission_missing`이면 `시스템 설정 열기`(손쉬운 사용 화면), 저장 폴더·설정 오류면 `설정 열기`(Settings 화면) 버튼을 붙였다(`ErrorRecovery`, `LibraryModel.performRecovery`). 손쉬운 사용 URL은 `PermissionsModel.accessibilitySettingsURL` 하나를 쓴다.
+- 메타데이터 실패(M-02, M-03)는 경고라 저장을 막지 않고, 저장소 실패는 저장을 막고 이유를 보인다. 기존 동작 그대로이며 `SelectedTextCaptureTests.sourceFailureNeverBlocksCapture`, `StorageFolderCheckTests`가 확인한다.
+- 단위: `LocalizationTests`(새 코드 8개의 문구, `recoverableErrorsOfferAButton`), `LibraryModelTests`(권한 알림 → 손쉬운 사용 URL, 저장 폴더 알림 → Settings, 복구 버튼이 없는 알림과 닫을 때 정리). A-04는 이 단위 테스트와 기존 `PermissionsModelTests`로도 확인한다.
+- 범위 밖: 저장 폴더 검증 자체는 STA-60. 저장 팝업 안의 저장 실패 문구에는 버튼을 붙이지 않았다(문구만 보인다).
+
+수동 확인이 남음(실제 앱, 헤드리스 불가): 손쉬운 사용을 끈 채 `Shift+Cmd+C` 시 알림 문구와 `시스템 설정 열기` 버튼이 손쉬운 사용 화면으로 가는지, 허용 후 앱으로 돌아오면 설정 화면의 상태가 갱신되는지, 허용을 거부·취소한 뒤 다시 허용, 앱 업데이트(서명 변경) 후 권한이 초기화됐을 때의 안내, Chrome 자동화 거부 상태에서 저장이 막히지 않는지, 저장 폴더를 읽기 전용으로 바꾼 뒤 캡처·편집·삭제 때 알림과 `설정 열기` 버튼, 이미지 쓰기 실패 문구, 한국어·영어 시스템 언어에서 각 문구.

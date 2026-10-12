@@ -64,10 +64,11 @@ final class PermissionsModel {
         item == .accessibility && accessibility == .missing
     }
 
+    static let accessibilitySettingsURL = URL(
+        string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")
+
     func openAccessibilitySettings() {
-        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
-            openURL(url)
-        }
+        if let url = Self.accessibilitySettingsURL { openURL(url) }
     }
 
     private static func accessibilityStatus(_ checker: PermissionChecking) -> PermissionStatus {

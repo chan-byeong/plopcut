@@ -33,6 +33,9 @@ import Testing
         "invalid_image": "invalidImage", "empty_image": "invalidImage", "empty_text": "noCaptured",
         "invalid_storage_folder": "storageFailure", "storage_unwritable": "storageFailure",
         "storage_unreadable": "storageFailure", "permission_missing": "permissionAccessibilityMissing",
+        "settings_invalid": "settingsFailure", "settings_unreadable": "settingsFailure",
+        "settings_unwritable": "settingsFailure", "delete_failed": "deleteFailed", "drop_not_found": "dropNotFound",
+        "invalid_drop_id": "dropNotFound", "export_failed": "exportFailed", "save_failed": "saveFailed",
     ]
 
     /// Either language is accepted so a concurrent change of the language override cannot fail the comparison.
@@ -56,5 +59,19 @@ import Testing
             #expect(isText(ErrorText.message(for: error), ofKey: "defaultError"))
         }
         #expect(isText(ErrorText.message(forCode: "something_new"), ofKey: "defaultError"))
+    }
+
+    // STA-78: the missing-permission and storage errors name a way forward, and their button label exists in both languages.
+    @Test func recoverableErrorsOfferAButton() {
+        #expect(ErrorRecovery.forCode("permission_missing") == .openAccessibilitySettings)
+        for code in ["invalid_storage_folder", "storage_unwritable", "storage_unreadable", "settings_unwritable"] {
+            #expect(ErrorRecovery.forCode(code) == .openNotedropSettings, "\(code)")
+        }
+        for code in ["no_selected_text", "clipboard_empty", "clipboard_restore_failed", "something_new"] {
+            #expect(ErrorRecovery.forCode(code) == nil, "\(code)")
+        }
+        for recovery in [ErrorRecovery.openAccessibilitySettings, .openNotedropSettings] {
+            #expect(StringTable.entries[recovery.titleKey] != nil)
+        }
     }
 }

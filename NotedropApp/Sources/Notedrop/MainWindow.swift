@@ -126,6 +126,9 @@ struct MainWindow: View {
             Button(L10n.t("cancel"), role: .cancel) { model.pendingDeleteID = nil }
         } message: { Text(L10n.t("confirmTrashBody")) }
         .alert(model.alertMessage ?? "", isPresented: Binding(get: { model.alertMessage != nil }, set: { if !$0 { model.alertMessage = nil } })) {
+            if let recovery = model.alertRecovery {
+                Button(L10n.t(recovery.titleKey)) { model.performRecovery() }
+            }
             Button("OK", role: .cancel) {}
         }
         .overlay(alignment: .bottom) { NoticeBanner(model: model) }
