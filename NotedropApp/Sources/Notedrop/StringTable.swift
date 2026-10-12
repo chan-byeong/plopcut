@@ -31,6 +31,10 @@ enum StringTable {
         "searchPlaceholder": (en: "Search title, text, note, tag, source…", ko: "제목, 텍스트, 노트, 태그, 출처 검색…"),
         "clearSearch": (en: "Clear search", ko: "검색 지우기"),
         "drops": (en: "drops", ko: "개"),
+        "dropCountOne": (en: "1 drop", ko: "1개의 드롭"),
+        "dropTitle": (en: "Drop title", ko: "드롭 제목"),
+        "ok": (en: "OK", ko: "확인"),
+        "unreadableDrops": (en: "Some drops could not be read ({count})", ko: "일부 드롭을 읽지 못했습니다 ({count})"),
         "allDrops": (en: "All drops", ko: "모든 드롭"),
         "textDrops": (en: "Text drops", ko: "텍스트 드롭"),
         "imageDrops": (en: "Image drops", ko: "이미지 드롭"),
@@ -75,7 +79,7 @@ enum StringTable {
         "noNote": (en: "No note…", ko: "노트 없음…"),
         "tagPlaceholder": (en: "research, quote…", ko: "리서치, 인용…"),
         "tagAlreadyAdded": (en: "Already added", ko: "이미 추가됨"),
-        "removeTag": (en: "Remove", ko: "삭제"),
+        "removeTag": (en: "Remove", ko: "제거"),
         "source": (en: "Source", ko: "출처"),
         "sourceDetails": (en: "Source details", ko: "출처 상세 정보"),
         "app": (en: "App", ko: "앱"),
@@ -116,7 +120,7 @@ enum StringTable {
         "shortcutRecording": (en: "Press keys…", ko: "키를 누르세요…"),
         "shortcutRecordHint": (
             en: "Click the field and press the new key combination. Esc cancels the recording.",
-            ko: "입력란을 클릭하고 새 키 조합을 누르세요. Esc를 누르면 녹화를 취소합니다."),
+            ko: "입력란을 클릭하고 새 키 조합을 누르세요. Esc를 누르면 입력을 취소합니다."),
         "shortcutUnsaved": (
             en: "Not saved yet. The current shortcut keeps working until you press Save.",
             ko: "아직 저장하지 않았습니다. 저장을 누르기 전까지 기존 단축키가 그대로 동작합니다."),

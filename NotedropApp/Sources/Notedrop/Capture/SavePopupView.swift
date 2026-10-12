@@ -32,6 +32,9 @@ struct SavePopupView: View {
         .frame(minHeight: min(Self.contentSize.height, maxHeight), maxHeight: maxHeight, alignment: .top)
         .fixedSize(horizontal: false, vertical: true)
         .onChange(of: tagFocused) { _, _ in CompositionMonitor.shared.reset() }
+        .onChange(of: model.errorMessage) { _, message in
+            if let message { AccessibilityNotification.Announcement(message).post() }
+        }
     }
 
     private var fields: some View {
@@ -45,14 +48,14 @@ struct SavePopupView: View {
             noteField
             tagField
             if let message = model.errorMessage {
-                Text(message).font(.callout).foregroundStyle(.red).accessibilityAddTraits(.isStaticText)
+                Text(message).font(.callout).foregroundStyle(.red)
             }
         }
     }
 
     private var header: some View {
         HStack {
-            Text(L10n.t(model.selectedType == .image ? "saveImage" : "saveText")).font(.headline)
+            Text(L10n.t(model.selectedType == .image ? "saveImage" : "saveText")).font(.headline).accessibilityAddTraits(.isHeader)
             Spacer(minLength: 8)
             if model.isMixed { typePicker }
         }
@@ -88,6 +91,7 @@ struct SavePopupView: View {
             Text(L10n.t("source")).font(.caption).foregroundStyle(.secondary)
             Text(model.sourceSummary).font(.callout).lineLimit(2).textSelection(.enabled)
         }
+        .accessibilityElement(children: .combine)
         .fixedSize(horizontal: false, vertical: true)
     }
 
@@ -110,7 +114,7 @@ struct SavePopupView: View {
 
     private var noteField: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(L10n.t("note")).font(.callout.weight(.semibold))
+            Text(L10n.t("note")).font(.callout.weight(.semibold)).accessibilityHidden(true)
             PopupNoteEditor(
                 text: $model.note, placeholder: L10n.t("optionalNote"), accessibilityLabel: L10n.t("note"),
                 control: noteControl, onFocusChange: { focused in
@@ -125,7 +129,7 @@ struct SavePopupView: View {
 
     private var tagField: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(L10n.t("tags")).font(.callout.weight(.semibold))
+            Text(L10n.t("tags")).font(.callout.weight(.semibold)).accessibilityHidden(true)
             HStack {
                 TextField(L10n.t("tagPlaceholder"), text: $model.tagInput)
                     .focused($tagFocused)

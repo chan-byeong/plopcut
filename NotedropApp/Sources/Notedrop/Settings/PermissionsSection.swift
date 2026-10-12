@@ -20,19 +20,22 @@ struct PermissionsSection: View {
     private func row(_ item: PermissionItem) -> some View {
         let status = model.status(of: item)
         return VStack(alignment: .leading, spacing: 4) {
-            LabeledContent(L10n.t(PermissionsModel.itemKey(item))) {
-                Text(L10n.t(PermissionsModel.statusKey(status)))
-                    .foregroundStyle(status == .missing ? Color.red : Color.secondary)
+            // The button stays outside the combined element so VoiceOver can still activate it.
+            VStack(alignment: .leading, spacing: 4) {
+                LabeledContent(L10n.t(PermissionsModel.itemKey(item))) {
+                    Text(L10n.t(PermissionsModel.statusKey(status)))
+                        .foregroundStyle(status == .missing ? Color.red : Color.secondary)
+                }
+                Text(L10n.t(PermissionsModel.detailKey(item, status)))
+                    .font(.callout).foregroundStyle(.secondary)
+                if item == .automation {
+                    Text(L10n.t("permissionAutomationNote")).font(.callout).foregroundStyle(.secondary)
+                }
             }
-            Text(L10n.t(PermissionsModel.detailKey(item, status)))
-                .font(.callout).foregroundStyle(.secondary)
-            if item == .automation {
-                Text(L10n.t("permissionAutomationNote")).font(.callout).foregroundStyle(.secondary)
-            }
+            .accessibilityElement(children: .combine)
             if model.offersSystemSettings(for: item) {
                 Button(L10n.t("openSystemSettings")) { model.openAccessibilitySettings() }
             }
         }
-        .accessibilityElement(children: .combine)
     }
 }

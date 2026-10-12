@@ -20,6 +20,8 @@ final class SavePopupWindowController: NSObject, NSWindowDelegate {
         self.model = model
         let panel = panel ?? makePanel()
         self.panel = panel
+        // The title bar is hidden, but VoiceOver announces the window by its title.
+        panel.title = L10n.t(model.selectedType == .image ? "saveImage" : "saveText")
         let area = visibleFrame(panel)
         let titleBar = panel.frame.height - panel.contentLayoutRect.height
         let host = NSHostingView(rootView: SavePopupView(model: model, maxHeight: area.map { $0.height - titleBar } ?? .infinity))
