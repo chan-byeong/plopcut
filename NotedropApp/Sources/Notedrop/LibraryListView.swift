@@ -14,7 +14,7 @@ struct LibraryListView: View {
             content
         }
         .navigationTitle(model.title)
-        .navigationSubtitle(L10n.t("dropCount", ["count": String(model.filtered.count)]))
+        .navigationSubtitle(Formatting.dropCount(model.filtered.count))
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 if model.hasRefiningFilters {
@@ -47,14 +47,14 @@ struct LibraryListView: View {
     }
 
     private var warningBanner: some View {
-        Label("\(model.warnings.count) drop(s) could not be read", systemImage: "exclamationmark.triangle")
+        Label(L10n.t("unreadableDrops", ["count": String(model.warnings.count)]), systemImage: "exclamationmark.triangle")
             .font(.caption).foregroundStyle(.orange).padding(.horizontal, 16).padding(.bottom, 6)
             .frame(maxWidth: .infinity, alignment: .leading)
             .help(model.warnings.map(\.message).joined(separator: "\n"))
     }
 
     @ViewBuilder private var content: some View {
-        let groups = DateGroup.group(model.filtered)
+        let groups = model.groups
         if model.isLoading && model.drops.isEmpty {
             ProgressView(L10n.t("loadingDrops")).frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let error = model.loadError {
@@ -182,5 +182,7 @@ struct DropRow: View {
             }
         }
         .padding(.vertical, 3)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Formatting.rowAccessibilityLabel(drop))
     }
 }

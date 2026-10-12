@@ -129,7 +129,7 @@ struct MainWindow: View {
             if let recovery = model.alertRecovery {
                 Button(L10n.t(recovery.titleKey)) { model.performRecovery() }
             }
-            Button("OK", role: .cancel) {}
+            Button(L10n.t("ok"), role: .cancel) {}
         }
         .overlay(alignment: .bottom) { NoticeBanner(model: model) }
         .background {

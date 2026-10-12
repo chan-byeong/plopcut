@@ -4,7 +4,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39)
 
 레거시 `src/i18n/i18n.tsx`에서 그대로 추출한 사용자 문구입니다. 키는 [스펙](spec.md)과 [체크리스트](behavior-checklist.md)가 참조하는 이름입니다. 시스템 언어가 `ko`로 시작하면 한국어, 아니면 영어를 씁니다. 두 언어의 키 집합은 같습니다(158개). `shortcutFormatHint`만 구현 용어(Tauri)를 말하므로 Swift 구현의 단축키 형식에 맞게 고쳐 씁니다(체크리스트 D-12). `{count}` 같은 자리 표시자는 치환합니다.
 
-Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA-72, 로고 접근성 라벨), `settingsFailure`·`deleteFailed`·`dropNotFound`·`exportFailed`(STA-78, 알려진 오류 코드의 문구).
+Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA-72, 로고 접근성 라벨), `settingsFailure`·`deleteFailed`·`dropNotFound`·`exportFailed`(STA-78, 알려진 오류 코드의 문구), `dropCountOne`(영어 단수형), `dropTitle`(제목 입력란 접근성 라벨), `ok`(알림 단추), `unreadableDrops`(읽지 못한 드롭 경고, STA-80).
 
 | 키 | en | ko |
 | --- | --- | --- |
@@ -45,6 +45,7 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `activeFilters` | Active filters | 적용된 필터 |
 | `removeFilter` | Remove filter | 필터 제거 |
 | `dropCount` | {count} drops | {count}개의 드롭 |
+| `dropCountOne` | 1 drop | 1개의 드롭 |
 | `filterTag` | Filter by tag | 태그로 필터 |
 | `filterApp` | Filter by app | 앱으로 필터 |
 | `filterDate` | Filter by date | 날짜로 필터 |
@@ -61,6 +62,9 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `noMatches` | No drops match the current filters | 현재 필터와 일치하는 드롭이 없습니다 |
 | `noDrops` | No saved drops yet. Capture text with Shift + Cmd + C. | 저장된 드롭이 없습니다. Shift + Cmd + C로 텍스트를 캡처하세요. |
 | `appLogo` | Notedrop logo | Notedrop 로고 |
+| `dropTitle` | Drop title | 드롭 제목 |
+| `ok` | OK | 확인 |
+| `unreadableDrops` | Some drops could not be read ({count}) | 일부 드롭을 읽지 못했습니다 ({count}) |
 | `selectedDrop` | Selected drop | 선택한 드롭 |
 | `drop` | drop | 드롭 |
 | `unsaved` | Unsaved changes | 저장되지 않은 변경 |
@@ -81,7 +85,7 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `noNote` | No note… | 노트 없음… |
 | `tagPlaceholder` | research, quote… | 리서치, 인용… |
 | `tagAlreadyAdded` | Already added | 이미 추가됨 |
-| `removeTag` | Remove | 삭제 |
+| `removeTag` | Remove | 제거 |
 | `source` | Source | 출처 |
 | `sourceDetails` | Source details | 출처 상세 정보 |
 | `app` | App | 앱 |
@@ -114,7 +118,7 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `shortcutRollbackFailed` | The shortcut could not be saved and the previous one could not be restored. Set a shortcut again. | 단축키를 저장하지 못했고 이전 단축키도 복원하지 못했습니다. 단축키를 다시 설정하세요. |
 | `shortcutField` | Shortcut | 단축키 |
 | `shortcutRecording` | Press keys… | 키를 누르세요… |
-| `shortcutRecordHint` | Click the field and press the new key combination. Esc cancels the recording. | 입력란을 클릭하고 새 키 조합을 누르세요. Esc를 누르면 녹화를 취소합니다. |
+| `shortcutRecordHint` | Click the field and press the new key combination. Esc cancels the recording. | 입력란을 클릭하고 새 키 조합을 누르세요. Esc를 누르면 입력을 취소합니다. |
 | `shortcutUnsaved` | Not saved yet. The current shortcut keeps working until you press Save. | 아직 저장하지 않았습니다. 저장을 누르기 전까지 기존 단축키가 그대로 동작합니다. |
 | `shortcutNeedsModifier` | Hold Shift, Cmd, Ctrl or Option together with the key. | Shift, Cmd, Ctrl, Option 중 하나 이상을 함께 누르세요. |
 | `shortcutUnsupportedKey` | That key can't be used. Use a letter, a number, F1–F20, an arrow, Space, Enter, Tab, Esc, Backspace, Delete, Home, End, Page Up or Page Down. | 이 키는 쓸 수 없습니다. 문자, 숫자, F1–F20, 방향키, Space, Enter, Tab, Esc, Backspace, Delete, Home, End, Page Up, Page Down 중에서 고르세요. |
@@ -180,3 +184,12 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `deleteFailed` | The drop could not be moved to the Trash. It is still in the Library. | 드롭을 휴지통으로 이동하지 못했습니다. 드롭은 라이브러리에 그대로 있습니다. |
 | `dropNotFound` | This drop no longer exists. Refresh the library. | 이 드롭이 더 이상 없습니다. 라이브러리를 새로고침하세요. |
 | `exportFailed` | The Markdown file could not be written. Choose another location. | Markdown 파일을 쓰지 못했습니다. 다른 위치를 선택하세요. |
+
+## 문구 점검 기록 (STA-80)
+
+- `shortcutRecordHint`(ko): "녹화를 취소합니다"는 영상 녹화로 읽혀 "입력을 취소합니다"로 고쳤다.
+- `removeTag`(ko): `removeFilter`("제거")와 같은 동사로 맞추려 "삭제"를 "제거"로 고쳤다.
+- 영어 단수형: `dropCountOne` 추가(`1 drops` 방지). 한국어는 단수·복수 구분이 없다.
+- 하드코딩 영어 제거: 읽지 못한 드롭 경고(`unreadableDrops`), 알림창 단추(`ok`). 접근성 라벨 `dropTitle` 추가.
+- 의도적으로 그대로 둠: `Save Clipboard...`(세 점, 스펙·체크리스트가 같은 표기를 쓴다), 미리보기가 없을 때의 영어 `No preview`(스펙 2.5), 그룹 제목의 `Previous 7 Days`(macOS 목록 머리글 표기).
+- `StringTable.swift`와 이 표가 같은 키·문구를 가지는지는 `AccessibilityAndCopyTests.stringTableMatchesStringsMarkdown`이 검사한다(`shortcutFormatHint`는 Swift 단축키 형식으로 고쳐 쓰므로 제외).

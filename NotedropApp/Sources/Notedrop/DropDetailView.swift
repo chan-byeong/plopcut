@@ -37,7 +37,8 @@ struct DropDetailView: View {
                 .background(titleFocused ? Color(nsColor: .textBackgroundColor) : .clear, in: RoundedRectangle(cornerRadius: 6))
                 .overlay(RoundedRectangle(cornerRadius: 6).stroke(titleFocused ? Color.accentColor : .clear, lineWidth: 2))
                 .focused($titleFocused)
-                                .onSubmit { finishTitle(commit: true) }
+                .accessibilityLabel(L10n.t("dropTitle"))
+                .onSubmit { finishTitle(commit: true) }
                 .onExitCommand { finishTitle(commit: false) }
                 .onChange(of: titleFocused) { _, focused in
                     if focused { editor.beginTitleEdit() } else { Task { await editor.commitTitle() } }
@@ -65,6 +66,7 @@ struct DropDetailView: View {
     @ViewBuilder private func body(of drop: Drop) -> some View {
         if let url = drop.imageURL, let image = NSImage(contentsOf: url) {
             Image(nsImage: image).resizable().scaledToFit().frame(maxWidth: 640)
+                .accessibilityLabel(L10n.t("image"))
         } else if drop.type == .image {
             Label(L10n.t("imagePreviewUnavailable"), systemImage: "photo.badge.exclamationmark").foregroundStyle(.secondary)
         } else if let text = drop.text {

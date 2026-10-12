@@ -11,6 +11,47 @@ public enum Timestamp {
 
     /// Accepts any number of fractional digits (including none).
     public static func parse(_ string: String) -> Date? {
+        fastParse(string) ?? slowParse(string)
+    }
+
+    /// `YYYY-MM-DDTHH:MM:SS[.fraction]Z` with in-range fields, computed without Calendar (about 20x faster; STA-80).
+    private static func fastParse(_ string: String) -> Date? {
+        var string = string
+        return string.withUTF8 { u -> Date? in
+            let count = u.count
+            guard count >= 20, u[count - 1] == UInt8(ascii: "Z"),
+                  u[4] == 45, u[7] == 45, u[10] == 84, u[13] == 58, u[16] == 58 else { return nil }
+            func num(_ from: Int, _ to: Int) -> Int? {
+                var value = 0
+                for i in from..<to {
+                    guard u[i] >= 48, u[i] <= 57 else { return nil }
+                    value = value * 10 + Int(u[i] - 48)
+                }
+                return value
+            }
+            guard let y = num(0, 4), let mo = num(5, 7), let d = num(8, 10),
+                  let h = num(11, 13), let mi = num(14, 16), let s = num(17, 19),
+                  (1...12).contains(mo), (1...28).contains(d), h < 24, mi < 60, s < 60, y >= 1970 else { return nil }
+            var fraction = 0.0
+            if count > 20 {
+                let digits = count - 21
+                guard u[19] == 46, digits >= 1, digits <= 15 else { return nil }
+                guard let value = num(20, count - 1) else { return nil }
+                fraction = Double(value) / pow(10, Double(digits))
+            }
+            // Days from civil (Howard Hinnant), valid for the proleptic Gregorian calendar.
+            let yy = mo <= 2 ? y - 1 : y
+            let era = yy / 400
+            let yoe = yy - era * 400
+            let doy = (153 * (mo + (mo > 2 ? -3 : 9)) + 2) / 5 + d - 1
+            let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy
+            let days = era * 146_097 + doe - 719_468
+            let seconds = Double(days * 86_400 + h * 3600 + mi * 60 + s)
+            return Date(timeIntervalSince1970: seconds + fraction)
+        }
+    }
+
+    static func slowParse(_ string: String) -> Date? {
         guard string.hasSuffix("Z") else { return nil }
         let body = string.dropLast()
         let halves = body.split(separator: ".", maxSplits: 1, omittingEmptySubsequences: false)
