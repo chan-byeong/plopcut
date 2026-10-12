@@ -48,13 +48,13 @@ public struct LibraryFilter: Sendable {
     }
 
     private func matchesSearch(_ drop: Drop) -> Bool {
-        let query = search.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let query = SearchIndex.fold(search.trimmingCharacters(in: .whitespacesAndNewlines))
         if query.isEmpty { return true }
         let fields: [String?] = [
             drop.title, drop.text, drop.note, drop.imagePath, drop.source.appName,
             drop.source.windowTitle, drop.source.url,
         ]
-        return (fields.compactMap { $0 } + drop.tags).contains { $0.lowercased().contains(query) }
+        return (fields.compactMap { $0 } + drop.tags).contains { SearchIndex.fold($0).contains(query) }
     }
 
     private func matchesDate(_ drop: Drop, now: Date, calendar: Calendar) -> Bool {
@@ -76,8 +76,8 @@ public struct LibraryFilter: Sendable {
 }
 
 /// Lowercased searchable text of every drop, built once per scan so each keystroke is a byte search (STA-80).
-/// Fields are joined by NUL so a query never matches across two fields. Matching compares UTF-8 bytes of the
-/// lowercased text, so canonically equivalent but differently composed characters do not match each other.
+/// Fields are joined by NUL so a query never matches across two fields. Fields and the query go through the same
+/// `fold` (lowercase, then NFC), so decomposed (NFD) and precomposed Hangul match each other (STA-82).
 public struct SearchIndex: Sendable {
     private var haystacks: [String: [UInt8]] = [:]
 
@@ -93,7 +93,7 @@ public struct SearchIndex: Sendable {
         ]
         var bytes: [UInt8] = []
         for field in fields.compactMap({ $0 }) + drop.tags {
-            bytes.append(contentsOf: field.lowercased().utf8)
+            bytes.append(contentsOf: Self.fold(field).utf8)
             bytes.append(0)
         }
         haystacks[drop.id] = bytes
@@ -101,8 +101,16 @@ public struct SearchIndex: Sendable {
 
     public mutating func remove(id: String) { haystacks[id] = nil }
 
-    /// The query as lowercase bytes; empty means "match everything".
-    static func needle(_ trimmedQuery: String) -> [UInt8] { Array(trimmedQuery.lowercased().utf8) }
+    /// Search form of a field or query: lowercased, then NFC so canonically equivalent text has the same bytes.
+    /// ASCII text is already NFC, so it skips the normalization call.
+    static func fold(_ text: String) -> String {
+        let lower = text.lowercased()
+        if lower.utf8.allSatisfy({ $0 < 0x80 }) { return lower }
+        return lower.precomposedStringWithCanonicalMapping
+    }
+
+    /// The folded query as bytes; empty means "match everything".
+    static func needle(_ trimmedQuery: String) -> [UInt8] { Array(fold(trimmedQuery).utf8) }
 
     func contains(_ needle: [UInt8], in id: String) -> Bool {
         if needle.isEmpty { return true }

@@ -98,6 +98,32 @@ private func drop(_ id: String, created: String, type: DropType = .text, title: 
         }
     }
 
+    @Test func decomposedAndPrecomposedHangulMatchEachOther() {
+        func nfd(_ s: String) -> String { s.decomposedStringWithCanonicalMapping }
+        func nfc(_ s: String) -> String { s.precomposedStringWithCanonicalMapping }
+        let decomposed = [
+            drop("title", created: "2026-03-10T00:00:00Z", title: nfd("자모분리 제목")),
+            drop("body", created: "2026-03-10T00:00:00Z", title: "x", text: nfd("자모분리 테스트 문장")),
+            drop("note", created: "2026-03-10T00:00:00Z", title: "x", note: nfd("노트 메모")),
+            drop("tag", created: "2026-03-10T00:00:00Z", title: "x", tags: [nfd("한글태그")]),
+        ]
+        let precomposed = [drop("nfc", created: "2026-03-10T00:00:00Z", title: "x", text: nfc("완성형 본문 Café"))]
+        #expect(nfd("자모분리").utf8.count != nfc("자모분리").utf8.count)
+        let cases: [(drops: [Drop], query: String, id: String)] = [
+            (decomposed, nfc("제목"), "title"), (decomposed, nfc("테스트"), "body"),
+            (decomposed, nfc("메모"), "note"), (decomposed, nfc("한글태그"), "tag"),
+            (precomposed, nfd("완성형"), "nfc"), (precomposed, nfd("CAFÉ"), "nfc"),
+        ]
+        for (drops, query, id) in cases {
+            var incremental = SearchIndex()
+            drops.forEach { incremental.insert($0) }
+            for index in [SearchIndex(drops), incremental] {
+                #expect(LibraryFilter(search: query).apply(drops, now: now, calendar: cal, index: index).map(\.id) == [id], "\(query)")
+            }
+            #expect(LibraryFilter(search: query).apply(drops, now: now, calendar: cal).map(\.id) == [id], "\(query)")
+        }
+    }
+
     @Test func removedAndUnindexedDropsDoNotMatch() {
         let a = drop("1", created: "2026-03-10T00:00:00Z", title: "Alpha")
         var index = SearchIndex([a])
