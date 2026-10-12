@@ -1,4 +1,5 @@
 import AppKit
+import NotedropCore
 import Observation
 
 enum PermissionItem: CaseIterable, Sendable {
@@ -38,18 +39,29 @@ final class PermissionsModel {
 
     private let checker: PermissionChecking
     private let openURL: (URL) -> Void
+    private let log: EventLogging
 
-    init(checker: PermissionChecking = SystemPermissionChecker(), openURL: @escaping (URL) -> Void = { NSWorkspace.shared.open($0) }) {
+    init(checker: PermissionChecking = SystemPermissionChecker(), openURL: @escaping (URL) -> Void = { NSWorkspace.shared.open($0) },
+         log: EventLogging = AppLog.shared) {
         self.checker = checker
         self.openURL = openURL
+        self.log = log
         accessibility = Self.accessibilityStatus(checker)
         clipboard = Self.clipboardStatus(checker)
     }
 
     /// Re-reads the OS state, e.g. when the user returns from System Settings.
     func refresh() {
+        let previous = (accessibility, clipboard)
         accessibility = Self.accessibilityStatus(checker)
         clipboard = Self.clipboardStatus(checker)
+        // Only changes are logged (STA-80), not every refresh.
+        if accessibility != previous.0 { logChange(.accessibility, accessibility) }
+        if clipboard != previous.1 { logChange(.clipboard, clipboard) }
+    }
+
+    private func logChange(_ item: PermissionItem, _ status: PermissionStatus) {
+        log.log(.permission(item: Self.itemKey(item), status: status == .unknown ? "unknown" : Self.statusKey(status)))
     }
 
     func status(of item: PermissionItem) -> PermissionStatus {

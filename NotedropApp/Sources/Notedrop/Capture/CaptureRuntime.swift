@@ -111,11 +111,13 @@ final class CaptureRuntime {
     /// A failed clipboard capture only flashes `Error` in the menu bar and keeps the message for the next time the
     /// main window opens; it never raises the window itself (checklist K-06).
     private func reportQuietly(_ error: NotedropError) {
+        AppLog.shared.log(error: error)
         menuBar?.showError()
         model.pendingCapture.store(error)
     }
 
     private func report(_ error: NotedropError) {
+        AppLog.shared.log(error: error)
         if error.code == "permission_missing", !didPromptForAccessibility {
             didPromptForAccessibility = true  // once per launch; the message in the main window repeats the guidance
             _ = AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": true] as CFDictionary)

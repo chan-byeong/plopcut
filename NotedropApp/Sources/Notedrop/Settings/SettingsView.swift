@@ -28,6 +28,7 @@ struct SettingsView: View {
             PermissionsSection()
             Section(L10n.t("about")) {
                 LabeledContent(L10n.t("appVersion"), value: model.appVersion)
+                Button(L10n.t("showLogInFinder")) { AppLog.revealInFinder() }
             }
             if let message = model.errorMessage {
                 Text(message).foregroundStyle(.red).accessibilityAddTraits(.updatesFrequently)

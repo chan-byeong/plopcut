@@ -9,6 +9,21 @@ Notedrop keeps everything on your Mac.
 - **No telemetry.** The app contains no analytics, crash reporting, or usage tracking.
 - **No accounts, no cloud, no database.**
 
+## Support log (local only)
+
+Notedrop writes a small log to `~/Library/Logs/Notedrop/notedrop.log` (one
+previous file, `notedrop.log.1`; about 1 MB each). It stays on your Mac and is
+never uploaded. Settings has a `Show Log in Finder` row.
+
+- **Contains:** timestamp, app version, build and macOS version at start, the
+  code of errors shown to you (such as `storage_unreadable`, `permission_missing`,
+  `save_failed`), and permission status changes.
+- **Never contains:** drop text, images, notes, titles, tags, URLs, clipboard
+  data, or file paths. The log API accepts only fixed event types, and error
+  details are dropped, so only the code is written (covered by unit tests).
+- **Reporting a problem:** attach the log file to your message yourself. There
+  is no automatic report.
+
 ## What Notedrop reads, and when
 
 - The **selected text** of the frontmost app, only when you press the capture
