@@ -108,7 +108,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 
 | ID | 동작 | 근거 | 확인 방법 | ☐ |
 | --- | --- | --- | --- | --- |
-| L-01 | 검색은 제목·본문·노트·이미지 경로·앱·윈도우·URL·태그의 부분 문자열(대소문자 무시). 이미지 경로(`image.png`)로도 검색된다. | `drop-utils.ts` `matchesDropSearch` | 단위 | ☑ |
+| L-01 | 검색은 제목·본문·노트·이미지 경로·앱·윈도우·URL·태그의 부분 문자열(대소문자 무시). 이미지 경로(`image.png`)로도 검색된다. 질의와 필드는 소문자화 후 NFC로 맞춰 분해형(NFD)·완성형 한글이 서로 찾힌다(STA-82). | `drop-utils.ts` `matchesDropSearch` | 단위 | ☑ |
 | L-02 | 기간 필터: 오늘은 같은 달력 날짜, 7·30일은 `createdAt ≥ 지금 − N일`. 날짜를 해석할 수 없는 Drop은 기간 필터에서 제외. | `matchesDateFilter` | 단위 | ☑ |
 | L-03 | 날짜 그룹: 오늘/어제/지난 7일(2~7일 전)/이전. 해석 불가한 날짜는 `이전`. 빈 그룹 숨김. | `drop-groups.ts` | 단위 | ☑ |
 | L-04 | 선택이 필터 결과에서 사라지면 첫 항목, 결과가 비면 선택 없음. | `useLibraryFilters.ts` | 단위 | ☑ |
