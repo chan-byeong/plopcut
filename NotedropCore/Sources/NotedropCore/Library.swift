@@ -15,14 +15,28 @@ public struct LibraryFilter: Sendable {
         self.search = search; self.type = type; self.tag = tag; self.app = app; self.dateRange = dateRange
     }
 
-    public func apply(_ drops: [Drop], now: Date = Date(), calendar: Calendar = .current) -> [Drop] {
-        drops.filter { matches($0, now: now, calendar: calendar) }
+    /// With an `index` built from the same drops, search runs on prebuilt lowercase text instead of rebuilding it per keystroke.
+    public func apply(_ drops: [Drop], now: Date = Date(), calendar: Calendar = .current, index: SearchIndex? = nil) -> [Drop] {
+        let query = normalizedQuery
+        let needle = index == nil ? nil : SearchIndex.needle(query)
+        return drops.filter { drop in
+            if let index, let needle {
+                return matchesIgnoringSearch(drop, now: now, calendar: calendar) && index.contains(needle, in: drop.id)
+            }
+            return matches(drop, now: now, calendar: calendar)
+        }
     }
 
     public func matches(_ drop: Drop, now: Date = Date(), calendar: Calendar = .current) -> Bool {
+        matchesIgnoringSearch(drop, now: now, calendar: calendar) && matchesSearch(drop)
+    }
+
+    private var normalizedQuery: String { search.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+    private func matchesIgnoringSearch(_ drop: Drop, now: Date, calendar: Calendar) -> Bool {
         matchesType(drop) && (tag.map { drop.tags.contains($0) } ?? true)
             && (app.map { drop.source.appName == $0 } ?? true)
-            && matchesDate(drop, now: now, calendar: calendar) && matchesSearch(drop)
+            && matchesDate(drop, now: now, calendar: calendar)
     }
 
     private func matchesType(_ drop: Drop) -> Bool {
@@ -58,6 +72,47 @@ public struct LibraryFilter: Sendable {
     public static func resolveSelection(_ current: String?, in drops: [Drop]) -> String? {
         if let current, drops.contains(where: { $0.id == current }) { return current }
         return drops.first?.id
+    }
+}
+
+/// Lowercased searchable text of every drop, built once per scan so each keystroke is a byte search (STA-80).
+/// Fields are joined by NUL so a query never matches across two fields. Matching compares UTF-8 bytes of the
+/// lowercased text, so canonically equivalent but differently composed characters do not match each other.
+public struct SearchIndex: Sendable {
+    private var haystacks: [String: [UInt8]] = [:]
+
+    public init(_ drops: [Drop] = []) {
+        haystacks.reserveCapacity(drops.count)
+        for drop in drops { insert(drop) }
+    }
+
+    public mutating func insert(_ drop: Drop) {
+        let fields: [String?] = [
+            drop.title, drop.text, drop.note, drop.imagePath, drop.source.appName,
+            drop.source.windowTitle, drop.source.url,
+        ]
+        var bytes: [UInt8] = []
+        for field in fields.compactMap({ $0 }) + drop.tags {
+            bytes.append(contentsOf: field.lowercased().utf8)
+            bytes.append(0)
+        }
+        haystacks[drop.id] = bytes
+    }
+
+    public mutating func remove(id: String) { haystacks[id] = nil }
+
+    /// The query as lowercase bytes; empty means "match everything".
+    static func needle(_ trimmedQuery: String) -> [UInt8] { Array(trimmedQuery.lowercased().utf8) }
+
+    func contains(_ needle: [UInt8], in id: String) -> Bool {
+        if needle.isEmpty { return true }
+        guard let hay = haystacks[id] else { return false }
+        return hay.withUnsafeBufferPointer { h in
+            needle.withUnsafeBufferPointer { n in
+                guard let hb = h.baseAddress, let nb = n.baseAddress else { return false }
+                return memmem(hb, h.count, nb, n.count) != nil
+            }
+        }
     }
 }
 

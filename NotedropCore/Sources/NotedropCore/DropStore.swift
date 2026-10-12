@@ -24,6 +24,29 @@ public struct DropUpdate: Sendable {
     }
 }
 
+/// Slots written by concurrent scan workers, one per folder, so results keep directory order.
+private enum ScanSlot: Sendable {
+    case read(Drop, [ScanWarning])
+    case skipped(ScanWarning)
+}
+
+private final class ScanResults: @unchecked Sendable {
+    private let lock = NSLock()
+    private var slots: [ScanSlot?]
+
+    init(count: Int) { slots = Array(repeating: nil, count: count) }
+
+    func set(_ index: Int, _ result: ScanSlot) {
+        lock.lock(); defer { lock.unlock() }
+        slots[index] = result
+    }
+
+    var values: [ScanSlot?] {
+        lock.lock(); defer { lock.unlock() }
+        return slots
+    }
+}
+
 /// Reads and writes drop folders under `{root}/drops` (spec section 1).
 public struct DropStore: Sendable {
     public let root: URL
@@ -54,16 +77,29 @@ public struct DropStore: Sendable {
             throw NotedropError("storage_unreadable", detail: error.localizedDescription)
         }
 
-        var drops: [Drop] = []
-        var warnings: [ScanWarning] = []
-        for entry in entries {
-            guard (try? entry.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else { continue }
+        // Folders are read concurrently: the scan is bound by file latency, not CPU (STA-80 measurements).
+        let folders = entries.filter { (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true }
+        let results = ScanResults(count: folders.count)
+        DispatchQueue.concurrentPerform(iterations: folders.count) { index in
+            let entry = folders[index]
             do {
                 let (drop, dropWarnings) = try readFolder(entry)
+                results.set(index, .read(drop, dropWarnings))
+            } catch {
+                results.set(index, .skipped(ScanWarning(code: "drop_scan_skipped", message: "\(entry.lastPathComponent): \(error)")))
+            }
+        }
+        var drops: [Drop] = []
+        var warnings: [ScanWarning] = []
+        for result in results.values {
+            switch result {
+            case .read(let drop, let dropWarnings):
                 drops.append(drop)
                 warnings += dropWarnings
-            } catch {
-                warnings.append(ScanWarning(code: "drop_scan_skipped", message: "\(entry.lastPathComponent): \(error)"))
+            case .skipped(let warning):
+                warnings.append(warning)
+            case nil:
+                break
             }
         }
         drops.sort { ($0.createdAt, $0.id) > ($1.createdAt, $1.id) }

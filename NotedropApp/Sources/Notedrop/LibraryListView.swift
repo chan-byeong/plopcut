@@ -54,7 +54,7 @@ struct LibraryListView: View {
     }
 
     @ViewBuilder private var content: some View {
-        let groups = DateGroup.group(model.filtered)
+        let groups = model.groups
         if model.isLoading && model.drops.isEmpty {
             ProgressView(L10n.t("loadingDrops")).frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let error = model.loadError {

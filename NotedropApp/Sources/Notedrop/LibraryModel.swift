@@ -12,6 +12,14 @@ enum SidebarSelection: Hashable {
 @MainActor @Observable
 final class LibraryModel {
     private(set) var drops: [Drop] = []
+    /// Derived from `drops` and the filter inputs when they change, not on every view update (5,000-drop library, STA-80).
+    private(set) var filtered: [Drop] = []
+    private(set) var groups: [(group: DateGroup, drops: [Drop])] = []
+    private(set) var allTags: [String] = []
+    private(set) var allApps: [String] = []
+    private var typeCounts: (text: Int, image: Int) = (0, 0)
+    private var tagCounts: [String: Int] = [:]
+    private var searchIndex = SearchIndex()
     private(set) var warnings: [ScanWarning] = []
     private(set) var isLoading = false
     private(set) var loadError: String?
@@ -99,18 +107,15 @@ final class LibraryModel {
         return LibraryFilter(search: search, type: type, tag: tag, app: app, dateRange: dateRange)
     }
 
-    var filtered: [Drop] { filter.apply(drops) }
     var selectedDrop: Drop? { drops.first { $0.id == selectedID } }
     var hasRefiningFilters: Bool { app != nil || dateRange != .all }
-    var allTags: [String] { Array(Set(drops.flatMap(\.tags))).sorted() }
-    var allApps: [String] { Array(Set(drops.compactMap(\.source.appName))).sorted() }
 
     func count(for collection: SidebarSelection) -> Int {
         switch collection {
         case .all: drops.count
-        case .text: drops.filter { $0.type == .text }.count
-        case .image: drops.filter { $0.type == .image }.count
-        case .tag(let name): drops.filter { $0.tags.contains(name) }.count
+        case .text: typeCounts.text
+        case .image: typeCounts.image
+        case .tag(let name): tagCounts[name] ?? 0
         case .settings: 0
         }
     }
@@ -140,9 +145,11 @@ final class LibraryModel {
             drops = scan.drops
             warnings = scan.warnings
             loadError = nil
+            dropsChanged(rebuildIndex: true)
         case .failure(let error):
             drops = []
             warnings = []
+            dropsChanged(rebuildIndex: true)
             loadError = (error as? NotedropError)?.code ?? error.localizedDescription
         }
         reselect()
@@ -168,6 +175,8 @@ final class LibraryModel {
         guard let index = drops.firstIndex(where: { $0.id == saved.id }) else { return }
         // The selection stays on the edited drop even if it no longer matches the filter (spec E-06).
         drops[index] = saved
+        searchIndex.insert(saved)
+        dropsChanged(rebuildIndex: false)
     }
 
     /// Moves the drop's folder to the Trash (spec 2.6). The drop stays in the list when the move fails.
@@ -180,6 +189,8 @@ final class LibraryModel {
         case .success:
             editor.forget(id)
             drops.removeAll { $0.id == id }
+            searchIndex.remove(id: id)
+            dropsChanged(rebuildIndex: false)
             reselect()
             editor.show(selectedDrop)
             notice = L10n.t("trashSuccess")
@@ -229,7 +240,31 @@ final class LibraryModel {
     /// Selecting a type row clears the tag filter and vice versa because `collection` holds only one of them.
     private func collectionChanged() { reselect() }
 
+    /// Recomputes everything derived from `drops`: counts, tag and app lists, the search index, and the filtered list.
+    private func dropsChanged(rebuildIndex: Bool) {
+        if rebuildIndex { searchIndex = SearchIndex(drops) }
+        var tags: [String: Int] = [:]
+        var apps = Set<String>()
+        var text = 0, image = 0
+        for drop in drops {
+            if drop.type == .text { text += 1 } else if drop.type == .image { image += 1 }
+            for tag in drop.tags { tags[tag, default: 0] += 1 }
+            if let app = drop.source.appName { apps.insert(app) }
+        }
+        typeCounts = (text, image)
+        tagCounts = tags
+        allTags = tags.keys.sorted()
+        allApps = apps.sorted()
+        refilter()
+    }
+
+    private func refilter() {
+        filtered = filter.apply(drops, index: searchIndex)
+        groups = DateGroup.group(filtered)
+    }
+
     private func reselect() {
+        refilter()
         selectedID = LibraryFilter.resolveSelection(selectedID, in: filtered)
     }
 }

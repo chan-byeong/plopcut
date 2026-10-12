@@ -81,3 +81,38 @@ private func drop(_ id: String, created: String, type: DropType = .text, title: 
         #expect(LibraryFilter.resolveSelection("a", in: []) == nil)
     }
 }
+
+@Suite struct SearchIndexTests {
+    @Test func indexedSearchAgreesWithDirectSearch() {
+        let drops = [
+            drop("1", created: "2026-03-10T00:00:00Z", title: "Alpha", text: "Body Gamma", note: "Delta note", tags: ["Epsilon"],
+                 source: DropSource(appName: "Zeta", windowTitle: "Eta win", url: "https://theta.dev", filePath: nil), imagePath: "image.png"),
+            drop("2", created: "2026-03-10T00:00:00Z", title: "라이브러리 검색", text: nil, tags: ["태그"]),
+            drop("3", created: "2026-03-10T00:00:00Z", title: "ab", text: "cd"),
+        ]
+        let index = SearchIndex(drops)
+        for q in ["alpha", "GAMMA", "  delta  ", "epsilon", "zeta", "theta.dev", "image.png", "라이브러리", "태그", "nope", "", "   ", "bc", "abcd"] {
+            let filter = LibraryFilter(search: q)
+            #expect(filter.apply(drops, now: now, calendar: cal, index: index).map(\.id)
+                == filter.apply(drops, now: now, calendar: cal).map(\.id), "\(q)")
+        }
+    }
+
+    @Test func removedAndUnindexedDropsDoNotMatch() {
+        let a = drop("1", created: "2026-03-10T00:00:00Z", title: "Alpha")
+        var index = SearchIndex([a])
+        index.remove(id: "1")
+        #expect(LibraryFilter(search: "alpha").apply([a], index: index).isEmpty)
+        #expect(LibraryFilter().apply([a], index: index).count == 1)
+    }
+
+    @Test func fastTimestampParseMatchesCalendarParse() {
+        for s in ["2026-03-10T12:00:00Z", "2026-03-10T12:00:00.5Z", "2026-01-01T09:00:00.000000001Z", "2024-02-28T23:59:59.999999999Z",
+                  "2026-12-28T00:00:00.123456Z", "1970-01-01T00:00:00Z"] {
+            #expect(Timestamp.parse(s) == Timestamp.slowParse(s), "\(s)")
+        }
+        for s in ["", "2026-03-10", "2026-13-10T00:00:00Z", "2026-03-10T00:00:00.Z", "2026-03-10T00:00:00", "garbage-----------Z"] {
+            #expect(Timestamp.parse(s) == Timestamp.slowParse(s), "\(s)")
+        }
+    }
+}
