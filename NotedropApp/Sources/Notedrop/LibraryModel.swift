@@ -69,7 +69,7 @@ final class LibraryModel {
         editor = DropEditor(
             save: { id, update in try DropStore(root: try storageRoot(), trash: trashMover).update(id: id, update) },
             onSaved: { [weak self] in self?.apply($0) },
-            onBackgroundFailure: { [weak self] code in self?.showAlert(forCode: code) })
+            onBackgroundFailure: { [weak self] code in self?.showAlert(forCode: code, logged: false) })
     }
 
     /// `NOTEDROP_SETTINGS_FILE` keeps dev runs and screenshots away from the user's real settings.json.
@@ -177,8 +177,9 @@ final class LibraryModel {
     }
 
     /// Shows an error with its recovery button when there is one.
-    func showAlert(forCode code: String, prefix: String = "") {
-        AppLog.shared.log(.error(code: code))
+    /// `logged: false` when the failure was already logged where it happened (a background autosave).
+    func showAlert(forCode code: String, prefix: String = "", logged: Bool = true) {
+        if logged { AppLog.shared.log(.error(code: code)) }
         alertMessage = prefix + ErrorText.message(forCode: code)
         alertRecovery = ErrorRecovery.forCode(code)
     }

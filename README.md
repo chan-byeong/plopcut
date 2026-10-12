@@ -90,7 +90,8 @@ each file is at most about 1 MB). In Notedrop, open **Settings** and choose
 
 - **It stays on your Mac.** Nothing is uploaded or sent automatically.
 - **It contains only:** a timestamp, app version, build and macOS version at
-  start, the code of an error that was shown to you (for example
+  start, the code of an error that was shown to you, in an alert or inline such as a
+  failed autosave or a failed save in the save popup (for example
   `storage_unreadable`, `permission_missing`, `save_failed`), and permission
   status changes.
 - **It never contains** drop text, images, notes, titles, tags, URLs, clipboard

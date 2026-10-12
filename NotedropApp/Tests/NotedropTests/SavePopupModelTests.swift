@@ -15,9 +15,28 @@ import Testing
 
     private func make(
         recent: [String] = [], save: @escaping @Sendable (SaveRequest) async throws -> Drop,
-        saved: @escaping (Drop) -> Void = { _ in }, cancelled: @escaping () -> Void = {}
+        saved: @escaping (Drop) -> Void = { _ in }, cancelled: @escaping () -> Void = {},
+        log: EventLogging = NullEventLog()
     ) -> SavePopupModel {
-        SavePopupModel(draft: draft, recentTags: recent, save: save, onSaved: saved, onCancel: cancelled)
+        SavePopupModel(draft: draft, recentTags: recent, save: save, onSaved: saved, onCancel: cancelled, log: log)
+    }
+
+    // STA-84: a save failure shown in the popup is logged by code only.
+    @Test func saveFailureIsLoggedWithTheCodeOnly() async {
+        let log = LogRecorder()
+        let model = make(save: { _ in throw NotedropError("storage_unwritable", detail: "/Users/me/secret") },
+                         log: log)
+        model.note = "private note"
+        await model.submit()
+        #expect(model.errorMessage == L10n.t("storageFailure"))
+        #expect(log.events == [.error(code: "storage_unwritable")])
+    }
+
+    @Test func successfulSaveLogsNothing() async {
+        let log = LogRecorder()
+        let model = make(save: { Self.drop($0) }, log: log)
+        await model.submit()
+        #expect(log.events.isEmpty)
     }
 
     @Test func savesTextWithNoteAndTags() async {

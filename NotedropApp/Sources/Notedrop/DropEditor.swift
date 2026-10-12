@@ -74,13 +74,16 @@ final class DropEditor {
     private let save: @Sendable (String, DropUpdate) async throws -> Drop
     private let onSaved: @MainActor (Drop) -> Void
     private let onBackgroundFailure: @MainActor (String) -> Void
+    private let log: EventLogging
 
     init(
         sleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
         save: @escaping @Sendable (String, DropUpdate) async throws -> Drop,
         onSaved: @escaping @MainActor (Drop) -> Void,
-        onBackgroundFailure: @escaping @MainActor (String) -> Void = { _ in }
+        onBackgroundFailure: @escaping @MainActor (String) -> Void = { _ in },
+        log: EventLogging = AppLog.shared
     ) {
+        self.log = log
         self.sleep = sleep
         self.save = save
         self.onSaved = onSaved
@@ -296,6 +299,9 @@ final class DropEditor {
         }
         let update = update(for: slot.draft, from: slot.base)
         let sentRevision = slot.revision
+        // A retry of a save that already failed is the same failure event: only the change into failed is logged.
+        var wasFailed = false
+        if case .failed = slot.state { wasFailed = true }
         slot.state = .saving
         store(slot, for: id)
         writing[id, default: 0] += 1
@@ -321,6 +327,7 @@ final class DropEditor {
         } catch {
             writing[id, default: 1] -= 1
             let code = (error as? NotedropError)?.code ?? "defaultError"
+            if !wasFailed { log.log(error: error) }
             guard var latest = self.slot(id) else { return false }
             latest.state = latest.revision == sentRevision ? .failed(code) : .pending
             store(latest, for: id)
