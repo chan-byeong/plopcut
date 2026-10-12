@@ -91,7 +91,7 @@ See [docs/release-scope.md](docs/release-scope.md).
 ## Updates
 
 This release has no automatic update check. Download new versions manually.
-See [docs/update-method.md](docs/update-method.md).
+See [docs/update-method.md](docs/update-method.md). Notedrop is distributed as a downloadable DMG, not through the Mac App Store.
 
 ## License
 
