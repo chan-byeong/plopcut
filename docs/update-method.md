@@ -4,8 +4,8 @@ Status: **decided — manual download (owner, STA-75).**
 
 ## Decision: manual download
 
-Notedrop checks for updates **never**. Users download the new `Notedrop.dmg`
-from the Releases page of the public release repository and replace the app.
+plopcut checks for updates **never**. Users download the new `plopcut.dmg`
+from the Releases page of the plopcut repository (`github.com/chan-byeong/plopcut`) and replace the app.
 
 Reasons:
 
@@ -58,7 +58,7 @@ Each item below needs an owner decision. Items struck through are decided.
 4. **Distribution and release process.** How the DMG is built, signed, checked by
    macOS, and published is not decided on this branch. It will be described in
    `docs/release.md` (coming). The README does not claim anything about it.
-5. ~~**Where the user docs are published.**~~ Decided (owner, STA-75): a separate
-   **public release repository** holds the user README, install guide, privacy note and
-   the DMGs in its GitHub Releases. The source repository stays private. The release
-   repository's name waits for the final service name (see the bundle ID decision).
+5. ~~**Where the user docs are published.**~~ Decided (owner, STA-85, replacing the STA-75
+   plan of a separate release repository): plopcut is open source, so the source repository
+   `github.com/chan-byeong/plopcut` is the public home. Its README and `docs/` hold the user
+   docs, and the DMGs are in its GitHub Releases. It goes public after STA-86.

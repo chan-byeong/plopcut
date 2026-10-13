@@ -1,11 +1,11 @@
-# Notedrop (한국어)
+# plopcut (한국어)
 
 [English README](README.md)
 
-Notedrop은 로컬 우선(local-first) macOS 클립보드 앱입니다. 선택한 텍스트나 클립보드 이미지를 사용자가 직접 캡처하고,
+plopcut은 로컬 우선(local-first) macOS 클립보드 앱입니다. 선택한 텍스트나 클립보드 이미지를 사용자가 직접 캡처하고,
 노트와 태그를 붙여 라이브러리에서 다시 찾습니다. 모든 드롭은 Mac에 일반적인 읽을 수 있는 파일로 저장됩니다.
 
-Notedrop은 백그라운드에서 클립보드를 감시하지 않습니다. 사용자가 캡처를 요청할 때만 클립보드나 선택한 텍스트를 읽습니다.
+plopcut은 백그라운드에서 클립보드를 감시하지 않습니다. 사용자가 캡처를 요청할 때만 클립보드나 선택한 텍스트를 읽습니다.
 
 > 상태: 출시 전입니다. 다운로드와 서명에 관한 내용은 출시 시 `docs/release.md`에 정리될 예정입니다(준비 중).
 
@@ -21,15 +21,15 @@ Notedrop은 백그라운드에서 클립보드를 감시하지 않습니다. 사
 
 요구 사항: macOS 14 이상이 설치된 Mac.
 
-1. Notedrop 공개 배포 저장소의 Releases 페이지에서 `Notedrop.dmg`를 내려받습니다. *링크: 첫 릴리스와 함께 추가합니다.*
-2. 디스크 이미지를 열고 **Notedrop**을 **응용 프로그램(Applications)** 폴더로 끌어 놓습니다.
-3. 응용 프로그램에서 Notedrop을 엽니다.
+1. [plopcut 저장소](https://github.com/chan-byeong/plopcut)의 Releases 페이지에서 `plopcut.dmg`를 내려받습니다. *첫 릴리스와 함께 추가합니다.*
+2. 디스크 이미지를 열고 **plopcut**을 **응용 프로그램(Applications)** 폴더로 끌어 놓습니다.
+3. 응용 프로그램에서 plopcut을 엽니다.
 
 ## 첫 실행
 
 처음 실행하면 드롭을 어디에 저장할지 묻습니다.
 
-- **기본 폴더 사용**: `~/Documents/Notedrop`
+- **기본 폴더 사용**: `~/Documents/plopcut`
 - **다른 폴더 선택**
 
 둘 중 하나를 확정할 때까지 대화상자가 남습니다. 나중에 설정에서 폴더를 바꾸면 새로 만드는 드롭부터 적용됩니다.
@@ -37,41 +37,48 @@ Notedrop은 백그라운드에서 클립보드를 감시하지 않습니다. 사
 
 ## 권한
 
-Notedrop은 해당 기능이 필요할 때만 권한을 요청합니다. 설정 화면에서 권한 상태를 확인할 수 있습니다.
+plopcut은 해당 기능이 필요할 때만 권한을 요청합니다. 설정 화면에서 권한 상태를 확인할 수 있습니다.
 
 | 권한 | 허용 위치 | 필요한 이유 |
 | --- | --- | --- |
 | 손쉬운 사용(Accessibility) | 시스템 설정 › 개인정보 보호 및 보안 › 손쉬운 사용 | 사용 중인 앱에서 선택한 텍스트를 읽고, 직접 읽기가 안 될 때 대신 `Command`+`C`를 보내 복사합니다. 이 권한이 없으면 선택 텍스트 캡처가 동작하지 않습니다. |
 | 자동화(Google Chrome) | 시스템 설정 › 개인정보 보호 및 보안 › 자동화 | Chrome 활성 탭의 URL을 읽어 드롭의 출처 링크를 남깁니다. macOS가 처음 한 번 묻습니다. 허용하지 않아도 캡처는 되지만 URL은 저장되지 않습니다. |
-| 클립보드 | Notedrop 설정 항목 없음. 최근 macOS는 앱이 클립보드를 읽을 때 자체 확인 창을 띄울 수 있습니다. | `Save Clipboard...`를 실행할 때만 클립보드를 읽습니다. |
+| 클립보드 | plopcut 설정 항목 없음. 최근 macOS는 앱이 클립보드를 읽을 때 자체 확인 창을 띄울 수 있습니다. | `Save Clipboard...`를 실행할 때만 클립보드를 읽습니다. |
 
 ## 데이터 저장 위치
 
-- **드롭**: `~/Documents/Notedrop/drops/<드롭 ID>/` 폴더 하나당 드롭 하나입니다. 안에는 `drop.json`(메타데이터),
+- **드롭**: `~/Documents/plopcut/drops/<드롭 ID>/` 폴더 하나당 드롭 하나입니다. 안에는 `drop.json`(메타데이터),
   `content.md` 또는 `image.png`, `note.md`가 있습니다. 텍스트 편집기나 Finder로 열어 볼 수 있습니다.
-- **설정**: `~/Library/Application Support/Notedrop/settings.json`
+- **설정**: `~/Library/Application Support/plopcut/settings.json`
 
-Notedrop은 데이터베이스를 사용하지 않으며, 이 파일을 외부로 보내지 않습니다. 자세한 내용은 [docs/privacy.md](docs/privacy.md)를 참고하세요.
+plopcut은 데이터베이스를 사용하지 않으며, 이 파일을 외부로 보내지 않습니다. 자세한 내용은 [docs/privacy.md](docs/privacy.md)를 참고하세요.
+
+## Notedrop에서 업그레이드
+
+plopcut의 예전 이름은 Notedrop입니다. plopcut을 처음 열면 데이터를 새 위치로 옮깁니다. `~/Documents/Notedrop`은
+`~/Documents/plopcut`으로, `~/Library/Application Support`의 설정 폴더와 `~/Library/Logs`의 로그 폴더도 같이 옮깁니다.
+직접 고른 저장 폴더는 옮기지 않으며, 이미 있는 plopcut 폴더는 덮어쓰지 않습니다. macOS는 plopcut을 새 앱으로 인식하므로
+**손쉬운 사용**과 **자동화**에서 다시 허용해야 합니다. 예전 Notedrop 항목은 지워도 됩니다.
 
 ## 삭제(제거) 방법
 
-1. Notedrop을 종료합니다.
-2. 응용 프로그램의 **Notedrop.app**을 휴지통으로 옮깁니다.
-3. 선택 사항: 설정 폴더 `~/Library/Application Support/Notedrop`을 삭제합니다.
-4. 선택 사항: `~/Documents/Notedrop`의 저장된 드롭을 삭제합니다. **드롭이 모두 삭제됩니다.** 보관하려면 먼저 다른 곳에 복사하세요.
+1. plopcut을 종료합니다.
+2. 응용 프로그램의 **plopcut.app**을 휴지통으로 옮깁니다.
+3. 선택 사항: 설정 폴더 `~/Library/Application Support/plopcut`을 삭제합니다.
+4. 선택 사항: `~/Documents/plopcut`의 저장된 드롭을 삭제합니다. **드롭이 모두 삭제됩니다.** 보관하려면 먼저 다른 곳에 복사하세요.
    앱을 삭제해도 드롭은 자동으로 지워지지 않습니다.
-5. 선택 사항: 시스템 설정 › 개인정보 보호 및 보안의 **손쉬운 사용**과 **자동화**에서 Notedrop 항목을 지웁니다.
+5. 선택 사항: 시스템 설정 › 개인정보 보호 및 보안의 **손쉬운 사용**과 **자동화**에서 plopcut 항목을 지웁니다.
 
 ## 개인정보
 
-모든 드롭과 설정은 사용자의 Mac에만 남습니다. Notedrop은 데이터를 외부로 보내지 않으며 원격 측정(telemetry)을 포함하지 않습니다.
+모든 드롭과 설정은 사용자의 Mac에만 남습니다. plopcut은 데이터를 외부로 보내지 않으며 원격 측정(telemetry)을 포함하지 않습니다.
 근거와 세부 내용은 [docs/privacy.md](docs/privacy.md)를 참고하세요.
 
 ## 로그 파일과 문제 신고
 
-Notedrop은 문제 확인에 쓰는 작은 로그를 이 Mac에만 남깁니다. 위치는
-`~/Library/Logs/Notedrop/notedrop.log`이고 일반 텍스트 파일입니다(이전 파일은
-`notedrop.log.1`, 파일당 최대 약 1MB). Notedrop의 **설정**에서
+plopcut은 문제 확인에 쓰는 작은 로그를 이 Mac에만 남깁니다. 위치는
+`~/Library/Logs/plopcut/plopcut.log`이고 일반 텍스트 파일입니다(이전 파일은
+`plopcut.log.1`, 파일당 최대 약 1MB). plopcut의 **설정**에서
 **Finder에서 로그 보기**를 누르면 열립니다.
 
 - **이 Mac 밖으로 나가지 않습니다.** 자동으로 업로드하거나 전송하지 않습니다.
@@ -79,9 +86,9 @@ Notedrop은 문제 확인에 쓰는 작은 로그를 이 Mac에만 남깁니다.
   코드(예: `storage_unreadable`, `permission_missing`, `save_failed`), 권한 상태 변경.
 - **담지 않는 내용:** 드롭 텍스트, 이미지, 노트, 제목, 태그, URL, 클립보드 내용, 파일 경로.
 
-문제를 신고할 때는 무엇을 했는지 짧게 적고 `notedrop.log`(있으면 `notedrop.log.1`도)를
+문제를 신고할 때는 무엇을 했는지 짧게 적고 `plopcut.log`(있으면 `plopcut.log.1`도)를
 직접 첨부하세요. 먼저 파일을 열어 내용을 확인할 수 있습니다. 파일을 지워도 되며,
-Notedrop이 새로 만듭니다.
+plopcut이 새로 만듭니다.
 
 ## 이번 릴리스에서 제외된 기능
 
@@ -107,4 +114,4 @@ Swift(SwiftUI, AppKit)로 새로 구현한 버전입니다. 이전 Tauri + React
 동작 참고용으로만 보존되어 있습니다.
 
 먼저 [`AGENTS.md`](AGENTS.md)를 읽고, [구현 사양](docs/swift-migration/spec.md)과
-[동작 체크리스트](docs/swift-migration/behavior-checklist.md)를 확인하세요. `scripts/make-app.sh`로 개발용 `Notedrop.app`을 만들 수 있습니다.
+[동작 체크리스트](docs/swift-migration/behavior-checklist.md)를 확인하세요. `scripts/make-app.sh`로 개발용 `plopcut.app`을 만들 수 있습니다.

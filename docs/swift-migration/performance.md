@@ -12,7 +12,7 @@ scripts/measure-performance.sh 20000  # 건수 변경
 ```
 
 - `scripts/generate-perf-library.py OUTPUT_DIR [COUNT]`가 같은 인자에 같은 결과를 만듭니다(고정 시드). 텍스트 90%, 이미지 10%, 한글·영문 혼합 본문(20~200단어), 앱 8종, 태그 10종, 4건 중 1건은 노트.
-- 측정 테스트는 `NotedropCore/Tests/NotedropCoreTests/PerformanceTests.swift`입니다. `NOTEDROP_PERF_LIBRARY`가 없으면 건너뜁니다. 기본 `swift test`에는 영향이 없습니다.
+- 측정 테스트는 `PlopcutCore/Tests/PlopcutCoreTests/PerformanceTests.swift`입니다. `PLOPCUT_PERF_LIBRARY`가 없으면 건너뜁니다. 기본 `swift test`에는 영향이 없습니다.
 - 통과 기준: 5,000건 스캔 5초 미만, 색인 검색 100 ms 미만.
 
 ## 측정 환경
@@ -64,6 +64,6 @@ STA-80 색인은 소문자 UTF-8 바이트만 비교해 분해형(NFD) 한글이
 
 ## 수동 확인 (사람이 해야 함)
 
-1. `python3 scripts/generate-perf-library.py /tmp/nd-perf`로 만든 뒤 `NOTEDROP_STORAGE_FOLDER=/tmp/nd-perf NOTEDROP_SETTINGS_FILE=/tmp/nd-perf-settings.json`로 앱을 실행하고, 시작부터 목록이 보일 때까지 걸리는 시간을 잰다.
+1. `python3 scripts/generate-perf-library.py /tmp/nd-perf`로 만든 뒤 `PLOPCUT_STORAGE_FOLDER=/tmp/nd-perf PLOPCUT_SETTINGS_FILE=/tmp/nd-perf-settings.json`로 앱을 실행하고, 시작부터 목록이 보일 때까지 걸리는 시간을 잰다.
 2. 검색창에 빠르게 입력해 입력이 끊기지 않는지, 목록을 끝까지 스크롤해 끊김이 없는지 확인한다.
 3. 끝나면 `/tmp/nd-perf`를 지운다.

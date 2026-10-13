@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Writes a deterministic synthetic Notedrop library for performance measurements.
+"""Writes a deterministic synthetic plopcut library for performance measurements.
 
 Usage: scripts/generate-perf-library.py OUTPUT_DIR [COUNT]   (COUNT defaults to 5000)
 
-OUTPUT_DIR must not exist or must be empty, and must not be a real Notedrop
+OUTPUT_DIR must not exist or must be empty, and must not be a real plopcut
 storage folder. The drops go to OUTPUT_DIR/drops, the same layout the app scans.
 About 90% are text drops, 10% are image drops. Same arguments, same output.
 """

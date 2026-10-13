@@ -1,0 +1,188 @@
+import AppKit
+import PlopcutCore
+import SwiftUI
+
+struct LibraryListView: View {
+    @Bindable var model: LibraryModel
+    var listFocused: FocusState<Bool>.Binding
+    @State private var filtersOpen = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            header
+            if !model.warnings.isEmpty { warningBanner }
+            content
+        }
+        .navigationTitle(model.title)
+        .navigationSubtitle(Formatting.dropCount(model.filtered.count))
+        .toolbar {
+            ToolbarItemGroup(placement: .primaryAction) {
+                if model.hasRefiningFilters {
+                    Button { model.clearFilters() } label: { Label(L10n.t("clearFilters"), systemImage: "arrow.counterclockwise") }
+                        .help(L10n.t("clearFilters"))
+                }
+                Button { filtersOpen.toggle() } label: { Label(L10n.t("openFilters"), systemImage: "line.3.horizontal.decrease") }
+                    .help(L10n.t("openFilters"))
+                    .popover(isPresented: $filtersOpen) { FilterPopover(model: model) }
+            }
+        }
+    }
+
+    /// Title and count live in the window toolbar (navigationTitle/Subtitle); only filter chips stay in the pane.
+    @ViewBuilder private var header: some View {
+        if model.hasRefiningFilters { chips.padding(.horizontal, 16).padding(.vertical, 8) }
+    }
+
+    private var chips: some View {
+        HStack {
+            if let app = model.app { chip(app) { model.app = nil } }
+            if model.dateRange != .all { chip(FilterPopover.title(model.dateRange)) { model.dateRange = .all } }
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func chip(_ text: String, remove: @escaping () -> Void) -> some View {
+        Button(action: remove) { Label(text, systemImage: "xmark").labelStyle(.titleAndIcon).font(.caption) }
+            .buttonStyle(.bordered).controlSize(.small).accessibilityLabel("\(L10n.t("removeFilter")) \(text)")
+    }
+
+    private var warningBanner: some View {
+        Label(L10n.t("unreadableDrops", ["count": String(model.warnings.count)]), systemImage: "exclamationmark.triangle")
+            .font(.caption).foregroundStyle(.orange).padding(.horizontal, 16).padding(.bottom, 6)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .help(model.warnings.map(\.message).joined(separator: "\n"))
+    }
+
+    @ViewBuilder private var content: some View {
+        let groups = model.groups
+        if model.isLoading && model.drops.isEmpty {
+            ProgressView(L10n.t("loadingDrops")).frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if let error = model.loadError {
+            ContentUnavailableView(error, systemImage: "exclamationmark.triangle")
+        } else if model.drops.isEmpty {
+            ContentUnavailableView {
+                AppLogo().frame(width: 72, height: 72)
+            } description: {
+                Text(L10n.t("noDrops"))
+            }
+        } else if groups.isEmpty {
+            ContentUnavailableView(L10n.t("noMatches"), systemImage: "magnifyingglass")
+        } else {
+            List(selection: $model.selectedID) {
+                ForEach(groups, id: \.group) { entry in
+                    Section(Formatting.groupTitle(entry.group)) {
+                        ForEach(entry.drops) { drop in DropRow(drop: drop).tag(drop.id) }
+                    }
+                }
+            }
+            .listStyle(.inset)
+            .slimScrollers()
+            .focused(listFocused)
+            .focusedValue(\.trashSelectedDrop, model.selectedID == nil ? nil : { if let id = model.selectedID { model.pendingDeleteID = id } })
+            .contextMenu(forSelectionType: String.self) { ids in
+                if let drop = model.drops.first(where: { ids.contains($0.id) }) {
+                    if let url = drop.source.url.flatMap(URL.init(string:)), drop.source.url?.isEmpty == false {
+                        Button(L10n.t("openSource")) { NSWorkspace.shared.open(url) }
+                    }
+                    if drop.type == .text, let text = drop.text {
+                        Button(L10n.t("copyContent")) {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(text, forType: .string)
+                        }
+                    }
+                    Button(L10n.t("exportMarkdown")) { Task { await model.exportWithPanel(id: drop.id) } }
+                    Divider()
+                    Button(L10n.t("moveTrash"), role: .destructive) { model.pendingDeleteID = drop.id }
+                }
+            }
+        }
+    }
+}
+
+/// The app icon from the bundle (copied by scripts/make-app.sh); falls back to the running app's icon outside a bundle.
+struct AppLogo: View {
+    private static let image: NSImage = {
+        if let url = Bundle.main.url(forResource: "AppIcon", withExtension: "icns"), let image = NSImage(contentsOf: url) { return image }
+        return NSApp?.applicationIconImage ?? NSImage()
+    }()
+
+    var body: some View {
+        Image(nsImage: Self.image).resizable().scaledToFit().accessibilityLabel(L10n.t("appLogo"))
+    }
+}
+
+struct FilterPopover: View {
+    @Bindable var model: LibraryModel
+
+    static func title(_ range: DateRange) -> String {
+        switch range {
+        case .all: L10n.t("anyTime")
+        case .today: L10n.t("today")
+        case .last7Days: L10n.t("last7")
+        case .last30Days: L10n.t("last30")
+        }
+    }
+
+    var body: some View {
+        Form {
+            Picker(L10n.t("filterApp"), selection: $model.app) {
+                Text(L10n.t("allApps")).tag(String?.none)
+                ForEach(model.allApps, id: \.self) { Text($0).tag(String?.some($0)) }
+            }
+            Picker(L10n.t("filterDate"), selection: $model.dateRange) {
+                ForEach([DateRange.all, .today, .last7Days, .last30Days], id: \.self) { Text(Self.title($0)).tag($0) }
+            }
+        }
+        .padding(16).frame(width: 280)
+    }
+}
+
+struct DropRow: View {
+    let drop: Drop
+
+    /// The type symbol: the text glyph or a photo. It stays the leading icon when no source app icon is known.
+    static func typeSymbol(for type: DropType) -> String { type == .image ? "photo" : "textformat" }
+
+    /// The source app's icon with a small type badge in its lower right corner, so text and image drops can still be
+    /// told apart. The app name is printed under the title, so the icon itself is decoration. Without an app icon the
+    /// type symbol alone is shown, as before.
+    @ViewBuilder private var leadingIcon: some View {
+        if let icon = SourceAppIcons.shared.icon(forAppNamed: drop.source.appName) {
+            // Gray with extra contrast keeps each logo's shape readable without competing with the title.
+            Image(nsImage: icon).resizable().grayscale(1).contrast(1.3).opacity(0.92)
+                .frame(width: 18, height: 18)
+                .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 4, style: .continuous).stroke(.separator, lineWidth: 0.5))
+                .accessibilityLabel(L10n.t(drop.type == .image ? "image" : "text"))
+                .frame(width: 22, height: 20, alignment: .leading)
+                .padding(.top, 1)
+        } else {
+            // The same 22 x 20 box as above, so the title starts at the same place with or without an app icon.
+            Image(systemName: Self.typeSymbol(for: drop.type)).foregroundStyle(.secondary)
+                .frame(width: 22, height: 20, alignment: .leading)
+                .padding(.top, 1)
+        }
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 8) {
+            leadingIcon
+            VStack(alignment: .leading, spacing: 2) {
+                HStack {
+                    Text(drop.title).fontWeight(.semibold).lineLimit(1)
+                    Spacer(minLength: 4)
+                    Text(Formatting.time(drop.createdAt)).font(.caption).foregroundStyle(.secondary)
+                }
+                Text(Formatting.preview(drop)).font(.callout).foregroundStyle(.secondary).lineLimit(1)
+                HStack(spacing: 6) {
+                    if let app = drop.source.appName { Text(app).font(.caption).foregroundStyle(.secondary) }
+                    ForEach(drop.tags.prefix(3), id: \.self) { Text("#\($0)").font(.caption).foregroundStyle(.tint) }
+                    if drop.tags.count > 3 { Text("+\(drop.tags.count - 3)").font(.caption).foregroundStyle(.secondary) }
+                }
+            }
+        }
+        .padding(.vertical, 3)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Formatting.rowAccessibilityLabel(drop))
+    }
+}

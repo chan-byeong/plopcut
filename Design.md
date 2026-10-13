@@ -1,4 +1,4 @@
-# Notedrop 디자인
+# plopcut 디자인
 
 이 문서는 확정된 Library 시안, 주요 사용자 흐름, 현재 구현과 목표 디자인의 차이를 기록합니다. 레이아웃 수치, 토큰, 컴포넌트 상태와
 검증 기준은 [디자인 시스템](docs/design-system.md)이 소유합니다.
@@ -11,12 +11,12 @@ Library는 저장한 Drop을 빠르게 찾고 검토하는 macOS 작업 공간�
 시각 방향은 선택한 macOS Tahoe 시안과 Apple의 플랫폼 지침을 참고합니다.
 Apple은 재질로 탐색·제어 요소와 콘텐츠를 구분하고, 가독성을 위해 재질을
 절제해 쓰도록 안내합니다. 도구 막대에는 검색과 자주 쓰는 동작을 두고,
-사이드바는 숨기거나 창 크기에 맞춰 접을 수 있도록 권장합니다. Notedrop은
+사이드바는 숨기거나 창 크기에 맞춰 접을 수 있도록 권장합니다. plopcut은
 탐색 영역과 개별 도구 컨트롤에 절제된 재질을 쓰고 콘텐츠는 불투명한 바탕에
 둡니다 ([Apple 재질 지침](https://developer.apple.com/design/human-interface-guidelines/materials),
 [Apple 도구 막대 지침](https://developer.apple.com/design/human-interface-guidelines/toolbars),
 [Apple 사이드바 지침](https://developer.apple.com/design/human-interface-guidelines/sidebars)).
-색상과 반경은 Notedrop의 구현 기준이며 Apple 공식 토큰이나 시안의 픽셀을
+색상과 반경은 plopcut의 구현 기준이며 Apple 공식 토큰이나 시안의 픽셀을
 측정한 값이 아닙니다.
 
 ## 확정 시안
@@ -35,7 +35,7 @@ Apple은 재질로 탐색·제어 요소와 콘텐츠를 구분하고, 가독성
 
 확정 요구사항은 다음과 같습니다.
 
-- 상단에는 Notedrop 앱 이름을 표시하지 않습니다. 도구 막대만을 위한 배경 띠와 아래 가로 구분선도 두지 않습니다.
+- 상단에는 plopcut 앱 이름을 표시하지 않습니다. 도구 막대만을 위한 배경 띠와 아래 가로 구분선도 두지 않습니다.
 - 사이드바는 창 가장자리에 붙이지 않고 인셋을 둡니다.
 - 본문과 상단은 같은 불투명 바탕을 사용합니다. 본문은 넓게 유지하고 우측 정보 인스펙터와 명확히 구분합니다.
 - 정보 인스펙터는 Library의 우측에 둡니다.

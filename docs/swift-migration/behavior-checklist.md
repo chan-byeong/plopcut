@@ -7,7 +7,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 찾아볼 위치입니다. 함수 이름이 `테스트:`로 시작하면 레거시 테스트가 그 동작을 고정하고 있으므로 같은 시나리오를 Swift 테스트로
 옮기면 됩니다.
 
-체크 표시 ☑는 구현과 자동 테스트로 확인한 항목입니다(STA-41, `NotedropCore`). 일부만 확인한 항목은 ☐로 두고 아래에 이유를 적습니다.
+체크 표시 ☑는 구현과 자동 테스트로 확인한 항목입니다(STA-41, `PlopcutCore`). 일부만 확인한 항목은 ☐로 두고 아래에 이유를 적습니다.
 
 확인 방법 표기: **단위** = 자동 테스트, **픽스처** = `fixtures/`로 호환 확인, **수동** = 실제 앱·macOS 권한이 필요한 확인.
 
@@ -40,7 +40,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 
 | ID | 동작 | 근거 | 확인 방법 | ☐ |
 | --- | --- | --- | --- | --- |
-| C-01 | 설정 파일 경로는 고정(`~/Library/Application Support/Notedrop/settings.json`)이고 저장 폴더 설정과 무관. | `settings.rs` | 단위 | ☑ |
+| C-01 | 설정 파일 경로는 고정(`~/Library/Application Support/plopcut/settings.json`)이고 저장 폴더 설정과 무관. | `settings.rs` | 단위 | ☑ |
 | C-02 | 파일이 없으면 기본값을 만들어 저장. JSON이 깨지면 `settings_invalid`. | 테스트: `default_settings_use_default_storage_and_system_theme` | 단위·픽스처 | ☑ |
 | C-03 | 부분 갱신: 보낸 필드만 바꾸고 나머지는 유지, `updatedAt` 갱신. | 테스트: `updating_settings_persists_path_first_run_theme_and_updated_at`, `updating_settings_persists_shortcuts_without_changing_unrelated_fields` | 단위 | ☑ |
 | C-04 | `captureConfirmationMode` 키가 없으면 `modal`. 잘못된 값으로 갱신하면 거부. | 테스트: `missing_capture_confirmation_mode_defaults_to_modal`, `update_rejects_invalid_capture_confirmation_mode`, `changingCaptureModePersistsAndKeepsTheme` | 단위 | ☑ |
@@ -51,7 +51,10 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | C-09 | 시작 시 저장된 단축키 하나만 등록(다른 단축키는 등록하지 않음). 등록 실패는 보관 오류와 메뉴 막대 `Error`로 알린다. | 테스트: `startup_registers_only_the_selected_text_shortcut` | 단위: `ShortcutControllerTests.startupRegistersOnlyTheStoredShortcut` + 수동 | ☑ |
 | C-10 | `theme`가 `system`이면 앱 외형을 시스템에 맡기고, `light`/`dark`는 시스템을 덮어쓴다. | `useTheme.ts`. Swift: `SettingsModel.colorScheme`, 테스트 `colorSchemeFollowsTheme`, `changingThemePersistsAndKeepsOtherFields` | 단위(모델) + 수동(창 외형) | ☑ |
 | C-11 | 읽은 `theme`이 잘못되면 `system`으로 보정, `storageFolderPath`가 공백이면 기본 폴더. | `read_app_settings_from_path` | 단위 | ☑ |
-| C-12 | 번들 ID를 바꾸면 손쉬운 사용·자동화 권한을 새로 허용해야 한다. 설정과 Drop은 영향이 없다. | — | 수동 | ☑ |
+| C-12 | 번들 ID를 바꾸면 손쉬운 사용·자동화 권한을 새로 허용해야 한다. 설정과 Drop은 영향이 없다. `app.notedrop.dev` → `com.plopcut.app`(STA-85). | — | 수동 | ☑ |
+| C-13 | 시작 시 예전 `Notedrop` 설정·기본 Drop 폴더·로그 폴더를 `plopcut`으로 옮기고 `storageFolderPath`를 새 경로로 저장한다(사양 1.9). | `LegacyMigration` | 단위: `movesSettingsAndTheDefaultDropFolder`, `movesTheLogFolderAndRenamesItsFiles` + 수동: 예전 폴더 복사본 | ☐ |
+| C-14 | 사용자 지정 저장 폴더는 옮기지 않는다. | `LegacyMigration` | 단위: `keepsACustomStorageFolder` | ☑ |
+| C-15 | `plopcut` 폴더가 이미 있으면 덮어쓰거나 합치지 않는다. 예전 폴더가 없으면 아무것도 하지 않는다. 설정 저장 실패는 폴더 이동을 되돌리고, 읽을 수 없는 설정이면 옮기지 않는다. | `LegacyMigration` | 단위: `neverOverwritesExistingPlopcutFolders`, `doesNothingWithoutLegacyFolders`, `rollsTheDropFolderBackWhenSettingsCannotBeSaved`, `aBrokenSettingsFileLeavesTheDropFolderAlone` | ☑ |
 
 ## P. 캡처 (선택 텍스트)
 
@@ -70,20 +73,20 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | P-11 | `modal`이면 팝업, `instant`이면 텍스트만 즉시 저장(노트 `""`, 태그 없음). | `instant_save_payload_from_draft`, `handle_capture_draft` | 단위: `CaptureConfirmationTests`, `CaptureRouterTests`(`instantTextIsSavedWithAnEmptyNoteAndNoTags`, `theModeIsReadAtEveryCapture`) + 수동 | ☑ |
 | P-12 | `instant`에서도 이미지·`mixed`는 팝업. (도구 막대 캡처 버튼은 D-05 결정으로 만들지 않는다.) | `handle_capture_draft` | 단위: `instantStillOpensThePopupForImagesAndMixedContent`, `instantImageAndMixedOpenThePopupAndSaveNothing` + 수동 | ☑ |
 | P-13 | 선택 텍스트 캡처 실패: 오류 보관 + 메인 창 표시 + 메뉴 막대 `Error`. 보관 오류는 메인 창에서 **한 번만** 소비. | `emit_selected_text_capture_event`, 테스트: `pending_capture_error_is_returned_once` | 단위·수동 | ☑ |
-| P-14 | 별도 팝업 창이 이미 열려 있으면 단축키는 새 캡처를 하지 않고 열린 팝업을 앞으로 가져온다(결정 STA-47). 팝업이 열려 있으면 최전면 앱이 Notedrop 자신이라 선택 텍스트를 읽을 수 없기 때문이다. 레거시의 "새 Draft로 교체"와 다르다. | `open_capture_window` | 수동: 팝업을 연 채 단축키 재입력 | ☑ |
+| P-14 | 별도 팝업 창이 이미 열려 있으면 단축키는 새 캡처를 하지 않고 열린 팝업을 앞으로 가져온다(결정 STA-47). 팝업이 열려 있으면 최전면 앱이 plopcut 자신이라 선택 텍스트를 읽을 수 없기 때문이다. 레거시의 "새 Draft로 교체"와 다르다. | `open_capture_window` | 수동: 팝업을 연 채 단축키 재입력 | ☑ |
 | P-15 | 레거시는 클립보드 접근을 `swift -e` 서브프로세스로 했다. Swift 앱은 `NSPasteboard`를 직접 쓰므로 이 구조는 이어받지 않는다(같은 시맨틱만 유지). | `capture.rs` | — | ☑ |
 | P-16 | 접근성 읽기(`AXUIElementCreateApplication(최전면 앱)` → 포커스 요소 → `AXSelectedText`)가 비어 있지 않은 값을 주면 클립보드를 읽거나 쓰지 않고, `Cmd+C`도 보내지 않는다. 시스템 전역 요소는 쓰지 않는다(Chrome에서 실패). | [ax-probe.md](ax-probe.md) | 단위(가짜 호출 기록) + 수동: 메모·Chrome에서 캡처 전후 클립보드 `changeCount` 동일 | ☑ |
-| P-17 | 접근성 읽기가 실패하거나 값이 비거나 공백뿐이면 클립보드 폴백(P-02~P-09)으로 넘어가며, 그 자체로 `no_selected_text`로 보지 않는다. 최전면 앱이 Notedrop이면 접근성 읽기를 건너뛴다. | [ax-probe.md](ax-probe.md) | 단위 + 수동: Safari·터미널(Hyper)에서 폴백으로 저장 | ☑ |
+| P-17 | 접근성 읽기가 실패하거나 값이 비거나 공백뿐이면 클립보드 폴백(P-02~P-09)으로 넘어가며, 그 자체로 `no_selected_text`로 보지 않는다. 최전면 앱이 plopcut이면 접근성 읽기를 건너뛴다. | [ax-probe.md](ax-probe.md) | 단위 + 수동: Safari·터미널(Hyper)에서 폴백으로 저장 | ☑ |
 
 ## K. 클립보드 캡처 (메뉴 막대 `Save Clipboard...`)
 
 | ID | 동작 | 근거 | 확인 방법 | ☐ |
 | --- | --- | --- | --- | --- |
 | K-01 | 변경 횟수를 읽기 전후로 비교해 다르면 `clipboard_changed`. | 테스트: `ClipboardCaptureTests.rejectsContentChangedDuringRead`, `acceptsAnUnchangedCountAndAnUnreportedCount` | 단위 | ☑ |
-| K-02 | 분류: 텍스트만 `text`, 이미지만 `image`, 둘 다 `mixed`, 둘 다 없으면 `clipboard_empty`. | 테스트: `textOnlyBecomesATextDraft`, `mixedContentKeepsBothForThePopupToChooseFrom`, `imageOnlyBecomesAnImageDraft`, `imageFromNotedropHasNoSourceAndTheFallbackTitle`, `emptyOrBlankClipboardFailsAsEmpty`; 팝업에서 고른 유형만 저장: `SavePopupImageTests` | 단위 | ☑ |
+| K-02 | 분류: 텍스트만 `text`, 이미지만 `image`, 둘 다 `mixed`, 둘 다 없으면 `clipboard_empty`. | 테스트: `textOnlyBecomesATextDraft`, `mixedContentKeepsBothForThePopupToChooseFrom`, `imageOnlyBecomesAnImageDraft`, `imageFromPlopcutHasNoSourceAndTheFallbackTitle`, `emptyOrBlankClipboardFailsAsEmpty`; 팝업에서 고른 유형만 저장: `SavePopupImageTests` | 단위 | ☑ |
 | K-03 | 이미지 디코딩 실패 시 텍스트가 있으면 텍스트로 진행하고 경고 `clipboard_image_unavailable`. 텍스트도 없으면 그 오류로 실패. | 테스트: `undecodableImageFallsBackToTextWithAWarning`, `undecodableImageWithoutTextFails`, `readFailureIsReportedAsUnavailable` | 단위 | ☑ |
 | K-04 | 이미지는 PNG가 있으면 PNG, 없으면 TIFF를 PNG로 변환해 사용. | `read_clipboard_snapshot` | 수동: 스크린샷(PNG)과 TIFF를 내는 앱 | ☑ |
-| K-05 | 최전면 앱이 Notedrop이면 출처를 비우고 제목을 다시 추론. 다른 앱이면 출처 유지. | 테스트: `omitsNotedropAsSourceAndReinfersTheTitle`, `keepsTheSourceOfAnotherApp` | 단위 | ☑ |
+| K-05 | 최전면 앱이 plopcut이면 출처를 비우고 제목을 다시 추론. 다른 앱이면 출처 유지. | 테스트: `omitsPlopcutAsSourceAndReinfersTheTitle`, `keepsTheSourceOfAnotherApp` | 단위 | ☑ |
 | K-06 | 클립보드 캡처 실패는 오류 보관 + 메뉴 막대 `Error`만(메인 창을 띄우지 않음). | `CaptureRuntime.reportQuietly`(Error만 표시하고 오류를 보관, 메인 창은 띄우지 않음) | 수동 | ☑ |
 
 ## M. 출처 수집
@@ -150,7 +153,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 
 | ID | 동작 | 근거 | 확인 방법 | ☐ |
 | --- | --- | --- | --- | --- |
-| T-01 | 템플릿 아이콘, 툴팁 `Notedrop`, 좌클릭은 메뉴가 아니라 메인 창 열기. 메뉴는 좌클릭이 아닌 방식(우클릭)으로 연다. | `tray.rs` | 수동 | ☑ |
+| T-01 | 템플릿 아이콘, 툴팁 `plopcut`, 좌클릭은 메뉴가 아니라 메인 창 열기. 메뉴는 좌클릭이 아닌 방식(우클릭)으로 연다. | `tray.rs` | 수동 | ☑ |
 | T-02 | 메뉴 항목 ID는 `save-clipboard`, `open-library`. 알 수 없는 ID는 무시. | 테스트: `routes_stable_tray_menu_ids`, `save_clipboard_menu_action_starts_clipboard_capture` | 단위 | ☑ |
 | T-03 | 성공 `Saved`, 실패 `Error`를 900 ms 동안 제목과 툴팁에 표시하고 원복. | `show_feedback` | 단위: `MenuBarTests`(`errorShowsFor900msThenRestores`, `savedShowsFor900msThenRestores`) + 수동 | ☑ |
 | T-04 | 메인 창을 열 때 보관된 캡처 오류를 확인하도록 신호를 보낸다. | `show_main_window` | 수동 | ☑ |
@@ -174,7 +177,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | D-02 | 타입에 `mixed`가 있지만 **저장되는 Drop은 `text` 또는 `image`뿐**이다(`mixed` Draft는 팝업에서 하나를 고른다). 레거시는 `mixed` Drop을 목록에는 보여 주지만 본문과 이미지를 읽지 않는다(픽스처로 확인). | 최소한 레거시와 같게(깨지지 않고 목록에 표시). 본문·이미지 표시는 별도 결정. | | ☑ |
 | D-03 | 레거시 단축키 문자열은 Tauri 문법이다. 전체 허용 범위(예: 방향키, 펑션키, `CmdOrCtrl`)는 문서화되어 있지 않다. | 최소 `Shift/Cmd/Ctrl/Alt` + 문자·숫자·펑션키를 지원하고 나머지는 거부. | | ☑ |
 | D-04 | 이미지 Drop의 `image.png`가 아닌 다른 `imagePath`를 읽는 경로는 있으나(`drop.imagePath`) 쓰는 경로는 항상 `image.png`다. | 읽기는 `imagePath` 우선, 쓰기는 `image.png`. | | ☑ |
-| D-05 | 도구 막대 `선택한 텍스트 캡처`는 Notedrop이 최전면일 때 Notedrop 안의 선택 텍스트만 캡처한다(다른 앱의 선택을 가져오지 못한다). | 기능을 만들지 않는다. | **결정(STA-47): 제거.** 트리거는 전역 단축키뿐. 문구 `captureSelected`도 제거. | ☑ |
+| D-05 | 도구 막대 `선택한 텍스트 캡처`는 plopcut이 최전면일 때 plopcut 안의 선택 텍스트만 캡처한다(다른 앱의 선택을 가져오지 못한다). | 기능을 만들지 않는다. | **결정(STA-47): 제거.** 트리거는 전역 단축키뿐. 문구 `captureSelected`도 제거. | ☑ |
 | D-06 | 이름 바꾼 단축키가 다른 앱과 충돌해 등록에 실패할 때의 사용자 메시지(`shortcut_registration_failed`)가 레거시에서는 영어 원문이다. | 한국어 문구 추가. | **결정(STA-55): 한국어·영어 문구 `shortcutRegistrationFailed` 추가.** | ☑ |
 | D-07 | 메인 창을 닫았을 때 앱이 종료되는지, 메뉴 막대에 남는지가 레거시에서 확인되지 않았다. 메뉴 막대와 전역 단축키의 목적상 남는 편이 자연스럽다. | 메뉴 막대에 남는다. 마지막 창을 닫아도 종료하지 않고 전역 단축키와 메뉴 막대 항목을 유지한다. 종료는 Cmd+Q. (STA-52) | | ✔ |
 | D-08 | 로그인 시 자동 실행, Dock 아이콘 표시 여부는 정의되어 있지 않다. | 범위 밖. 필요하면 새 이슈. | | ☑ |
@@ -191,7 +194,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 | --- | --- | --- |
 | 메모에서 선택 후 `Shift+Cmd+C` → 팝업 → 노트·태그 입력 → 저장 | 정상. `drop.json` 키 집합과 `null` 규칙, `content.md`, `note.md`, `recentTags` 갱신, 출처(앱·윈도우 제목) 확인 | P-10, M-01, S-01, I-02 |
 | Safari 본문 선택(접근성 읽기 불가 → 폴백) → 팝업에 선택 텍스트 → 저장·취소 후 붙여넣기 | 정상. 캡처 전 클립보드 텍스트가 그대로 복원됨 | P-17, P-04(성공 경로), P-09(텍스트만) |
-| 권한을 초기화한 뒤 다시 허용 | 같은 번들 ID의 레거시 Tauri 앱이 있으면 이전 허용 항목과 새 빌드 서명이 맞지 않아 권한이 없다고 나올 수 있음. `tccutil reset Accessibility app.notedrop.dev` 후 재허용 | C-12, A-01 |
+| 권한을 초기화한 뒤 다시 허용 | 같은 번들 ID(당시 `app.notedrop.dev`)의 레거시 Tauri 앱이 있으면 이전 허용 항목과 새 빌드 서명이 맞지 않아 권한이 없다고 나올 수 있음. `tccutil reset Accessibility app.notedrop.dev` 후 재허용 | C-12, A-01 |
 
 이어서 사용자가 목록의 나머지 수동 항목(메모에서 클립보드 불변, Chrome URL, 선택 없음, 권한 해제, 팝업이 열린 채 단축키,
 한글 조합 중 Enter, 터미널 폴백)이 모두 동작한다고 보고했습니다. 항목별 출력은 남기지 않았고 사용자 보고에 근거합니다.
@@ -260,14 +263,14 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 
 단위 테스트(`SettingsModelTests`, 8개)로 확인함: 저장된 테마·저장 확인 방식을 읽음, 테마·방식 변경이 해당 필드만 바꿈(C-03), 쓰기 실패 시 선택을 되돌리고 안내, `system`은 재정의 없음·`light`/`dark`는 강제, 버전 표시 대체값.
 
-수동 확인이 남음(실제 앱): 테마 변경이 메인 창과 Save Popup에 즉시 적용되고 `system`으로 돌아가면 풀리는지(C-10), 재실행 후 유지, 설정 화면에서 사이드바 접힘·너비가 Library와 같은지(L-06). `NOTEDROP_APPEARANCE`는 테마가 `system`일 때만 적용되는 개발용 재정의로 남겨 둠.
+수동 확인이 남음(실제 앱): 테마 변경이 메인 창과 Save Popup에 즉시 적용되고 `system`으로 돌아가면 풀리는지(C-10), 재실행 후 유지, 설정 화면에서 사이드바 접힘·너비가 Library와 같은지(L-06). `PLOPCUT_APPEARANCE`는 테마가 `system`일 때만 적용되는 개발용 재정의로 남겨 둠.
 
 
 ## 5단계 클립보드 캡처 기록 (STA-56)
 
 메뉴 막대 `Save Clipboard...`로 텍스트 클립보드를 캡처한다. K-01, K-02, K-03, K-05는 단위 테스트(`ClipboardCaptureTests`)로 확인함. 이미지와 `mixed` 저장은 STA-57에서 들어왔다(아래 기록).
 
-수동 확인이 남음(실제 앱): K-06(실패 시 `Error`만 보이고 메인 창이 뜨지 않음), 메뉴 항목에서 팝업이 열리고 저장되는지, Notedrop이 앞일 때 출처가 비는지.
+수동 확인이 남음(실제 앱): K-06(실패 시 `Error`만 보이고 메인 창이 뜨지 않음), 메뉴 항목에서 팝업이 열리고 저장되는지, plopcut이 앞일 때 출처가 비는지.
 
 ## 5단계 저장 폴더와 첫 실행 기록 (STA-53)
 
@@ -277,7 +280,7 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](s
 
 폴더 판정(`StorageFolderCheck`): 폴더가 있으면 디렉터리이고 쓸 수 있어야 한다. 없는 폴더는 가장 가까운 상위 폴더가 쓸 수 있을 때만 통과한다(저장 때 `drops/`가 만들어지므로). 통과하지 못하면 설정 화면에 `storageFailure`를 보이고, 저장 팝업의 저장도 같은 판정으로 막는다.
 
-개발용 `NOTEDROP_STORAGE_FOLDER`는 설정보다 우선한다. 폴더 변경을 확인하려면 이 변수 없이 `NOTEDROP_SETTINGS_FILE`만 지정해 실행한다. `NOTEDROP_SETTINGS_FILE`은 이제 저장 폴더 해석에도 쓰인다.
+개발용 `PLOPCUT_STORAGE_FOLDER`는 설정보다 우선한다. 폴더 변경을 확인하려면 이 변수 없이 `PLOPCUT_SETTINGS_FILE`만 지정해 실행한다. `PLOPCUT_SETTINGS_FILE`은 이제 저장 폴더 해석에도 쓰인다.
 
 단위 테스트(`StorageFolderCheckTests` 7개, `StorageFolderModelTests`·`StorageRootResolutionTests` 14개)로 확인함. 수동 확인이 남음(실제 앱): 폴더 선택 대화상자, 선택 취소 안내, 빈 설정 파일에서 첫 실행 모달(기본 폴더/폴더 선택/취소 시 모달 유지), 폴더 변경 후 Library와 새 저장이 새 폴더를 쓰는지, 쓸 수 없는 폴더의 안내.
 
@@ -325,7 +328,7 @@ STA-70 원인: 단축키 입력란 `TextField`에 `.onSubmit { model.apply() }`�
 7. 조합을 고른 뒤 저장하지 않고 사이드바에서 Library로 갔다가 설정으로 돌아오면 필드가 이전 단축키이고, 이전 단축키로 캡처된다. `취소` 버튼도 같다.
 8. 다른 앱이 쓰는 조합을 녹화하고 저장하면 `shortcutRegistrationFailed` 문구, 필드는 이전 값, 이전 단축키 동작.
 9. 한글 입력 상태에서 녹화해도 영문 키 이름(예: `Shift+Cmd+K`)으로 기록된다.
-10. 녹화 중 다른 Notedrop 창이나 다른 앱 창을 클릭하거나 키 창을 바꾸면 녹화가 끝나고, 그 창에서 키 입력(Library 목록 이동, 노트 입력)과 전역 단축키 캡처가 정상 동작한다.
+10. 녹화 중 다른 plopcut 창이나 다른 앱 창을 클릭하거나 키 창을 바꾸면 녹화가 끝나고, 그 창에서 키 입력(Library 목록 이동, 노트 입력)과 전역 단축키 캡처가 정상 동작한다.
 
 ## 5단계 이미지와 mixed 저장 기록 (STA-57)
 
@@ -365,7 +368,7 @@ STA-70 원인: 단축키 입력란 `TextField`에 `.onSubmit { model.apply() }`�
 - P-06: `backupFailureWarnsContinuesAndStillAttemptsRestore`
 - N-01: `LocalizationTests.koreanSystemLanguagesGetKoreanAndEverythingElseEnglish`
 - N-02: `LocalizationTests.everyPhraseHasBothLanguagesWithTheSamePlaceholders`. 표가 키마다 en·ko를 함께 가지므로 한쪽에만 있는 문구는 만들 수 없고, 테스트는 두 언어가 채워져 있고 자리표시자가 같은지 확인한다.
-- N-03: `LocalizationTests`의 알려진 코드 15개(코드별로 기대하는 문구 키까지 확인)와 알 수 없는 코드. **레거시와 다르게 정한 두 가지**: (1) 알 수 없는 코드의 오류는 레거시처럼 원본 메시지를 보여 주지 않고 기본 문구(`defaultError`)를 보여 준다. Swift의 `NotedropError.detail`은 사람용 문장이 아니라 로그용 원문(파일 경로, OS 영어 문구)이라 그대로 보여 주면 한국어 UI에 섞이고 경로가 노출된다. (2) "문자열 오류는 그대로"는 Swift에 문자열 오류 타입이 없어 해당 없음이고, `NotedropError`가 아닌 오류는 기본 문구로 가린다. 이 확인 중 `clipboard_restore_failed`, `automation_*` 문구를 추가했고 `empty_image`를 레거시처럼 `invalidImage`로 맞췄다.
+- N-03: `LocalizationTests`의 알려진 코드 15개(코드별로 기대하는 문구 키까지 확인)와 알 수 없는 코드. **레거시와 다르게 정한 두 가지**: (1) 알 수 없는 코드의 오류는 레거시처럼 원본 메시지를 보여 주지 않고 기본 문구(`defaultError`)를 보여 준다. Swift의 `PlopcutError.detail`은 사람용 문장이 아니라 로그용 원문(파일 경로, OS 영어 문구)이라 그대로 보여 주면 한국어 UI에 섞이고 경로가 노출된다. (2) "문자열 오류는 그대로"는 Swift에 문자열 오류 타입이 없어 해당 없음이고, `PlopcutError`가 아닌 오류는 기본 문구로 가린다. 이 확인 중 `clipboard_restore_failed`, `automation_*` 문구를 추가했고 `empty_image`를 레거시처럼 `invalidImage`로 맞췄다.
 
 P-02는 실제 대기 시간을 보는 수동 항목이라 ☐로 남긴다.
 
@@ -379,7 +382,7 @@ P-02는 실제 대기 시간을 보는 수동 항목이라 ☐로 남긴다.
 
 ## 체크리스트 정리 A 묶음: 단위 테스트 근거 (STA-63)
 
-- C-01: `SettingsTests.theSettingsFileLivesInApplicationSupportWhateverTheStorageFolderIs`. 기본 경로가 `~/Library/Application Support/Notedrop/settings.json`이고, 저장 폴더를 바꿔도 설정 파일이 옮겨지지 않으며 새 폴더에 파일이 생기지 않는다.
+- C-01: `SettingsTests.theSettingsFileLivesInApplicationSupportWhateverTheStorageFolderIs`. 기본 경로가 `~/Library/Application Support/plopcut/settings.json`이고, 저장 폴더를 바꿔도 설정 파일이 옮겨지지 않으며 새 폴더에 파일이 생기지 않는다.
 - C-07: `SettingsTests.aFailedWriteKeepsTheOldFileAndLeavesNoTempFile`(쓰기 실패 시 `settings_unwritable`, 기존 파일 그대로, 임시 파일 없음. root에서는 권한 검사가 맞지 않아 건너뜀), `writtenFileUsesContractKeysAndLeavesNoTempFiles`(성공 시 임시 파일 없음), `concurrentUpdatesAreSerialized`(동시 갱신 직렬화).
 - M-03: `SelectedTextCaptureTests.sourceFailureNeverBlocksCapture`(출처 수집 실패가 캡처를 막지 않음)와 `DropStoreTests`의 `drop.json` 확인(비어 있는 출처 필드는 `null`로 저장).
 - P-02: `SelectedTextCaptureTests.pollingIsEveryTwentyFiveMillisecondsForSevenHundred`(25 ms, 700 ms, 28회)와 `timesOutAfterTwentyEightPollsAndRestores`. 실제 폴백 동작은 STA-47 수동 확인(Safari)에서 확인됨.
@@ -435,7 +438,7 @@ AppKit의 레거시 스크롤 막대는 너비 17(knob 11)이고 `controlSize = 
 ## 저장소 호환성 검증 기록 (STA-77)
 
 S·C 항목을 픽스처 **복사본**으로 다시 확인하고 항목마다 Swift 테스트 근거를 남겼다. 새 테스트는
-`NotedropCore/Tests/NotedropCoreTests/CompatibilityTests.swift`에 있다. 나머지는 기존 `DropStoreTests.swift`,
+`PlopcutCore/Tests/PlopcutCoreTests/CompatibilityTests.swift`에 있다. 나머지는 기존 `DropStoreTests.swift`,
 `NamingTests.swift`, `SettingsTests.swift`(Core)와 앱 테스트다.
 
 | ID | 근거 (Swift 테스트) |
@@ -495,7 +498,7 @@ S·C 항목을 픽스처 **복사본**으로 다시 확인하고 항목마다 Sw
 
 ### 수동 확인 (2026-10-12)
 
-- 실제 레거시 폴더: `~/Documents/Notedrop`을 임시 위치로 복사하고, `NOTEDROP_COMPAT_FOLDER=<복사본> swift test --filter
+- 실제 레거시 폴더: `~/Documents/plopcut`을 임시 위치로 복사하고, `PLOPCUT_COMPAT_FOLDER=<복사본> swift test --filter
   RealFolderCopyTests`로 확인했다. 테스트는 그 복사본을 다시 복사해서 쓴다. Drop 7개(모두 텍스트, 전체 키, 9자리 시각)가 경고 없이 읽혔고,
   모두 수정한 뒤 다시 스캔해도 ID 순서·제목·태그·노트·본문·출처·`createdAt`이 같았고 `drop.json`은 계약 키 집합이었다. 원본은
   `diff -rq`로 바뀌지 않았음을 확인했다. 이 폴더에는 이미지 Drop이 없어 이미지는 픽스처로만 확인했다.
@@ -524,10 +527,10 @@ S·C 항목을 픽스처 **복사본**으로 다시 확인하고 항목마다 Sw
 
 ## 로컬 로그 (STA-80)
 
-앱에 로그가 없었다. `~/Library/Logs/Notedrop/notedrop.log`에 시각이 붙은 한 줄씩 덧붙인다. 외부 전송 없음(spec 제품 경계: 텔레메트리 없음).
+앱에 로그가 없었다. `~/Library/Logs/plopcut/plopcut.log`에 시각이 붙은 한 줄씩 덧붙인다. 외부 전송 없음(spec 제품 경계: 텔레메트리 없음).
 
-- 구현: `NotedropCore/EventLog.swift`(`EventLogging` 프로토콜, `FileEventLog`, `LogEvent`), 앱의 `AppLog`. 1MB에 이르면 `notedrop.log.1`로 넘기고 새 파일을 시작한다(이전 파일 1개만 유지). 잠금으로 스레드 안전하며 쓰기 실패는 조용히 무시한다.
-- 기록: 앱 시작(버전·빌드·macOS 버전), 화면에 표시된 오류의 코드(알림창뿐 아니라 STA-84: Library 노트·제목·태그 자동 저장 실패 `DropEditor`, 저장 팝업의 저장 실패 `SavePopupModel`. 자동 저장은 실패로 바뀔 때 한 번만 기록하고 `다시 시도`가 계속 실패해도 다시 쓰지 않으며, 다른 Drop으로 옮겨 알림창이 뜨는 경우는 이중 기록하지 않는다), 권한 상태 변경(바뀔 때만). `LogEvent`가 고정된 형태만 받고 문자열은 `[A-Za-z0-9._-]` 40자 이하만 통과(아니면 `invalid`), `NotedropError.detail`은 읽지 않는다. 드롭 내용·노트·제목·태그·URL·클립보드·경로는 기록하지 않는다.
+- 구현: `PlopcutCore/EventLog.swift`(`EventLogging` 프로토콜, `FileEventLog`, `LogEvent`), 앱의 `AppLog`. 1MB에 이르면 `plopcut.log.1`로 넘기고 새 파일을 시작한다(이전 파일 1개만 유지). 잠금으로 스레드 안전하며 쓰기 실패는 조용히 무시한다.
+- 기록: 앱 시작(버전·빌드·macOS 버전), 화면에 표시된 오류의 코드(알림창뿐 아니라 STA-84: Library 노트·제목·태그 자동 저장 실패 `DropEditor`, 저장 팝업의 저장 실패 `SavePopupModel`. 자동 저장은 실패로 바뀔 때 한 번만 기록하고 `다시 시도`가 계속 실패해도 다시 쓰지 않으며, 다른 Drop으로 옮겨 알림창이 뜨는 경우는 이중 기록하지 않는다), 권한 상태 변경(바뀔 때만). `LogEvent`가 고정된 형태만 받고 문자열은 `[A-Za-z0-9._-]` 40자 이하만 통과(아니면 `invalid`), `PlopcutError.detail`은 읽지 않는다. 드롭 내용·노트·제목·태그·URL·클립보드·경로는 기록하지 않는다.
 - UI: Settings 정보 구역에 `Finder에서 로그 보기`(`showLogInFinder`, en/ko). 로그가 없으면 폴더를 연다.
 - 문서: README.md, README.ko.md, `docs/privacy.md`에 위치·내용·로컬 보관·신고 방법(사용자가 직접 첨부)을 적었다.
 - 단위: `EventLogTests`(덧붙이기와 시각, 회전, 쓰기 실패 무시, 동시 쓰기, 민감 문구가 코드만 남는지), `DropEditorTests`·`SavePopupModelTests`(주입한 `EventLogging`에 코드 한 줄만, 내용·경로 없음), `LoggingTests`(권한 변경 한 번만 기록, 시작 줄, 문구, 테스트가 실제 로그에 쓰지 않음).

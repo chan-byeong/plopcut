@@ -1,8 +1,8 @@
-# Notedrop Swift 구현 사양
+# plopcut Swift 구현 사양
 
 Linear: [STA-39](https://linear.app/byeoung/issue/STA-39)
 
-이 문서는 Tauri + React로 만든 Notedrop을 Swift(SwiftUI/AppKit)로 **새로 구현**하기 위한 스택 중립 사양입니다. 구현자는 레거시
+이 문서는 Tauri + React로 만든 plopcut을 Swift(SwiftUI/AppKit)로 **새로 구현**하기 위한 스택 중립 사양입니다. 구현자는 레거시
 코드를 번역하지 않고 이 문서와 [동작 체크리스트](behavior-checklist.md), [픽스처](fixtures/README.md)만으로 구현할 수 있어야
 합니다. 레거시 구현은 `legacy/tauri` 브랜치와 `tauri-final` 태그에 보존되어 있으며, 문서에 명시한 파일만 참고합니다.
 
@@ -27,8 +27,9 @@ Linear: [STA-39](https://linear.app/byeoung/issue/STA-39)
 
 ### 플랫폼
 
-macOS 14 이상(STA-75에서 소유자가 확정. 레거시 번들은 13이었다). Apple Silicon과 Intel을 모두 지원합니다. 앱 이름은 `Notedrop`,
-레거시 번들 ID는 `app.notedrop.dev`입니다. 번들 ID를 바꾸면 사용자는 손쉬운 사용·자동화 권한을 다시 허용해야 합니다.
+macOS 14 이상(STA-75에서 소유자가 확정. 레거시 번들은 13이었다). Apple Silicon과 Intel을 모두 지원합니다. 앱 이름은 `plopcut`,
+번들 ID는 `com.plopcut.app`입니다(STA-85). 앱은 이전에 Notedrop이었고 번들 ID는 `app.notedrop.dev`였습니다. 번들 ID가 바뀌었으므로 예전
+빌드를 쓰던 사용자는 손쉬운 사용·자동화 권한을 한 번 다시 허용해야 합니다. 예전 폴더는 1.9의 규칙으로 옮깁니다.
 
 ## 용어
 
@@ -52,7 +53,7 @@ macOS 14 이상(STA-75에서 소유자가 확정. 레거시 번들은 13이었�
 ### 1.1 폴더 구조
 
 ```text
-{storageFolder}/                 기본값 ~/Documents/Notedrop
+{storageFolder}/                 기본값 ~/Documents/plopcut
   drops/
     {dropId}/
       drop.json                  메타데이터
@@ -145,11 +146,11 @@ UTF-8, 들여쓰기 2칸의 pretty JSON, 키는 camelCase입니다.
 
 ### 1.8 `settings.json`
 
-경로: `~/Library/Application Support/Notedrop/settings.json` (저장 폴더 설정과 무관한 고정 위치).
+경로: `~/Library/Application Support/plopcut/settings.json` (저장 폴더 설정과 무관한 고정 위치).
 
 | 키 | 타입 | 기본값 / 규칙 |
 | --- | --- | --- |
-| `storageFolderPath` | string | 기본 `~/Documents/Notedrop`의 절대 경로. 공백뿐이면 거부(저장 시) 또는 기본값(읽을 때). |
+| `storageFolderPath` | string | 기본 `~/Documents/plopcut`의 절대 경로. 공백뿐이면 거부(저장 시) 또는 기본값(읽을 때). |
 | `hasCompletedFirstRun` | bool | 기본 `false`. |
 | `theme` | `"system"` \| `"light"` \| `"dark"` | 기본 `system`. 읽을 때 잘못된 값은 `system`으로 보정. |
 | `captureConfirmationMode` | `"modal"` \| `"instant"` | 기본 `modal`. 키가 없으면 `modal`. 읽을 때 잘못된 값은 오류. |
@@ -165,6 +166,19 @@ UTF-8, 들여쓰기 2칸의 pretty JSON, 키는 camelCase입니다.
 - `selectedTextShortcut`은 Tauri 문법의 문자열(`Shift+Cmd+C`)로 저장합니다. 호환을 위해 이 문자열 형식을 유지하고 Swift 쪽에서
   해석합니다(체크리스트 C-06).
 
+### 1.9 예전 Notedrop 폴더 이동
+
+앱 이름이 Notedrop이던 시절의 폴더를 시작할 때 한 번, 설정과 로그를 열기 전에 옮깁니다. 파일 형식은 바꾸지 않고 위치만 바꿉니다.
+패키지된 앱에서만 실행하며(`swift test`와 `swift run`은 개발자의 실제 폴더를 옮기지 않습니다) 구현은 `LegacyMigration`입니다.
+
+1. `~/Library/Application Support/plopcut`이 없고 `.../Notedrop`이 폴더이면 이름을 바꿉니다.
+2. `~/Documents/plopcut`이 없고 `~/Documents/Notedrop`이 폴더이면, 설정 파일이 없거나 `storageFolderPath`가 정확히
+   `~/Documents/Notedrop`일 때만 이름을 바꾸고 `storageFolderPath`를 새 경로로 저장합니다. 설정 저장에 실패하면 폴더 이동을 되돌립니다.
+   설정 파일을 읽을 수 없으면(`settings_invalid` 등) 폴더를 옮기지 않습니다.
+3. `~/Library/Logs/plopcut`이 없고 `~/Library/Logs/Notedrop`이 폴더이면 이름을 바꾸고 `notedrop.log(.1)`을 `plopcut.log(.1)`로 바꿉니다.
+4. 사용자가 지정한 다른 저장 폴더와 이미 있는 `plopcut` 폴더는 건드리지 않습니다(덮어쓰기·병합 없음).
+5. 실패해도 실행을 막지 않고 오류 코드만 로그에 남깁니다. 이 경우 남은 경로를 그대로 씁니다.
+
 ## 2. 앱 구조
 
 ### 2.1 창과 진입점
@@ -173,7 +187,7 @@ UTF-8, 들여쓰기 2칸의 pretty JSON, 키는 camelCase입니다.
 | --- | --- |
 | 메인 창 | 기본 1120×720, 최소 960×640. 제목 표시줄 투명, 앱 이름 제목 없음, 통합 도구 막대. Library와 Settings를 한 창에서 전환. |
 | Save Popup 창 | 너비 430, 높이는 내용에 맞춤(제목 막대 아래 최소 388, STA-67). 경고·태그 칩·최근 태그가 늘면 위쪽 가장자리를 유지한 채 아래로 커지고 내용을 자르지 않음. 화면의 보이는 영역보다 커지지 않고 그 안에 머묾. 그보다 내용이 많으면 입력 영역이 스크롤되고 저장·취소 버튼은 아래에 고정. 사용자가 크기를 조절할 수 없음, 항상 위, 열 때마다 그 Draft의 크기로 보이는 영역 중앙, Dock·전환기에 노출하지 않음, 제목 숨김, 닫으면 Draft 폐기. (레거시: 430×560 고정) |
-| 메뉴 막대 항목 | 템플릿 아이콘, 툴팁 `Notedrop`. 좌클릭: 메인 창 열기와 포커스. 메뉴: `Save Clipboard...`(별도 창 팝업 또는 `instant`), `Open Library`. |
+| 메뉴 막대 항목 | 템플릿 아이콘, 툴팁 `plopcut`. 좌클릭: 메인 창 열기와 포커스. 메뉴: `Save Clipboard...`(별도 창 팝업 또는 `instant`), `Open Library`. |
 | 메뉴 막대 피드백 | 저장 성공 `Saved`, 실패 `Error`를 아이콘 옆 제목으로 900 ms 표시하고 툴팁도 같이 바꾼 뒤 원래대로 복원. |
 | 전역 단축키 | 선택 텍스트 캡처 하나. 기본 `Shift+Cmd+C`. 설정에서 바꿈. |
 
@@ -262,14 +276,14 @@ UTF-8, 들여쓰기 2칸의 pretty JSON, 키는 camelCase입니다.
 ### 3.1 선택 텍스트 캡처
 
 트리거는 전역 단축키(기본 `Shift+Cmd+C`) 하나이며 확인 방식(3.3)을 적용하고 별도 Save Popup 창을 엽니다. 도구 막대의
-`선택한 텍스트 캡처` 버튼은 두지 않습니다. 최전면 앱이 Notedrop 자신이라 다른 앱의 선택을 가져올 수 없기 때문입니다(체크리스트 D-05).
+`선택한 텍스트 캡처` 버튼은 두지 않습니다. 최전면 앱이 plopcut 자신이라 다른 앱의 선택을 가져올 수 없기 때문입니다(체크리스트 D-05).
 
 캡처는 두 경로를 이 순서로 시도합니다. 단계 번호의 순서는 바꾸면 안 됩니다.
 
 1. **출처 수집을 먼저** 합니다(3.4). 이 시점의 최전면 앱이 원본이기 때문입니다.
 2. **접근성 읽기(1순위, 클립보드를 건드리지 않음)**: 최전면 앱의 프로세스로 만든 접근성 요소(`AXUIElementCreateApplication`)에서
    포커스된 요소의 선택 텍스트(`AXSelectedText`)를 읽습니다. 시스템 전역 요소(`AXUIElementCreateSystemWide`)는 Chrome에서
-   실패하므로 쓰지 않습니다. 짧은 타임아웃을 걸고, 최전면 앱이 Notedrop이면 건너뜁니다. 비어 있지 않은 값이 나오면 7단계로
+   실패하므로 쓰지 않습니다. 짧은 타임아웃을 걸고, 최전면 앱이 plopcut이면 건너뜁니다. 비어 있지 않은 값이 나오면 7단계로
    갑니다(클립보드 백업·복원 없음). 읽기에 실패하거나 값이 비면 폴백으로 넘어가며 이것만으로 `no_selected_text`로 보지 않습니다.
    앱별 결과는 [ax-probe.md](ax-probe.md)에 있습니다.
 3. **클립보드 폴백**: 클립보드를 백업합니다(텍스트와 PNG 이미지). 실패하면 경고 `clipboard_backup_failed`를 남기고 빈 스냅샷으로 계속합니다.
@@ -294,7 +308,7 @@ UTF-8, 들여쓰기 2칸의 pretty JSON, 키는 camelCase입니다.
 3. 이미지가 있는데 디코딩에 실패하면 경고 `clipboard_image_unavailable`을 남기고 텍스트만으로 진행합니다. 텍스트도 없으면
    그 오류로 실패합니다.
 4. 분류: 텍스트만 → `text`, 이미지만 → `image`, 둘 다 → `mixed`, 둘 다 없으면 `clipboard_empty`.
-5. 출처를 수집합니다. 최전면 앱이 Notedrop 자신이면(메뉴 막대에서 실행) 출처를 비우고 제목을 다시 추론합니다.
+5. 출처를 수집합니다. 최전면 앱이 plopcut 자신이면(메뉴 막대에서 실행) 출처를 비우고 제목을 다시 추론합니다.
 
 ### 3.3 확인 방식
 

@@ -1,1 +1,1 @@
-Mixed drops are never written by Notedrop.
+Mixed drops are never written by plopcut.

@@ -6,10 +6,10 @@
 
 실제 사용자 폴더를 건드리지 않도록 **복사본**과 임시 설정 파일로 실행한다.
 
-1. 앱 빌드: `scripts/make-app.sh debug` → `NotedropApp/.build/Notedrop.app`
-2. 연습용 저장소 만들기: 실제 폴더를 복사하거나(`cp -R ~/Documents/Notedrop /tmp/nd-copy`) 픽스처([README](fixtures/README.md))를 복사한다.
-3. 복사본으로 실행(환경변수는 `open`으로 전달되지 않으므로 실행 파일을 직접 실행한다): `NOTEDROP_STORAGE_FOLDER=/tmp/nd-copy NOTEDROP_SETTINGS_FILE=/tmp/nd-settings.json NotedropApp/.build/Notedrop.app/Contents/MacOS/Notedrop`
-4. 주의: 개발 빌드는 ad-hoc 서명이라 다시 빌드하면 손쉬운 사용 권한이 풀릴 수 있다. 권한이 안 먹으면 시스템 설정 › 개인정보 보호 및 보안 › 손쉬운 사용에서 Notedrop을 지우고 다시 추가한다.
+1. 앱 빌드: `scripts/make-app.sh debug` → `PlopcutApp/.build/plopcut.app`
+2. 연습용 저장소 만들기: 실제 폴더를 복사하거나(`cp -R ~/Documents/plopcut /tmp/nd-copy`) 픽스처([README](fixtures/README.md))를 복사한다.
+3. 복사본으로 실행(환경변수는 `open`으로 전달되지 않으므로 실행 파일을 직접 실행한다): `PLOPCUT_STORAGE_FOLDER=/tmp/nd-copy PLOPCUT_SETTINGS_FILE=/tmp/nd-settings.json PlopcutApp/.build/plopcut.app/Contents/MacOS/plopcut`
+4. 주의: 개발 빌드는 ad-hoc 서명이라 다시 빌드하면 손쉬운 사용 권한이 풀릴 수 있다. 권한이 안 먹으면 시스템 설정 › 개인정보 보호 및 보안 › 손쉬운 사용에서 plopcut을 지우고 다시 추가한다.
 5. 끝나면 `/tmp/nd-copy`, `/tmp/nd-settings.json`을 지운다.
 
 ## 1. 저장소 호환성 (STA-77)
@@ -18,7 +18,7 @@
 - [ ] 각 Drop을 수정하고 저장한 뒤 `drop.json`을 열어 키 집합이 유지되고 빠진 값이 `null`로 쓰이는지 본다 (S-01).
 - [ ] 새 Drop을 저장하고 폴더 이름(ID), 시각, 파일 구성이 규칙(S-05~S-11)에 맞는지 본다.
 - [ ] 이미지 Drop(픽스처 사용)이 Library 본문에 보이고 수정 후에도 `image.png` 경로가 유지된다. (실제 폴더에는 이미지가 없다.)
-- [ ] 원본 폴더에는 아무 변경이 없다 (`diff -rq ~/Documents/Notedrop /tmp/nd-copy` 확인은 복사 직후 기준으로).
+- [ ] 원본 폴더에는 아무 변경이 없다 (`diff -rq ~/Documents/plopcut /tmp/nd-copy` 확인은 복사 직후 기준으로).
 
 ## 2. 단축키 키 녹화 (STA-77, C-06 · C-08)
 
@@ -33,7 +33,7 @@
 - [ ] 7. 조합을 고른 뒤 저장하지 않고 사이드바에서 Library로 갔다가 설정으로 돌아오면 필드가 이전 단축키이고 이전 단축키로 캡처된다. `취소`도 같다.
 - [ ] 8. 다른 앱이 쓰는 조합을 녹화하고 저장하면 등록 실패 문구가 나오고 필드는 이전 값, 이전 단축키가 동작한다.
 - [ ] 9. 한글 입력 상태에서 녹화해도 영문 키 이름(예: `Shift+Cmd+K`)으로 기록된다.
-- [ ] 10. 녹화 중 다른 Notedrop 창이나 다른 앱 창을 클릭하면 녹화가 끝나고, 그 창의 키 입력과 전역 단축키 캡처가 정상 동작한다.
+- [ ] 10. 녹화 중 다른 plopcut 창이나 다른 앱 창을 클릭하면 녹화가 끝나고, 그 창의 키 입력과 전역 단축키 캡처가 정상 동작한다.
 
 ## 3. 권한 누락과 오류 UX (STA-78)
 
@@ -48,21 +48,21 @@
 
 ## 4. 로컬 로그 (STA-80)
 
-로그 위치: `~/Library/Logs/Notedrop/notedrop.log`. **정식 `.app` 번들로 실행했을 때만** 기록된다 (`swift run`이나 테스트는 기록하지 않는다).
+로그 위치: `~/Library/Logs/plopcut/plopcut.log`. **정식 `.app` 번들로 실행했을 때만** 기록된다 (`swift run`이나 테스트는 기록하지 않는다).
 
 - [ ] 처음 실행하면 시작 줄(버전, 빌드, macOS 버전)이 생긴다.
 - [ ] 설정 정보 구역의 `Finder에서 로그 보기`가 파일을 선택해 Finder를 연다. 로그가 없으면 폴더가 열린다.
 - [ ] 손쉬운 사용을 끄고 캡처하면 `permission_missing` 줄만 생기고 텍스트·경로·URL은 없다.
 - [ ] 시스템 설정에서 권한을 바꾸고 앱으로 돌아오면 권한 변경 줄이 생긴다.
 - [ ] 로그 폴더를 읽기 전용으로 만들어도 앱이 정상 동작한다.
-- [ ] (선택) 로그가 1MB를 넘으면 `notedrop.log.1`이 생긴다.
+- [ ] (선택) 로그가 1MB를 넘으면 `plopcut.log.1`이 생긴다.
 - [ ] `Finder에서 로그 보기` 단추 문구가 한국어·영어에서 맞다.
 - [ ] 로그 전체를 훑어 Drop 내용, 노트, 제목, 태그, 클립보드 내용이 한 줄도 없는지 확인한다.
 
 ## 5. 성능 (STA-80)
 
 - [ ] `python3 scripts/generate-perf-library.py /tmp/nd-perf`로 5,000건을 만든다.
-- [ ] `NOTEDROP_STORAGE_FOLDER=/tmp/nd-perf NOTEDROP_SETTINGS_FILE=/tmp/nd-perf-settings.json`로 앱을 실행해, 시작부터 목록이 보일 때까지 걸리는 시간을 잰다. 결과를 [performance.md](performance.md)에 적는다.
+- [ ] `PLOPCUT_STORAGE_FOLDER=/tmp/nd-perf PLOPCUT_SETTINGS_FILE=/tmp/nd-perf-settings.json`로 앱을 실행해, 시작부터 목록이 보일 때까지 걸리는 시간을 잰다. 결과를 [performance.md](performance.md)에 적는다.
 - [ ] 검색창에 빠르게 입력해도 입력이 끊기지 않는다.
 - [ ] 목록을 끝까지 스크롤해도 끊김이 없다.
 - [ ] 한글 검색 확인: 맥에서 복사한 파일 이름처럼 자모가 분리된 텍스트가 든 Drop이 완성형으로 검색되는지 본다 (새 검색 인덱스는 UTF-8 바이트 비교라 누락될 수 있다).
@@ -92,7 +92,7 @@ VoiceOver는 `Cmd+F5`로 켠다.
 
 ## 실행 기록 (2026-10-12, Claude 대행)
 
-`scripts/make-app.sh debug` 빌드를 픽스처 복사본(`NOTEDROP_STORAGE_FOLDER`, `NOTEDROP_SETTINGS_FILE`)으로 실행하고 GUI 자동화(Orca computer use)로 조작했다. 언어는 시스템 설정을 바꾸지 않고 `-AppleLanguages (ko)` / `(en)` 실행 인자로 바꿨다. 실제 사용자 폴더와 설정은 쓰지 않았다.
+`scripts/make-app.sh debug` 빌드를 픽스처 복사본(`PLOPCUT_STORAGE_FOLDER`, `PLOPCUT_SETTINGS_FILE`)으로 실행하고 GUI 자동화(Orca computer use)로 조작했다. 언어는 시스템 설정을 바꾸지 않고 `-AppleLanguages (ko)` / `(en)` 실행 인자로 바꿨다. 실제 사용자 폴더와 설정은 쓰지 않았다.
 
 | 섹션 | 확인됨 | 결과 |
 | --- | --- | --- |
