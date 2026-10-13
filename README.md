@@ -9,8 +9,10 @@ in the Library. Every drop is stored as ordinary readable files on your Mac.
 plopcut does not watch your clipboard in the background. It reads the
 clipboard or the selected text only when you ask it to capture.
 
-> Status: pre-release. Download and signing details will be described in
-> `docs/release.md` (coming).
+> **Beta.** plopcut is in beta. The beta build is **not signed or notarized by
+> Apple**, so macOS blocks it the first time you open it (see
+> [Install](#install)). An official signed release will follow after testing.
+> Please report problems in [GitHub Issues](https://github.com/chan-byeong/plopcut/issues).
 
 ## What you can do
 
@@ -28,10 +30,26 @@ clipboard or the selected text only when you ask it to capture.
 
 Requirements: a Mac running macOS. The minimum supported macOS version is 14.
 
-1. Download `plopcut.dmg` from the Releases page of the
-   [plopcut repository](https://github.com/chan-byeong/plopcut). *Added with the first release.*
+1. Download the latest `plopcut-<version>-beta.<n>.dmg` from the
+   [Releases page](https://github.com/chan-byeong/plopcut/releases) (beta builds are marked Pre-release).
+   *Added with the first beta.*
 2. Open the disk image and drag **plopcut** into **Applications**.
-3. Open plopcut from Applications.
+3. Try to open plopcut. macOS refuses because the beta is not notarized. Allow it once:
+   - Open **System Settings › Privacy & Security**, scroll to the message about
+     plopcut, and choose **Open Anyway**. (On macOS 15 and later, right-click › Open
+     no longer works.)
+   - Or, in Terminal: `xattr -dr com.apple.quarantine /Applications/plopcut.app`
+4. Allow **Accessibility** and **Automation** when plopcut asks (see Permissions below).
+
+You can also build it yourself: `sh scripts/make-app.sh release`, then open
+`PlopcutApp/.build/plopcut.app`. This needs Xcode and the Swift 6 toolchain.
+
+**Permissions after an update.** Beta builds are signed ad hoc, so the signature
+changes with every build and macOS may forget the Accessibility or Automation
+permission. If capture stops working after an update, run
+`tccutil reset Accessibility com.plopcut.app` and allow plopcut again. You will
+need to allow it once more when the signed official release replaces the beta.
+Your drops and settings are not affected.
 
 ## First run
 
