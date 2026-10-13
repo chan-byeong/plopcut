@@ -1,6 +1,6 @@
 # 접근성 점검 (STA-80)
 
-Linear: [STA-80](https://linear.app/byeoung/issue/STA-80)
+Linear: STA-80
 
 코드로 VoiceOver 라벨·특성·순서와 키보드 이동을 점검하고 빈틈을 고쳤습니다. 실제 VoiceOver 확인은 사람이 해야 합니다(맨 아래).
 

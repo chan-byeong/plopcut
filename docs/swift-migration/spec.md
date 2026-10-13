@@ -1,10 +1,11 @@
 # plopcut Swift 구현 사양
 
-Linear: [STA-39](https://linear.app/byeoung/issue/STA-39)
+Linear: STA-39
 
 이 문서는 Tauri + React로 만든 plopcut을 Swift(SwiftUI/AppKit)로 **새로 구현**하기 위한 스택 중립 사양입니다. 구현자는 레거시
 코드를 번역하지 않고 이 문서와 [동작 체크리스트](behavior-checklist.md), [픽스처](fixtures/README.md)만으로 구현할 수 있어야
-합니다. 레거시 구현은 `legacy/tauri` 브랜치와 `tauri-final` 태그에 보존되어 있으며, 문서에 명시한 파일만 참고합니다.
+합니다. 레거시 구현은 관리자가 `legacy/tauri` 브랜치와 `tauri-final` 태그로 보관하며 이 공개 저장소에는 없습니다. 이 문서와 체크리스트만으로 구현할 수 있도록
+썼습니다. 문서의 "근거" 열은 그 레거시 파일 이름이며, 기여자가 열어 볼 필요는 없습니다.
 
 ## 읽는 순서와 범위
 
