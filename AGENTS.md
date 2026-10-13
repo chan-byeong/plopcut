@@ -72,8 +72,10 @@ reporting a task as finished.
 
 ## Agent skills
 
-Read the relevant installed skill in `.agents/skills/` when its task
-matches the user's request.
+Agent skills are installed locally by each maintainer in `.agents/skills/`
+and are not part of this repository (the folder is git-ignored). Read the
+relevant installed skill when its task matches the user's request. If your
+agent has none installed, follow this file and the linked docs directly.
 
 ### Issue tracker
 

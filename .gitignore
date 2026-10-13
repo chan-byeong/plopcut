@@ -17,3 +17,8 @@ Packages/
 # Browser automation scratch output
 .playwright-mcp
 dist/
+
+# Local agent skills and tool settings (third-party content, not part of this repository)
+.agents/
+.claude/
+skills-lock.json
