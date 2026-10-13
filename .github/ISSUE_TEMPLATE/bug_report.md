@@ -12,7 +12,8 @@ labels: bug
 1.
 
 **Environment**
-- plopcut version:
+- plopcut version (beta number if any):
+- Installed from: DMG / built from source
 - macOS version:
 - Permissions granted (Accessibility / Automation):
 

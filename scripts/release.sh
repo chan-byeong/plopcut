@@ -2,11 +2,12 @@
 # Release pipeline: build -> sign -> DMG -> notarize -> staple -> verify.
 # Usage: scripts/release.sh [--check] [--adhoc]
 #   --check  print the plan and report which prerequisites/env vars are missing; builds nothing.
-#   --adhoc  local rehearsal: release build + ad-hoc signed DMG, no notarization (not distributable).
+#   --adhoc  beta build: release build + ad-hoc signed DMG, no notarization. Gatekeeper rejects it, so it is only for
+#            testers who accept the unsigned install steps in the README (docs/release.md, "Beta channel").
 # Env (never commit values):
 #   DEVELOPER_ID_IDENTITY  e.g. "Developer ID Application: Name (TEAMID)"  (required unless --adhoc)
 #   NOTARY_PROFILE         keychain profile created with `xcrun notarytool store-credentials`  (required unless --adhoc)
-#   APP_VERSION, APP_BUILD, BUNDLE_ID  optional overrides of scripts/app-config.sh
+#   APP_VERSION, APP_BUILD, APP_CHANNEL, BUNDLE_ID  optional overrides of scripts/app-config.sh
 set -eu
 SCRIPTS="$(cd "$(dirname "$0")" && pwd)"
 . "$SCRIPTS/app-config.sh"
@@ -22,13 +23,13 @@ done
 
 APP="$ROOT/PlopcutApp/.build/$APP_NAME.app"
 OUT="$ROOT/dist"
-DMG="$OUT/$APP_NAME-$APP_VERSION.dmg"
+DMG="$OUT/$APP_NAME-$APP_VERSION${APP_CHANNEL:+-$APP_CHANNEL}.dmg"
 IDENTITY="${DEVELOPER_ID_IDENTITY:-}"
 PROFILE="${NOTARY_PROFILE:-}"
 
 if [ "$MODE" = check ]; then
   missing=0
-  echo "bundle id : $BUNDLE_ID"; echo "version   : $APP_VERSION ($APP_BUILD)"; echo "min macOS : $MIN_MACOS"; echo "output    : $DMG"
+  echo "bundle id : $BUNDLE_ID"; echo "version   : $APP_VERSION ($APP_BUILD) channel: ${APP_CHANNEL:-official}"; echo "min macOS : $MIN_MACOS"; echo "output    : $DMG"
   for t in swift codesign hdiutil xcrun spctl vtool; do
     command -v "$t" >/dev/null 2>&1 && echo "tool ok   : $t" || { echo "tool MISSING: $t"; missing=1; }
   done
@@ -75,7 +76,7 @@ if [ "$MODE" = release ]; then
   spctl --assess --type open --context context:primary-signature -vv "$DMG"
   spctl --assess --type execute -vv "$APP"
 else
-  echo "ad-hoc rehearsal: skipped notarize/staple/spctl (would be rejected by Gatekeeper)"
+  echo "ad-hoc beta build: skipped notarize/staple/spctl (Gatekeeper rejects it; testers use Open Anyway)"
   hdiutil verify "$DMG" >/dev/null && echo "dmg verifies"
 fi
 echo "$DMG"
