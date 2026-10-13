@@ -22,3 +22,6 @@ dist/
 .agents/
 .claude/
 skills-lock.json
+
+# Design mockups and verification captures (kept locally only; may show personal data)
+docs/design/

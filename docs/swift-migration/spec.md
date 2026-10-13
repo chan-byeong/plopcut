@@ -13,8 +13,7 @@ Linear: STA-39
 2. [동작 체크리스트](behavior-checklist.md): 코드에만 남아 있는 세부 동작과 확인 방법.
 3. [Design.md](../../Design.md), [design-system.md](../design-system.md): 시각 기준. 두 문서의 "구현 경계"와 AppKit
    도구 막대 설명은 Tauri 구조를 전제로 하므로 무시합니다. 레이아웃 수치, 색상·재질 토큰, 컴포넌트 상태, 접근성, 검증 기준만
-   따릅니다. 기준 이미지는 [`docs/design/sta30-font-book/`](../design/sta30-font-book/README.md)와
-   `docs/design/library-sidebar-*.png`입니다.
+   따릅니다. 기준 이미지와 검증 캡처는 저장소에 포함하지 않으므로 두 문서의 수치와 규칙이 기준입니다.
 4. 문구는 [strings.md](strings.md)의 `en`·`ko` 표가 유일한 원본입니다. 레거시 사전에서 그대로 추출한 것입니다.
 
 이 브랜치에는 레거시 코드가 없습니다. 동작이 모호할 때만 `git show legacy/tauri:<경로>`로 파일 하나씩 확인합니다. 읽을 필요가
