@@ -7,13 +7,19 @@ how engineering skills fetch, publish, and complete work.
 
 Use this verified destination:
 
-- Workspace: `byeoung` (`600dee2e-a780-4f76-bbd6-95695c7828ec`).
-- Project: `sta` (`678f4a23-78f8-4d69-858a-3054f62f52ec`).
-- Project URL: <https://linear.app/byeoung/project/sta-81fcbf48558b>.
-- Team: `Byeoung`, key `STA`
-  (`36f6ee12-0510-4891-be3c-bf7204e007b7`).
+- Workspace: `byeoung`.
+- Project: `sta`.
+- Team: `Byeoung`, key `STA`.
 - Required issue identifier: `STA-{Number}`, assigned by Linear.
 - Issue title: a concise description of the work.
+
+Resolve the workspace, team, and project IDs from their names with the Linear
+connector or Orca (for example `team list` and `project list`); they are not
+recorded here because this repository is public.
+
+This tracker is the maintainer's workflow. External contributors report and
+discuss work in GitHub Issues; a maintainer mirrors accepted work into `sta`
+and refers to it by its `STA-{Number}`.
 
 Linear generates issue identifiers from the owning team's key. To obtain
 `STA-{Number}`, the issue must belong to a team whose key is `STA`.

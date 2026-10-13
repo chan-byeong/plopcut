@@ -1,6 +1,6 @@
 # 호환성 픽스처
 
-Linear: [STA-39](https://linear.app/byeoung/issue/STA-39)
+Linear: STA-39
 
 모두 **합성 데이터**입니다(실제 사용자 Drop이 아님). 레거시 스캐너(`legacy/tauri`)에 실제로 돌려 아래 기대값을 확인했습니다.
 Swift 구현은 같은 입력에서 같은 결과를 내야 합니다.

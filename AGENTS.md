@@ -5,8 +5,10 @@ AppKit). Users deliberately capture text or images, add notes and tags, and
 find saved drops in the Library.
 
 This branch is a from-scratch Swift implementation. The previous Tauri +
-React implementation is preserved on the `legacy/tauri` branch and the
-`tauri-final` tag. It is a reference for behavior only; do not port its code.
+React implementation is kept by the maintainer (branch `legacy/tauri`, tag
+`tauri-final`) and is not published in this repository. It was a reference for
+behavior only; do not port its code. The spec and the checklist are
+self-contained, so contributors do not need it.
 
 ## Product boundaries
 

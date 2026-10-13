@@ -1,6 +1,6 @@
 # 성능 측정 (STA-80)
 
-Linear: [STA-80](https://linear.app/byeoung/issue/STA-80), 정규화 수정 [STA-82](https://linear.app/byeoung/issue/STA-82)
+Linear: STA-80, 정규화 수정 STA-82
 
 5,000건 라이브러리에서 Library 스캔과 검색 응답을 측정했습니다. 임시 폴더에만 만들며 실제 사용자 폴더는 건드리지 않습니다.
 

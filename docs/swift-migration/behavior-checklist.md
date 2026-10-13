@@ -1,6 +1,6 @@
 # 동작 체크리스트
 
-Linear: [STA-39](https://linear.app/byeoung/issue/STA-39) · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/README.md)
+Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/README.md)
 
 레거시 코드와 PRD에만 남아 있고 화면만 봐서는 놓치기 쉬운 동작을 모았습니다. 구현이 끝나면 항목마다 "확인 방법"을 수행해
 체크하세요. **근거**는 레거시(`legacy/tauri` 브랜치) 파일입니다. 그 파일을 읽어야 한다는 뜻이 아니라, 동작에 의문이 생겼을 때

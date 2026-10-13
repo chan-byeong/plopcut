@@ -127,17 +127,17 @@ See [docs/update-method.md](docs/update-method.md). plopcut is distributed as a 
 
 ## License
 
-**License: TBD (placeholder).** No license has been chosen yet. Until one is
-chosen, all rights are reserved by the author. See the open decisions in
-[docs/update-method.md](docs/update-method.md#open-decisions).
+plopcut is open source under the [MIT License](LICENSE). Contributions are
+welcome: see [CONTRIBUTING.md](CONTRIBUTING.md). Report security problems
+privately as described in [SECURITY.md](SECURITY.md).
 
 ---
 
 ## For contributors
 
-This is a from-scratch Swift (SwiftUI and AppKit) implementation. The previous
-Tauri + React version is kept on `legacy/tauri` and the `tauri-final` tag, for
-behavior reference only.
+This is a from-scratch Swift (SwiftUI and AppKit) implementation. An earlier
+Tauri + React prototype is not part of this repository; the spec and the
+behavior checklist record the behavior you need.
 
 Start with [`AGENTS.md`](AGENTS.md), then the
 [implementation spec](docs/swift-migration/spec.md) and the

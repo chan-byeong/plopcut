@@ -50,9 +50,7 @@ first, then implement the update flow as its own issue.
 Each item below needs an owner decision. Items struck through are decided.
 
 1. ~~**Update method.**~~ Decided: manual download.
-2. **License.** **TBD (placeholder).** No license has been chosen. The README
-   says all rights are reserved until one is chosen. The owner must pick a
-   license and add a `LICENSE` file.
+2. ~~**License.**~~ Decided (owner, STA-86): MIT. `LICENSE` is added and both READMEs link to it.
 3. ~~**Minimum macOS version.**~~ Decided: macOS 14. `spec.md`, both `Package.swift` files and
    `make-app.sh` now agree.
 4. **Distribution and release process.** How the DMG is built, signed, checked by

@@ -103,15 +103,15 @@ plopcut이 새로 만듭니다.
 
 ## 라이선스
 
-**라이선스: 미정(자리표시자).** 아직 라이선스를 정하지 않았습니다. 정해질 때까지 모든 권리는 저작자에게 있습니다.
-미결정 사항은 [docs/update-method.md](docs/update-method.md#open-decisions)에 있습니다.
+plopcut은 [MIT 라이선스](LICENSE)로 공개된 오픈소스입니다. 기여를 환영합니다. [CONTRIBUTING.md](CONTRIBUTING.md)를 읽어 주세요.
+보안 문제는 [SECURITY.md](SECURITY.md)의 절차대로 비공개로 신고해 주세요.
 
 ---
 
 ## 기여자용 안내
 
-Swift(SwiftUI, AppKit)로 새로 구현한 버전입니다. 이전 Tauri + React 버전은 `legacy/tauri` 브랜치와 `tauri-final` 태그에
-동작 참고용으로만 보존되어 있습니다.
+Swift(SwiftUI, AppKit)로 새로 구현한 버전입니다. 이전 Tauri + React 프로토타입은 이 저장소에 포함되어 있지 않습니다.
+필요한 동작은 사양과 동작 체크리스트에 기록되어 있습니다.
 
 먼저 [`AGENTS.md`](AGENTS.md)를 읽고, [구현 사양](docs/swift-migration/spec.md)과
 [동작 체크리스트](docs/swift-migration/behavior-checklist.md)를 확인하세요. `scripts/make-app.sh`로 개발용 `plopcut.app`을 만들 수 있습니다.
