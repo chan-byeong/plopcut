@@ -1,18 +1,18 @@
 # Privacy
 
-Notedrop keeps everything on your Mac.
+plopcut keeps everything on your Mac.
 
 - **All data stays local.** Drops, notes, tags, and settings are files in your
-  storage folder (default `~/Documents/Notedrop`) and in
-  `~/Library/Application Support/Notedrop/`.
+  storage folder (default `~/Documents/plopcut`) and in
+  `~/Library/Application Support/plopcut/`.
 - **Nothing is sent externally.** The app has no code that uploads or syncs data.
 - **No telemetry.** The app contains no analytics, crash reporting, or usage tracking.
 - **No accounts, no cloud, no database.**
 
 ## Support log (local only)
 
-Notedrop writes a small log to `~/Library/Logs/Notedrop/notedrop.log` (one
-previous file, `notedrop.log.1`; about 1 MB each). It stays on your Mac and is
+plopcut writes a small log to `~/Library/Logs/plopcut/plopcut.log` (one
+previous file, `plopcut.log.1`; about 1 MB each). It stays on your Mac and is
 never uploaded. Settings has a `Show Log in Finder` row.
 
 - **Contains:** timestamp, app version, build and macOS version at start, the
@@ -25,11 +25,11 @@ never uploaded. Settings has a `Show Log in Finder` row.
 - **Reporting a problem:** attach the log file to your message yourself. There
   is no automatic report.
 
-## What Notedrop reads, and when
+## What plopcut reads, and when
 
 - The **selected text** of the frontmost app, only when you press the capture
   shortcut or choose a capture command.
-- The **clipboard**, only when you run `Save Clipboard...`. Notedrop does not
+- The **clipboard**, only when you run `Save Clipboard...`. plopcut does not
   monitor the clipboard in the background.
 - The **frontmost app name, window title**, and, for Google Chrome only, the
   **URL of the active tab**, at the moment of capture. macOS asks for Automation
@@ -45,15 +45,15 @@ Searched for network and telemetry APIs and SDKs (`URLSession`, `NSURLSession`,
 `WKWebView`, `WebKit`, `dataTask`, `downloadTask`, Sparkle, analytics, telemetry,
 crash reporters such as Crashlytics, Sentry, and Firebase, and `http(s)://` URLs).
 
-Result: **no matches in the app or core sources** (`NotedropApp/Sources`,
-`NotedropCore/Sources`). The only `http` string in the app-related files is the
+Result: **no matches in the app or core sources** (`PlopcutApp/Sources`,
+`PlopcutCore/Sources`). The only `http` string in the app-related files is the
 DTD URL inside the `Info.plist` template in `scripts/make-app.sh`. It is XML
 metadata and is not requested at runtime.
 
 Other findings:
 
-- **No third-party dependencies.** `NotedropApp/Package.swift` depends only on the
-  local package `../NotedropCore`. `NotedropCore/Package.swift` has no dependencies.
+- **No third-party dependencies.** `PlopcutApp/Package.swift` depends only on the
+  local package `../PlopcutCore`. `PlopcutCore/Package.swift` has no dependencies.
 - **Local file access only.** Drops and settings are read and written with
   `FileManager`, `Data(contentsOf:)`, and `String(contentsOf:)` on local paths.
 - **Chrome URL read is local IPC.** The app runs an AppleScript (`NSAppleScript`)
@@ -62,7 +62,7 @@ Other findings:
 - **User-initiated URL opening.** `NSWorkspace.shared.open` opens a stored
   source URL when you click `Open Source`, and opens System Settings when you
   choose to review permissions. The browser that opens makes its own network
-  requests. That traffic is the browser's, not Notedrop's.
+  requests. That traffic is the browser's, not plopcut's.
 
 ## What this does not cover
 

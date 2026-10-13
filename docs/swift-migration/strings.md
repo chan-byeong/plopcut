@@ -61,7 +61,7 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `loadingDrops` | Loading drops… | 드롭 불러오는 중… |
 | `noMatches` | No drops match the current filters | 현재 필터와 일치하는 드롭이 없습니다 |
 | `noDrops` | No saved drops yet. Capture text with Shift + Cmd + C. | 저장된 드롭이 없습니다. Shift + Cmd + C로 텍스트를 캡처하세요. |
-| `appLogo` | Notedrop logo | Notedrop 로고 |
+| `appLogo` | plopcut logo | plopcut 로고 |
 | `dropTitle` | Drop title | 드롭 제목 |
 | `ok` | OK | 확인 |
 | `unreadableDrops` | Some drops could not be read ({count}) | 일부 드롭을 읽지 못했습니다 ({count}) |
@@ -136,13 +136,13 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `missing` | Needs permission | 권한 필요 |
 | `permissionUnknown` | Unknown | 알 수 없음 |
 | `permissionAccessibilityGranted` | Keyboard simulation and active window access are available. | 키보드 시뮬레이션과 활성 윈도우 접근을 사용할 수 있습니다. |
-| `permissionAccessibilityMissing` | Allow Notedrop in System Settings › Privacy & Security › Accessibility. | 시스템 설정 › 개인정보 보호 및 보안 › 손쉬운 사용에서 Notedrop을 허용하세요. |
+| `permissionAccessibilityMissing` | Allow plopcut in System Settings › Privacy & Security › Accessibility. | 시스템 설정 › 개인정보 보호 및 보안 › 손쉬운 사용에서 plopcut을 허용하세요. |
 | `permissionClipboardGranted` | Clipboard content is read only when you use a capture action. | 캡처 동작을 실행할 때만 클립보드 내용을 읽습니다. |
 | `permissionClipboardMissing` | Clipboard access is required for explicit captures. | 명시적인 캡처에 클립보드 접근이 필요합니다. |
 | `permissionAutomationGranted` | Chrome source URLs can be collected during capture. | 캡처 중 Chrome 출처 URL을 가져올 수 있습니다. |
 | `permissionAutomationMissing` | Allow browser automation when macOS asks for access. | macOS가 요청할 때 브라우저 자동화를 허용하세요. |
-| `permissionUnknownDetail` | Notedrop could not determine this permission status. | 이 권한 상태를 확인하지 못했습니다. |
-| `permissionAutomationNote` | macOS asks for access the first time Notedrop reads the Chrome URL. | Notedrop이 Chrome URL을 처음 읽을 때 macOS가 접근을 묻습니다. |
+| `permissionUnknownDetail` | plopcut could not determine this permission status. | 이 권한 상태를 확인하지 못했습니다. |
+| `permissionAutomationNote` | macOS asks for access the first time plopcut reads the Chrome URL. | plopcut이 Chrome URL을 처음 읽을 때 macOS가 접근을 묻습니다. |
 | `openSystemSettings` | Open System Settings | 시스템 설정 열기 |
 | `saveText` | Save Text Drop | 텍스트 드롭 저장 |
 | `saveImage` | Save Image Drop | 이미지 드롭 저장 |
@@ -165,17 +165,17 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `exportCancelled` | Markdown export cancelled. | Markdown 내보내기를 취소했습니다. |
 | `exportSuccess` | Markdown exported. | Markdown을 내보냈습니다. |
 | `updated` | Drop updated. | 드롭을 수정했습니다. |
-| `defaultError` | Notedrop could not complete the action. | Notedrop이 작업을 완료하지 못했습니다. |
+| `defaultError` | plopcut could not complete the action. | plopcut이 작업을 완료하지 못했습니다. |
 | `panelFocusRestoreFailed` | The panel closed, but keyboard focus could not return to its toolbar button. | 패널을 닫았지만 도구 막대 버튼으로 키보드 포커스를 돌리지 못했습니다. |
 | `chooseStorage` | Choose Storage Folder | 저장 폴더 선택 |
-| `firstRunBody` | Notedrop saves readable drop files locally. Confirm the default folder or choose another folder before using the Library. | Notedrop은 읽을 수 있는 드롭 파일을 로컬에 저장합니다. 라이브러리를 사용하기 전에 기본 폴더를 확인하거나 다른 폴더를 선택하세요. |
+| `firstRunBody` | plopcut saves readable drop files locally. Confirm the default folder or choose another folder before using the Library. | plopcut은 읽을 수 있는 드롭 파일을 로컬에 저장합니다. 라이브러리를 사용하기 전에 기본 폴더를 확인하거나 다른 폴더를 선택하세요. |
 | `chooseFolderAction` | Choose Folder | 폴더 선택 |
 | `useDefaultFolder` | Use Default Folder | 기본 폴더 사용 |
 | `dismiss` | Dismiss status | 상태 메시지 닫기 |
 | `noCaptured` | No captured content is available. | 캡처한 내용이 없습니다. |
 | `noSelectedText` | No selected text was found. Select text and press Shift + Cmd + C. | 선택한 텍스트가 없습니다. 텍스트를 선택하고 Shift + Cmd + C를 누르세요. |
 | `clipboardEmpty` | The clipboard has no supported text or image. | 클립보드에 지원되는 텍스트나 이미지가 없습니다. |
-| `clipboardUnavailable` | Notedrop could not read the clipboard. | 클립보드를 읽지 못했습니다. |
+| `clipboardUnavailable` | plopcut could not read the clipboard. | 클립보드를 읽지 못했습니다. |
 | `clipboardChanged` | The clipboard changed while it was being read. Try Save Clipboard again. | 읽는 중 클립보드 내용이 바뀌었습니다. 클립보드 저장을 다시 실행하세요. |
 | `clipboardRestoreFailed` | The capture succeeded, but the previous clipboard could not be restored. | 캡처는 완료했지만 이전 클립보드를 복원하지 못했습니다. |
 | `automationFailed` | Source metadata could not be collected. You can still save the drop. | 출처 메타데이터를 가져오지 못했습니다. 드롭은 계속 저장할 수 있습니다. |

@@ -20,7 +20,7 @@ for a in "$@"; do
   esac
 done
 
-APP="$ROOT/NotedropApp/.build/$APP_NAME.app"
+APP="$ROOT/PlopcutApp/.build/$APP_NAME.app"
 OUT="$ROOT/dist"
 DMG="$OUT/$APP_NAME-$APP_VERSION.dmg"
 IDENTITY="${DEVELOPER_ID_IDENTITY:-}"

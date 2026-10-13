@@ -1,12 +1,12 @@
-# Notedrop
+# plopcut
 
 [한국어 안내 (README.ko.md)](README.ko.md)
 
-Notedrop is a local-first macOS clipboard app. You deliberately capture
+plopcut is a local-first macOS clipboard app. You deliberately capture
 selected text or a clipboard image, add a note and tags, and find it later
 in the Library. Every drop is stored as ordinary readable files on your Mac.
 
-Notedrop does not watch your clipboard in the background. It reads the
+plopcut does not watch your clipboard in the background. It reads the
 clipboard or the selected text only when you ask it to capture.
 
 > Status: pre-release. Download and signing details will be described in
@@ -28,16 +28,16 @@ clipboard or the selected text only when you ask it to capture.
 
 Requirements: a Mac running macOS. The minimum supported macOS version is 14.
 
-1. Download `Notedrop.dmg` from the Releases page of the public Notedrop release
-   repository. *Link: added with the first release.*
-2. Open the disk image and drag **Notedrop** into **Applications**.
-3. Open Notedrop from Applications.
+1. Download `plopcut.dmg` from the Releases page of the
+   [plopcut repository](https://github.com/chan-byeong/plopcut). *Added with the first release.*
+2. Open the disk image and drag **plopcut** into **Applications**.
+3. Open plopcut from Applications.
 
 ## First run
 
-On first launch Notedrop asks where to keep your drops:
+On first launch plopcut asks where to keep your drops:
 
-- **Use the default folder** `~/Documents/Notedrop`, or
+- **Use the default folder** `~/Documents/plopcut`, or
 - **Choose another folder.**
 
 The dialog stays until you confirm one of these. Changing the folder later in
@@ -45,47 +45,58 @@ Settings only affects new drops. Existing drops are not moved or copied.
 
 ## Permissions
 
-Notedrop asks for these only when a feature needs them. You can review their
+plopcut asks for these only when a feature needs them. You can review their
 status in Settings.
 
-| Permission | Where to allow it | Why Notedrop needs it |
+| Permission | Where to allow it | Why plopcut needs it |
 | --- | --- | --- |
 | Accessibility | System Settings › Privacy & Security › Accessibility | Reads the selected text in the app you are using and, as a fallback, sends `Command`+`C` to copy it. Selected-text capture does not work without it. |
 | Automation (Google Chrome) | System Settings › Privacy & Security › Automation | Reads the URL of Chrome's active tab so the drop can keep its source link. macOS asks the first time. Without it, capture still works but the URL is not saved. |
-| Clipboard | No Notedrop setting. Recent macOS versions may show their own prompt when an app reads the clipboard. | Reads the clipboard only when you run `Save Clipboard...`. |
+| Clipboard | No plopcut setting. Recent macOS versions may show their own prompt when an app reads the clipboard. | Reads the clipboard only when you run `Save Clipboard...`. |
 
 ## Where your data is stored
 
-- **Drops:** `~/Documents/Notedrop/drops/<drop-id>/`, one folder per drop,
+- **Drops:** `~/Documents/plopcut/drops/<drop-id>/`, one folder per drop,
   containing `drop.json` (metadata), `content.md` or `image.png`, and `note.md`.
   You can open these files with any text editor or Finder.
-- **Settings:** `~/Library/Application Support/Notedrop/settings.json`.
+- **Settings:** `~/Library/Application Support/plopcut/settings.json`.
 
-Notedrop does not use a database and does not send these files anywhere.
+plopcut does not use a database and does not send these files anywhere.
 See [docs/privacy.md](docs/privacy.md).
+
+## Upgrading from Notedrop
+
+plopcut was called Notedrop before. The first time you open plopcut it moves
+your data to the new locations: `~/Documents/Notedrop` to
+`~/Documents/plopcut`, the settings folder in `~/Library/Application Support`,
+and the log folder in `~/Library/Logs`. A storage folder you chose yourself is
+not moved, and a plopcut folder that already exists is never overwritten.
+macOS treats plopcut as a new app, so allow it again under **Accessibility**
+and **Automation**. You can remove the old Notedrop entries there.
 
 ## Uninstall
 
-1. Quit Notedrop.
-2. Move **Notedrop.app** from Applications to the Trash.
-3. Optional: remove the settings folder `~/Library/Application Support/Notedrop`.
-4. Optional: remove your saved drops in `~/Documents/Notedrop`. **This deletes
+1. Quit plopcut.
+2. Move **plopcut.app** from Applications to the Trash.
+3. Optional: remove the settings folder `~/Library/Application Support/plopcut`
+
+4. Optional: remove your saved drops in `~/Documents/plopcut`. **This deletes
    your drops.** Copy the folder somewhere safe first if you want to keep them.
    Uninstalling the app does not delete them.
-5. Optional: remove Notedrop from **Accessibility** and **Automation** under
+5. Optional: remove plopcut from **Accessibility** and **Automation** under
    System Settings › Privacy & Security.
 
 ## Privacy
 
-All drops and settings stay on your Mac. Notedrop does not send data
+All drops and settings stay on your Mac. plopcut does not send data
 externally and contains no telemetry. Details and the basis for this claim:
 [docs/privacy.md](docs/privacy.md).
 
 ## Log file and reporting a problem
 
-Notedrop keeps a small local log to help with support. It is a plain text file at
-`~/Library/Logs/Notedrop/notedrop.log` (the previous one is `notedrop.log.1`;
-each file is at most about 1 MB). In Notedrop, open **Settings** and choose
+plopcut keeps a small local log to help with support. It is a plain text file at
+`~/Library/Logs/plopcut/plopcut.log` (the previous one is `plopcut.log.1`;
+each file is at most about 1 MB). In plopcut, open **Settings** and choose
 **Show Log in Finder**.
 
 - **It stays on your Mac.** Nothing is uploaded or sent automatically.
@@ -97,9 +108,9 @@ each file is at most about 1 MB). In Notedrop, open **Settings** and choose
 - **It never contains** drop text, images, notes, titles, tags, URLs, clipboard
   data or file paths.
 
-To report a problem, attach `notedrop.log` (and `notedrop.log.1` if it exists)
+To report a problem, attach `plopcut.log` (and `plopcut.log.1` if it exists)
 to your message yourself, with a short description of what you did. You can
-open the file first to check it. Deleting the files is safe; Notedrop creates a
+open the file first to check it. Deleting the files is safe; plopcut creates a
 new one.
 
 ## Features not in this release
@@ -112,7 +123,7 @@ See [docs/release-scope.md](docs/release-scope.md).
 ## Updates
 
 This release has no automatic update check. Download new versions manually.
-See [docs/update-method.md](docs/update-method.md). Notedrop is distributed as a downloadable DMG, not through the Mac App Store.
+See [docs/update-method.md](docs/update-method.md). plopcut is distributed as a downloadable DMG, not through the Mac App Store.
 
 ## License
 
@@ -131,4 +142,4 @@ behavior reference only.
 Start with [`AGENTS.md`](AGENTS.md), then the
 [implementation spec](docs/swift-migration/spec.md) and the
 [behavior checklist](docs/swift-migration/behavior-checklist.md).
-`scripts/make-app.sh` builds a local `Notedrop.app` bundle for development.
+`scripts/make-app.sh` builds a local `plopcut.app` bundle for development.

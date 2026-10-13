@@ -24,29 +24,29 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            NotedropCore/.build
-            NotedropApp/.build
-          key: ${{ runner.os }}-spm-${{ hashFiles('NotedropCore/Package.swift', 'NotedropApp/Package.swift', 'NotedropCore/**/*.swift', 'NotedropApp/**/*.swift') }}
+            PlopcutCore/.build
+            PlopcutApp/.build
+          key: ${{ runner.os }}-spm-${{ hashFiles('PlopcutCore/Package.swift', 'PlopcutApp/Package.swift', 'PlopcutCore/**/*.swift', 'PlopcutApp/**/*.swift') }}
           restore-keys: |
             ${{ runner.os }}-spm-
 
       - name: Print toolchain
         run: swift --version
 
-      - name: Build NotedropCore
-        working-directory: NotedropCore
+      - name: Build PlopcutCore
+        working-directory: PlopcutCore
         run: swift build
 
-      - name: Test NotedropCore
-        working-directory: NotedropCore
+      - name: Test PlopcutCore
+        working-directory: PlopcutCore
         run: swift test
 
-      - name: Build NotedropApp
-        working-directory: NotedropApp
+      - name: Build PlopcutApp
+        working-directory: PlopcutApp
         run: swift build
 
-      - name: Test NotedropApp
-        working-directory: NotedropApp
+      - name: Test PlopcutApp
+        working-directory: PlopcutApp
         run: swift test
 
       - name: Build app bundle

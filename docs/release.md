@@ -4,18 +4,18 @@ Tracked by STA-76. Nothing secret is committed: the signing identity and notary 
 
 ## Distribution channel
 
-Decided (owner, STA-75): Notedrop is distributed as a **Developer ID signed, notarized DMG**, downloaded directly. Mac App Store distribution is on hold: it requires App Sandbox, which conflicts with capturing selected text through the Accessibility API, sending the copy key event and reading the Chrome URL through Apple Events. Revisit it only if a sandbox-compatible product is decided.
+Decided (owner, STA-75): plopcut is distributed as a **Developer ID signed, notarized DMG**, downloaded directly. Mac App Store distribution is on hold: it requires App Sandbox, which conflicts with capturing selected text through the Accessibility API, sending the copy key event and reading the Chrome URL through Apple Events. Revisit it only if a sandbox-compatible product is decided.
 
-Publishing (decided, STA-75): the source repository stays private. DMGs and the user docs go to a separate public release repository, as assets of its GitHub Releases and its README. Its name waits for the final service name.
+Publishing (decided, STA-85, replacing the STA-75 plan): plopcut is open source. The source repository `github.com/chan-byeong/plopcut` is the public home: the user docs are its README and `docs/`, and the DMGs are assets of its GitHub Releases. There is no separate release repository. The repository stays private until the open-source readiness checks (STA-86) are done.
 
 ## Files
 
 | File | Role |
 | --- | --- |
 | `scripts/app-config.sh` | Single source of bundle ID, version, build number, minimum macOS. Sourced by both scripts. |
-| `scripts/make-app.sh` | Builds `NotedropApp/.build/Notedrop.app`. Ad-hoc signs by default; with `SIGN_IDENTITY` set, signs with Hardened Runtime, secure timestamp and entitlements. |
-| `scripts/Notedrop.entitlements` | `com.apple.security.automation.apple-events` (browser URL via Apple Events). Accessibility needs no entitlement. The app is not sandboxed. |
-| `scripts/release.sh` | build, sign, DMG, notarize, staple, `spctl` verify. Output: `dist/Notedrop-<version>.dmg`. |
+| `scripts/make-app.sh` | Builds `PlopcutApp/.build/plopcut.app`. Ad-hoc signs by default; with `SIGN_IDENTITY` set, signs with Hardened Runtime, secure timestamp and entitlements. |
+| `scripts/plopcut.entitlements` | `com.apple.security.automation.apple-events` (browser URL via Apple Events). Accessibility needs no entitlement. The app is not sandboxed. |
+| `scripts/release.sh` | build, sign, DMG, notarize, staple, `spctl` verify. Output: `dist/plopcut-<version>.dmg`. |
 
 ## Commands
 
@@ -23,7 +23,7 @@ Publishing (decided, STA-75): the source repository stays private. DMGs and the 
 scripts/release.sh --check   # report missing tools/env/identity; builds nothing
 scripts/release.sh --adhoc   # local rehearsal: release build + ad-hoc DMG, no notarization (not distributable)
 DEVELOPER_ID_IDENTITY="Developer ID Application: Name (TEAMID)" \
-NOTARY_PROFILE=notedrop-notary \
+NOTARY_PROFILE=plopcut-notary \
   scripts/release.sh         # full release
 ```
 
@@ -39,16 +39,18 @@ Version policy: edit `APP_VERSION` / `APP_BUILD` in `scripts/app-config.sh` (or 
 1. **Apple Developer Program** membership (paid) and a **Developer ID Application** certificate installed in the login keychain (Xcode > Settings > Accounts > Manage Certificates, or developer.apple.com). Confirm with `security find-identity -v -p codesigning`; the full name is `DEVELOPER_ID_IDENTITY`.
 2. **Notary credentials**: create an app-specific password at account.apple.com, then
    ```sh
-   xcrun notarytool store-credentials "notedrop-notary" --apple-id <apple-id> --team-id <TEAMID> --password <app-specific-password>
+   xcrun notarytool store-credentials "plopcut-notary" --apple-id <apple-id> --team-id <TEAMID> --password <app-specific-password>
    ```
    The profile name is `NOTARY_PROFILE`. (An App Store Connect API key via `--key/--key-id/--issuer` also works.)
 3. Run `scripts/release.sh --check`, then the full command above. If notarization is rejected, fetch the log: `xcrun notarytool log <submission-id> --keychain-profile "$NOTARY_PROFILE"`.
-4. Confirm `spctl --assess` passes (the script prints it) and `xcrun stapler validate dist/Notedrop-<version>.dmg`.
+4. Confirm `spctl --assess` passes (the script prints it) and `xcrun stapler validate dist/plopcut-<version>.dmg`.
 5. Test on clean Macs (Apple Silicon and Intel; macOS 14+): drag to Applications, first launch, Accessibility and Automation prompts, capture flow. The build is single-architecture (host arch). For an Intel + Apple Silicon DMG, build with `swift build -c release --arch arm64 --arch x86_64`; `make-app.sh` does not do this yet, so this is open work.
 6. Upload/distribute the DMG.
 
-## Open decision: bundle identifier
+## Bundle identifier
 
-Kept as `app.notedrop.dev` (legacy). Changing it makes macOS treat the app as new, so users must re-grant Accessibility and Automation, and old grants for the legacy Tauri app (same ID) no longer apply. No technical blocker was found for keeping it; the only argument for changing is that `.dev` reads like a development ID for a public release. Decide before the first public release; once shipped, changing it is costly. To change: set `BUNDLE_ID` in `scripts/app-config.sh` and update `docs/swift-migration/spec.md` and the `tccutil` line in `behavior-checklist.md`.
+Decided (STA-85): `com.plopcut.app`, the reverse DNS of plopcut.com. Register plopcut.com before the first public release so the ID stays tied to a domain we own. The Notedrop-era ID was `app.notedrop.dev`.
 
-Also note that the Developer ID certificate's team ID is part of the code signing requirement macOS stores for permissions; moving from an ad-hoc/dev signature to Developer ID may itself require a one-time re-grant (`tccutil reset Accessibility app.notedrop.dev`).
+macOS treats a new bundle ID as a new app, so users of an earlier Notedrop build must re-grant Accessibility and Automation once. Their drops, settings and log are moved by the legacy folder migration (`docs/swift-migration/spec.md` section 1.9). To change the ID again, set `BUNDLE_ID` in `scripts/app-config.sh` and update `spec.md` and the `tccutil` line in `behavior-checklist.md`. Once shipped, changing it is costly.
+
+Also note that the Developer ID certificate's team ID is part of the code signing requirement macOS stores for permissions; moving from an ad-hoc/dev signature to Developer ID may itself require a one-time re-grant (`tccutil reset Accessibility com.plopcut.app`).

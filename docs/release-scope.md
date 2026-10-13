@@ -27,7 +27,7 @@ behavior decisions it records.
   implemented. Clipboard capture is opened from the menu bar item
   `Save Clipboard...`.
 - A **capture button in the toolbar** for selected text. The frontmost app is
-  Notedrop when the button is pressed, so it cannot read another app's selection.
+  plopcut when the button is pressed, so it cannot read another app's selection.
   Use the global shortcut instead.
 - **File path collection** for sources. The spec collects it only when a
   trustworthy API exists, and the legacy app did not collect it.
