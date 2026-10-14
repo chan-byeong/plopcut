@@ -15,6 +15,7 @@ struct MainWindow: View {
     @State private var pendingSave: Task<Void, Never>?
     /// Closing the overlay returns focus to the drop list; toolbar buttons take no key focus without Full Keyboard Access.
     @FocusState private var listFocused: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// Sidebar 220 + list 300 + body 360 + two 8 pt dividers + inspector 280 (design-system.md).
     private static let sideBySideWidth: CGFloat = 1176
@@ -105,10 +106,10 @@ struct MainWindow: View {
                         Button("") { model.inspectorOverlayOpen = false }
                             .keyboardShortcut(.cancelAction).opacity(0).accessibilityHidden(true)
                     }
-                    .transition(.move(edge: .trailing))
+                    .transition(InspectorOverlayMotion.slides(reduceMotion: reduceMotion) ? .move(edge: .trailing) : .identity)
             }
         }
-        .animation(.default, value: model.inspectorOverlayOpen)
+        .animation(InspectorOverlayMotion.animation(reduceMotion: reduceMotion), value: model.inspectorOverlayOpen)
         .onChange(of: model.inspectorOverlayOpen) { _, open in if !open { listFocused = true } }
         .modifier(ToolbarSearch(
             text: $model.search, presented: $searchPresented,
@@ -165,6 +166,12 @@ struct MainWindow: View {
             .help(L10n.t(model.collection == .settings ? "openLibrary" : "openSettings"))
         }
     }
+}
+
+/// How the inspector overlay appears. With Reduce Motion on it shows its final state at once (design-system.md).
+enum InspectorOverlayMotion {
+    static func slides(reduceMotion: Bool) -> Bool { !reduceMotion }
+    static func animation(reduceMotion: Bool) -> Animation? { reduceMotion ? nil : .default }
 }
 
 /// The toolbar search field. Hidden (icon only) in narrow windows; the query survives while hidden.
