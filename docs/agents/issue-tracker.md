@@ -1,6 +1,6 @@
 # Issue tracker
 
-All work is tracked in the Linear `sta` project. This document defines
+All work is tracked in the Linear `Plopcut Beta` project. This document defines
 how engineering skills fetch, publish, and complete work.
 
 ## Destination and identifiers
@@ -8,9 +8,9 @@ how engineering skills fetch, publish, and complete work.
 Use this verified destination:
 
 - Workspace: `byeoung`.
-- Project: `sta`.
-- Team: `Byeoung`, key `STA`.
-- Required issue identifier: `STA-{Number}`, assigned by Linear.
+- Project: `Plopcut Beta`.
+- Team: `Plopcut`, key `PLO`.
+- Required issue identifier: `PLO-{Number}`, assigned by Linear.
 - Issue title: a concise description of the work.
 
 Resolve the workspace, team, and project IDs from their names with the Linear
@@ -18,13 +18,18 @@ connector or Orca (for example `team list` and `project list`); they are not
 recorded here because this repository is public.
 
 This tracker is the maintainer's workflow. External contributors report and
-discuss work in GitHub Issues; a maintainer mirrors accepted work into `sta`
-and refers to it by its `STA-{Number}`.
+discuss work in GitHub Issues; a maintainer mirrors accepted work into
+`Plopcut Beta` and refers to it by its `PLO-{Number}`.
 
 Linear generates issue identifiers from the owning team's key. To obtain
-`STA-{Number}`, the issue must belong to a team whose key is `STA`.
+`PLO-{Number}`, the issue must belong to a team whose key is `PLO`.
 Use the identifier returned by Linear; never invent or manually increment
 an issue number.
+
+The project was previously named `sta` and owned by the `Byeoung` team (key
+`STA`). Its issues moved to `Plopcut`, so earlier work appears as
+`STA-{Number}` in code comments, docs, and commit messages. Linear redirects
+those identifiers to the moved issues; leave them unchanged.
 
 ## Mandatory start gate
 
@@ -35,10 +40,10 @@ locate or create that issue is part of this gate.
 1. Read this configuration before planning or editing the task.
 2. Fetch the user-supplied or linked issue, including its description,
    comments, and dependencies. Verify its project and team.
-3. If no issue was supplied, search `sta` for matching work. Reuse an issue
-   only when its scope matches. Otherwise, create an issue in `sta` with
+3. If no issue was supplied, search `Plopcut Beta` for matching work. Reuse an issue
+   only when its scope matches. Otherwise, create an issue in `Plopcut Beta` with
    a concrete description, scope, and checkable acceptance criteria.
-4. Confirm the issue has a real `STA-{Number}` identifier and report its
+4. Confirm the issue has a real `PLO-{Number}` identifier and report its
    identifier and URL to the user before beginning task work.
 5. If the integration is unavailable or the destination is ambiguous,
    report the blocker and pause task work until it is resolved.
@@ -55,7 +60,7 @@ version-matched guide before invoking its commands. Use verified IDs for
 writes and inspect the current state before changing it.
 
 When a skill says to publish to the issue tracker, create or update a
-Linear issue in `sta`. Put specifications and acceptance criteria in its
+Linear issue in `Plopcut Beta`. Put specifications and acceptance criteria in its
 description and represent dependencies with Linear issue relationships.
 When a skill says to fetch a ticket, read the referenced Linear issue.
 Keep its identifier and URL in related specifications and handoffs.

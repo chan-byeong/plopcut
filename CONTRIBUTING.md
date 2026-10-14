@@ -60,7 +60,7 @@ test, chore, perf, ci.
 Use GitHub Issues for bugs and ideas. For a bug, include your macOS version, the
 plopcut version, what you did, and what happened. Attach `plopcut.log` if it
 helps (Settings → Show Log in Finder); it holds no drop text, notes, or paths.
-Maintainers track accepted work internally as `STA-<number>`; you do not need an account for that.
+Maintainers track accepted work internally as `PLO-<number>` (older work as `STA-<number>`); you do not need an account for that.
 
 ## License
 
