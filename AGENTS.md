@@ -76,7 +76,7 @@ agent has none installed, follow this file and the linked docs directly.
 
 ### Issue tracker
 
-Every task must be based on a Linear issue in the `sta` project, including
+Every task must be based on a Linear issue in the `Plopcut Beta` project, including
 implementation, bug fixes, refactoring, documentation, research, and
 reviews. Before starting work, read
 [issue tracker rules](docs/agents/issue-tracker.md), fetch or create the
