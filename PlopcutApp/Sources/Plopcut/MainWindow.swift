@@ -210,9 +210,9 @@ struct NoticeBanner: View {
     var body: some View {
         if let notice = model.notice {
             Text(notice)
-                .padding(.horizontal, 14).padding(.vertical, 8)
+                .padding(.horizontal, Spacing.l).padding(.vertical, Spacing.s)
                 .background(.regularMaterial, in: Capsule())
-                .padding(.bottom, 16)
+                .padding(.bottom, Spacing.l)
                 .transition(.opacity)
                 .accessibilityAddTraits(.updatesFrequently)
                 .task(id: notice) {

@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Lays children out left to right and wraps to a new row when the line is full (tag chips).
 struct FlowLayout: Layout {
-    var spacing: CGFloat = 6
+    var spacing: CGFloat = Spacing.s
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let rows = arrange(proposal.width ?? .infinity, subviews)

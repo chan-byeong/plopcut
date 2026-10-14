@@ -51,8 +51,8 @@ struct ShortcutSection: View {
             .foregroundStyle(model.isRecording && model.heldModifiers == nil ? .secondary : .primary)
             .lineLimit(1)
             .frame(minWidth: 180)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, Spacing.s)
+            .padding(.vertical, Spacing.xs)
             .background(shape.fill(Color(nsColor: .textBackgroundColor)))
             .overlay(shape.strokeBorder(
                 model.isRecording ? Color.accentColor : Color(nsColor: .separatorColor),
