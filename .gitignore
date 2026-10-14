@@ -28,6 +28,7 @@ docs/design/
 
 # Maintainer-only docs (kept locally; only contributor-facing docs are published)
 docs/design-decisions.md
+docs/component-decisions.md
 docs/release.md
 docs/swift-migration/accessibility.md
 docs/swift-migration/app-icon.md
