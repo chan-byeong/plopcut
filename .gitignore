@@ -25,3 +25,11 @@ skills-lock.json
 
 # Design mockups and verification captures (kept locally only; may show personal data)
 docs/design/
+
+# Maintainer-only docs (kept locally; only contributor-facing docs are published)
+docs/design-decisions.md
+docs/release.md
+docs/swift-migration/accessibility.md
+docs/swift-migration/app-icon.md
+docs/swift-migration/manual-verification.md
+docs/swift-migration/performance.md
