@@ -181,7 +181,7 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 | D-06 | 이름 바꾼 단축키가 다른 앱과 충돌해 등록에 실패할 때의 사용자 메시지(`shortcut_registration_failed`)가 레거시에서는 영어 원문이다. | 한국어 문구 추가. | **결정(STA-55): 한국어·영어 문구 `shortcutRegistrationFailed` 추가.** | ☑ |
 | D-07 | 메인 창을 닫았을 때 앱이 종료되는지, 메뉴 막대에 남는지가 레거시에서 확인되지 않았다. 메뉴 막대와 전역 단축키의 목적상 남는 편이 자연스럽다. | 메뉴 막대에 남는다. 마지막 창을 닫아도 종료하지 않고 전역 단축키와 메뉴 막대 항목을 유지한다. 종료는 Cmd+Q. (STA-52) | | ✔ |
 | D-08 | 로그인 시 자동 실행, Dock 아이콘 표시 여부는 정의되어 있지 않다. | 범위 밖. 필요하면 새 이슈. | | ☑ |
-| D-09 | `Design.md`와 `design-system.md`의 일부 문장은 AppKit 도구 막대, `compactSearch`, `inspectorOverlay` 같은 Tauri 구현 용어를 쓴다. | Swift 구현이 안정되면 문서에서 해당 구현 용어를 제거. | | ☑ |
+| D-09 | `Design.md`와 `design-system.md`의 일부 문장은 AppKit 도구 막대, `compactSearch`, `inspectorOverlay` 같은 Tauri 구현 용어를 쓴다. | Swift 구현이 안정되면 문서에서 해당 구현 용어를 제거. | **결정(STA-64): 두 문서를 SwiftUI·AppKit 기준으로 다시 씀. 색·서체·모양 토큰은 코드의 시스템 색·텍스트 스타일·기본 컨트롤에 맞추고, 레이아웃 수치는 유지. 동작 줄이기 시 인스펙터 오버레이 슬라이드 제거.** | ☑ |
 | D-10 | STA-38에서 도입한 SF Symbols 렌더링, 포커스 링, 제목 인라인 이름 변경, 목록 비포커스 선택 약화, 설정 화면 토글은 **실제 앱에서 확인되지 않았다.** | 레거시 앱에서 확인하지 말고 Swift 구현에서 기준(서체관리자)으로 직접 확인. | | ☑ |
 | D-11 | 라이트 테마의 도구 막대와 960 pt 너비 실화면 확인이 남아 있다. | Swift 구현에서 확인. | | ☑ |
 | D-12 | 문구 `shortcutFormatHint`가 "Tauri 형식"이라고 안내한다. 저장 문자열은 호환을 위해 같은 형식(`Shift+Cmd+K`)을 쓰지만 사용자에게 구현 용어를 보이면 안 된다. | 문구에서 Tauri를 빼고 형식 예시만 안내. | **결정(STA-55): `shortcutFormatHint`를 "수식키와 키를 +로 연결, 예: Shift+Cmd+K, F21–F24 미지원"으로 교체.** | ☑ |
