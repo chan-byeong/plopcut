@@ -66,13 +66,6 @@ plopcut은 해당 기능이 필요할 때만 권한을 요청합니다. 설정 �
 
 plopcut은 데이터베이스를 사용하지 않으며, 이 파일을 외부로 보내지 않습니다. 자세한 내용은 [docs/privacy.md](docs/privacy.md)를 참고하세요.
 
-## Notedrop에서 업그레이드
-
-plopcut의 예전 이름은 Notedrop입니다. plopcut을 처음 열면 데이터를 새 위치로 옮깁니다. `~/Documents/Notedrop`은
-`~/Documents/plopcut`으로, `~/Library/Application Support`의 설정 폴더와 `~/Library/Logs`의 로그 폴더도 같이 옮깁니다.
-직접 고른 저장 폴더는 옮기지 않으며, 이미 있는 plopcut 폴더는 덮어쓰지 않습니다. macOS는 plopcut을 새 앱으로 인식하므로
-**손쉬운 사용**과 **자동화**에서 다시 허용해야 합니다. 예전 Notedrop 항목은 지워도 됩니다.
-
 ## 삭제(제거) 방법
 
 1. plopcut을 종료합니다.

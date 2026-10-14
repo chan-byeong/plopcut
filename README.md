@@ -82,16 +82,6 @@ status in Settings.
 plopcut does not use a database and does not send these files anywhere.
 See [docs/privacy.md](docs/privacy.md).
 
-## Upgrading from Notedrop
-
-plopcut was called Notedrop before. The first time you open plopcut it moves
-your data to the new locations: `~/Documents/Notedrop` to
-`~/Documents/plopcut`, the settings folder in `~/Library/Application Support`,
-and the log folder in `~/Library/Logs`. A storage folder you chose yourself is
-not moved, and a plopcut folder that already exists is never overwritten.
-macOS treats plopcut as a new app, so allow it again under **Accessibility**
-and **Automation**. You can remove the old Notedrop entries there.
-
 ## Uninstall
 
 1. Quit plopcut.
