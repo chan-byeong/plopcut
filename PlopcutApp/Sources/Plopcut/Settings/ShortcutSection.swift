@@ -4,6 +4,8 @@ import SwiftUI
 /// Settings section for the global selected-text shortcut (checklist C-06, C-08, D-06, D-12).
 /// Click the field and press a key combination (STA-69); only Save changes the live shortcut and the file (STA-70).
 struct ShortcutSection: View {
+    /// Keeps the field from jumping in width while a shortcut is being recorded.
+    private static let fieldMinWidth: CGFloat = 180
     @Environment(ShortcutModel.self) private var model
     @State private var monitor = ShortcutKeyMonitor()
 
@@ -27,7 +29,7 @@ struct ShortcutSection: View {
                 Text(L10n.t("shortcutUnsaved")).font(.caption).foregroundStyle(.secondary)
             }
             if let message = model.errorMessage {
-                Text(message).foregroundStyle(.red).accessibilityAddTraits(.updatesFrequently)
+                FeedbackText(message, kind: .error)
             }
             HStack {
                 Spacer()
@@ -45,18 +47,14 @@ struct ShortcutSection: View {
     }
 
     private var field: some View {
-        let shape = RoundedRectangle(cornerRadius: 6, style: .continuous)
-        return Text(fieldText)
+        Text(fieldText)
             .font(.system(.body, design: .monospaced))  // shortcut notation uses the fixed-width system font
             .foregroundStyle(model.isRecording && model.heldModifiers == nil ? .secondary : .primary)
             .lineLimit(1)
-            .frame(minWidth: 180)
+            .frame(minWidth: Self.fieldMinWidth)
             .padding(.horizontal, Spacing.s)
             .padding(.vertical, Spacing.xs)
-            .background(shape.fill(Color(nsColor: .textBackgroundColor)))
-            .overlay(shape.strokeBorder(
-                model.isRecording ? Color.accentColor : Color(nsColor: .separatorColor),
-                lineWidth: model.isRecording ? 2 : 1))
-            .contentShape(shape)
+            .inputSurface(focused: model.isRecording)
+            .contentShape(RoundedRectangle(cornerRadius: Radius.field, style: .continuous))
     }
 }

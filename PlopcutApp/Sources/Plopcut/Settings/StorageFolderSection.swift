@@ -53,6 +53,7 @@ struct StorageFolderNoticeText: View {
 /// Shown over the main window until the user confirms the default folder or picks another. It has no cancel:
 /// cancelling the folder dialog leaves this sheet in place.
 struct FirstRunSheet: ViewModifier {
+    private static let width: CGFloat = 420
     let model: StorageFolderModel
 
     func body(content: Content) -> some View {
@@ -70,7 +71,7 @@ struct FirstRunSheet: ViewModifier {
                 }
             }
             .padding(Spacing.xl)
-            .frame(width: 420)
+            .frame(width: Self.width)
             .interactiveDismissDisabled()
         }
     }

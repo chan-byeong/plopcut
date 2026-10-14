@@ -31,7 +31,7 @@ struct SettingsView: View {
                 Button(L10n.t("showLogInFinder")) { AppLog.revealInFinder() }
             }
             if let message = model.errorMessage {
-                Text(message).foregroundStyle(.red).accessibilityAddTraits(.updatesFrequently)
+                FeedbackText(message, kind: .error)
             }
         }
         .formStyle(.grouped)

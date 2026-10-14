@@ -7,8 +7,10 @@ struct SavePopupView: View {
     /// The content below the window's title bar for a draft without warnings, tag chips or many recent tags.
     /// Content that needs more height (warnings, tag chips, recent tags, an error) makes the window taller instead
     /// of being cut off (STA-67), up to `maxHeight`; past that the fields scroll and the buttons stay at the bottom.
-    static let contentSize = CGSize(width: 430, height: 388)
+    static let contentSize = CGSize(width: 430, height: 390)
     private static let previewHeight: CGFloat = 96
+    /// About two lines of body text: the popup note is for a quick remark.
+    private static let noteHeight: CGFloat = 52
 
     @Bindable var model: SavePopupModel
     /// The tallest the content may get: the screen's visible height minus the title bar.
@@ -31,7 +33,6 @@ struct SavePopupView: View {
         .frame(width: Self.contentSize.width)
         .frame(minHeight: min(Self.contentSize.height, maxHeight), maxHeight: maxHeight, alignment: .top)
         .fixedSize(horizontal: false, vertical: true)
-        .onChange(of: tagFocused) { _, _ in CompositionMonitor.shared.reset() }
         .onChange(of: model.errorMessage) { _, message in
             if let message { AccessibilityNotification.Announcement(message).post() }
         }
@@ -48,7 +49,7 @@ struct SavePopupView: View {
             noteField
             tagField
             if let message = model.errorMessage {
-                Text(message).font(.callout).foregroundStyle(.red)
+                FeedbackText(message, kind: .error)
             }
         }
     }
@@ -73,7 +74,7 @@ struct SavePopupView: View {
         if model.selectedType == .image, let image = model.previewImage {
             Image(nsImage: image)
                 .resizable().scaledToFit().frame(maxWidth: .infinity).frame(height: Self.previewHeight)
-                .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
+                .contentWell()
                 .accessibilityLabel(L10n.t("image"))
         } else {
             ScrollView {
@@ -82,7 +83,7 @@ struct SavePopupView: View {
             }
             .slimScrollers()
             .frame(height: Self.previewHeight)
-            .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
+            .contentWell()
         }
     }
 
@@ -99,7 +100,7 @@ struct SavePopupView: View {
         let texts = model.draft.warnings.compactMap(Self.warningText)
         if !texts.isEmpty {
             VStack(alignment: .leading, spacing: Spacing.xxs) {
-                ForEach(texts, id: \.self) { Text($0).font(.caption).foregroundStyle(.orange) }
+                ForEach(texts, id: \.self) { FeedbackText($0, kind: .warning) }
             }
         }
     }
@@ -122,48 +123,26 @@ struct SavePopupView: View {
                     CompositionMonitor.shared.reset()
                 }
             )
-            .frame(height: 52).padding(Spacing.xs)
-            .overlay(RoundedRectangle(cornerRadius: 6).stroke(noteFocused ? Color.accentColor : Color.secondary.opacity(0.3), lineWidth: noteFocused ? 2 : 1))
+            .frame(height: Self.noteHeight).padding(Spacing.xs)
+            .inputSurface(focused: noteFocused)
         }
     }
 
     private var tagField: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
             Text(L10n.t("tags")).font(.callout.weight(.semibold)).accessibilityHidden(true)
-            HStack {
-                TextField(L10n.t("tagPlaceholder"), text: $model.tagInput)
-                    .focused($tagFocused)
-                    .onSubmit { register() }
-                    .onChange(of: model.tagInput) { old, value in
-                        if !value.isEmpty { model.tagMessage = nil }
-                        // Same rule as the detail pane: a typed comma registers, a pasted list registers.
-                        let pasted = value.count - old.count > 1
-                        if value.hasSuffix(",") || (pasted && value.contains(",")) { register() }
-                    }
-                    .accessibilityLabel(L10n.t("tags"))
-                Button(L10n.t("addTag")) { register() }
-                    .disabled(model.tagInput.trimmingCharacters(in: .whitespaces).isEmpty)
-            }
-            if let message = model.tagMessage { Text(message).font(.caption).foregroundStyle(.orange) }
-            if !model.tags.isEmpty {
-                FlowLayout {
-                    ForEach(model.tags, id: \.self) { tag in
-                        Button { model.removeTag(tag); tagFocused = true } label: {
-                            Label("#\(tag)", systemImage: "xmark").labelStyle(.titleAndIcon).font(.caption)
-                        }
-                        .buttonStyle(.bordered).controlSize(.small)
-                        .accessibilityLabel("\(L10n.t("removeTag")) #\(tag)")
-                    }
-                }
-            }
+            TagEntryField(model: model, focused: $tagFocused)
             let suggestions = model.recentTags.filter { !model.tags.contains($0) }
             if !suggestions.isEmpty {
-                Text(L10n.t("recentTags")).font(.caption).foregroundStyle(.secondary)
-                FlowLayout {
-                    ForEach(suggestions, id: \.self) { tag in
-                        Button("#\(tag)") { model.addRecentTag(tag) }.buttonStyle(.bordered).controlSize(.small)
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    Text(L10n.t("recentTags")).font(.caption).foregroundStyle(.secondary)
+                    FlowLayout {
+                        ForEach(suggestions, id: \.self) { tag in
+                            Button("#\(tag)") { model.addRecentTag(tag) }.chipStyle()
+                        }
                     }
                 }
+                .padding(.top, Spacing.xs)
             }
         }
         .fixedSize(horizontal: false, vertical: true)
@@ -182,12 +161,5 @@ struct SavePopupView: View {
                 .buttonStyle(.borderedProminent)
                 .disabled(model.isSaving)
         }
-    }
-
-    /// Enter and comma register tags, but not the key that only commits an input-method composition (spec I-01).
-    private func register() {
-        if CompositionMonitor.shared.shouldIgnoreRegistration { return }
-        model.registerTagInput()
-        tagFocused = true
     }
 }
