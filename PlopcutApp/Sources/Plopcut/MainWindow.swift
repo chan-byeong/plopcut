@@ -17,14 +17,6 @@ struct MainWindow: View {
     @FocusState private var listFocused: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    /// Sidebar 220 + list 300 + body 360 + two 8 pt dividers + inspector 280 (design-system.md).
-    private static let sideBySideWidth: CGFloat = 1176
-    private static let sidebarWidth: CGFloat = 220
-    /// Keeps a narrow window from squeezing the list below its 300 pt minimum.
-    private static let bodyMinWidth: CGFloat = 360
-    /// Below this window width the search field becomes an icon (spec 2.3).
-    private static let compactSearchWidth: CGFloat = 1050
-
     var body: some View {
         GeometryReader { proxy in
             layout(sideBySide: isSideBySide(width: proxy.size.width), width: proxy.size.width)
@@ -55,13 +47,14 @@ struct MainWindow: View {
     }
 
     private func isSideBySide(width: CGFloat) -> Bool {
-        width >= Self.sideBySideWidth - (columns == .detailOnly ? Self.sidebarWidth : 0)
+        LayoutMetrics.inspectorFitsBeside(contentWidth: width, sidebarHidden: columns == .detailOnly)
     }
 
     private func layout(sideBySide: Bool, width: CGFloat) -> some View {
         NavigationSplitView(columnVisibility: $columns) {
             SidebarView(model: model)
-                .navigationSplitViewColumnWidth(min: 180, ideal: model.paneWidths.sidebar, max: 320)
+                .navigationSplitViewColumnWidth(
+                    min: LayoutMetrics.sidebarRange.lowerBound, ideal: model.paneWidths.sidebar, max: LayoutMetrics.sidebarRange.upperBound)
         } content: {
             if model.collection == .settings {
                 Color.clear.navigationSplitViewColumnWidth(0)
@@ -75,7 +68,8 @@ struct MainWindow: View {
                         sidebarColumnWidth = $0.minX
                         listColumnWidth = $0.width
                     }
-                    .navigationSplitViewColumnWidth(min: 300, ideal: model.paneWidths.library, max: 560)
+                    .navigationSplitViewColumnWidth(
+                        min: LayoutMetrics.listRange.lowerBound, ideal: model.paneWidths.library, max: LayoutMetrics.listRange.upperBound)
                     .background(SplitViewRestorer(widths: model.paneWidths))
             }
         } detail: {
@@ -85,10 +79,11 @@ struct MainWindow: View {
                 // A plain HStack instead of `.inspector`: toggling that modifier from layout code crashed AppKit constraints.
                 HStack(spacing: 0) {
                     DropDetailView(model: model, listFocused: $listFocused)
-                        .frame(minWidth: Self.bodyMinWidth)
+                        // Keeps a narrow window from squeezing the list below its minimum.
+                        .frame(minWidth: LayoutMetrics.bodyMin)
                     if sideBySide && model.inspectorVisible {
                         Divider()
-                        InspectorView(model: model).frame(width: 280)
+                        InspectorView(model: model).frame(width: LayoutMetrics.inspectorWidth)
                     }
                 }
             }
@@ -96,7 +91,7 @@ struct MainWindow: View {
         .overlay(alignment: .trailing) {
             if !sideBySide && model.inspectorOverlayOpen && model.collection != .settings {
                 InspectorView(model: model)
-                    .frame(width: 280, alignment: .topLeading)
+                    .frame(width: LayoutMetrics.inspectorWidth, alignment: .topLeading)
                     .frame(maxHeight: .infinity, alignment: .top)
                     .background(Rectangle().fill(.regularMaterial).ignoresSafeArea())
                     .overlay(alignment: .leading) { Divider() }
@@ -113,7 +108,7 @@ struct MainWindow: View {
         .onChange(of: model.inspectorOverlayOpen) { _, open in if !open { listFocused = true } }
         .modifier(ToolbarSearch(
             text: $model.search, presented: $searchPresented,
-            visible: model.collection != .settings && (width >= Self.compactSearchWidth || searchOpen)))
+            visible: model.collection != .settings && (!LayoutMetrics.searchIsCompact(windowWidth: width) || searchOpen)))
         .onChange(of: searchPresented) { _, presented in if !presented { searchOpen = false } }
         .toolbar { toolbarContent(sideBySide: sideBySide, width: width) }
         .confirmationDialog(
@@ -145,25 +140,22 @@ struct MainWindow: View {
     @ToolbarContentBuilder
     private func toolbarContent(sideBySide: Bool, width: CGFloat) -> some ToolbarContent {
         ToolbarItemGroup(placement: .primaryAction) {
-            if width < Self.compactSearchWidth && model.collection != .settings {
-                Button { openSearch() } label: { Label(L10n.t("search"), systemImage: "magnifyingglass") }
-                    .help(L10n.t("search"))
+            if LayoutMetrics.searchIsCompact(windowWidth: width) && model.collection != .settings {
+                ToolbarButton(L10n.t("search"), systemImage: "magnifyingglass") { openSearch() }
             }
-            Button { Task { await model.reload() } } label: { Label(L10n.t("refreshLibrary"), systemImage: "arrow.clockwise") }
-                .help(L10n.t("refreshLibrary"))
-            Button {
+            ToolbarButton(L10n.t("refreshLibrary"), systemImage: "arrow.clockwise") { Task { await model.reload() } }
+            let inspectorShown = sideBySide ? model.inspectorVisible : model.inspectorOverlayOpen
+            ToolbarButton(
+                L10n.t(inspectorShown ? "hideInspector" : "showInspector"), systemImage: "sidebar.right",
+                help: L10n.t("inspectorPanelHelp")
+            ) {
                 if sideBySide { model.inspectorVisible.toggle() } else { model.inspectorOverlayOpen.toggle() }
-            } label: {
-                let shown = sideBySide ? model.inspectorVisible : model.inspectorOverlayOpen
-                Label(L10n.t(shown ? "hideInspector" : "showInspector"), systemImage: "sidebar.right")
             }
-            .help(L10n.t("inspectorPanelHelp"))
             .disabled(model.collection == .settings)
-            Button { model.collection = model.collection == .settings ? .all : .settings } label: {
-                Label(L10n.t(model.collection == .settings ? "openLibrary" : "openSettings"),
-                      systemImage: model.collection == .settings ? "tray.full" : "gearshape")
+            let inSettings = model.collection == .settings
+            ToolbarButton(L10n.t(inSettings ? "openLibrary" : "openSettings"), systemImage: inSettings ? "tray.full" : "gearshape") {
+                model.collection = inSettings ? .all : .settings
             }
-            .help(L10n.t(model.collection == .settings ? "openLibrary" : "openSettings"))
         }
     }
 }

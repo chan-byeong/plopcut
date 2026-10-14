@@ -100,6 +100,7 @@ UI는 SwiftUI로 구성하고, SwiftUI가 제공하지 않는 동작만 AppKit�
 - 선택, 검색·필터 상태, 인스펙터 표시 상태: `LibraryModel.swift`. 노트·태그·제목 편집과 자동 저장: `DropEditor.swift`
 - 패널 너비 저장: `PaneWidthRecorder.swift`, `SplitViewRestorer.swift`(AppKit `NSSplitView` 구분선 복원)
 - 한글 조합 판정: `CompositionGuard.swift`. 팝업 노트 입력기(AppKit `NSTextView`): `Capture/PopupNoteEditor.swift`
+- 간격·치수·반경과 공통 컴포넌트(입력 면, 칩, 태그 입력, 피드백 문구, 도구 막대 버튼): `DesignSystem/`
 - 스크롤 막대 크기: `SlimScroller.swift`. 테마 적용(`NSApp.appearance`): `Settings/SettingsModel.swift`
 - Drop 모델, 태그 정규화, 설정: `PlopcutCore/Sources/PlopcutCore`의 `Models.swift`, `Tags.swift`, `Settings.swift`
 

@@ -18,11 +18,9 @@ struct LibraryListView: View {
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 if model.hasRefiningFilters {
-                    Button { model.clearFilters() } label: { Label(L10n.t("clearFilters"), systemImage: "arrow.counterclockwise") }
-                        .help(L10n.t("clearFilters"))
+                    ToolbarButton(L10n.t("clearFilters"), systemImage: "arrow.counterclockwise") { model.clearFilters() }
                 }
-                Button { filtersOpen.toggle() } label: { Label(L10n.t("openFilters"), systemImage: "line.3.horizontal.decrease") }
-                    .help(L10n.t("openFilters"))
+                ToolbarButton(L10n.t("openFilters"), systemImage: "line.3.horizontal.decrease") { filtersOpen.toggle() }
                     .popover(isPresented: $filtersOpen) { FilterPopover(model: model) }
             }
         }
@@ -35,15 +33,12 @@ struct LibraryListView: View {
 
     private var chips: some View {
         HStack {
-            if let app = model.app { chip(app) { model.app = nil } }
-            if model.dateRange != .all { chip(FilterPopover.title(model.dateRange)) { model.dateRange = .all } }
+            if let app = model.app { RemovableChip(text: app, removeLabel: L10n.t("removeFilter")) { model.app = nil } }
+            if model.dateRange != .all {
+                RemovableChip(text: FilterPopover.title(model.dateRange), removeLabel: L10n.t("removeFilter")) { model.dateRange = .all }
+            }
             Spacer(minLength: 0)
         }
-    }
-
-    private func chip(_ text: String, remove: @escaping () -> Void) -> some View {
-        Button(action: remove) { Label(text, systemImage: "xmark").labelStyle(.titleAndIcon).font(.caption) }
-            .buttonStyle(.bordered).controlSize(.small).accessibilityLabel("\(L10n.t("removeFilter")) \(text)")
     }
 
     private var warningBanner: some View {
@@ -133,7 +128,7 @@ struct FilterPopover: View {
                 ForEach([DateRange.all, .today, .last7Days, .last30Days], id: \.self) { Text(Self.title($0)).tag($0) }
             }
         }
-        .padding(Spacing.l).frame(width: 280)
+        .padding(Spacing.l).frame(width: LayoutMetrics.popoverWidth)
     }
 }
 
@@ -151,8 +146,8 @@ struct DropRow: View {
             // Gray with extra contrast keeps each logo's shape readable without competing with the title.
             Image(nsImage: icon).resizable().grayscale(1).contrast(1.3).opacity(0.92)
                 .frame(width: 18, height: 18)
-                .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 4, style: .continuous).stroke(.separator, lineWidth: 0.5))
+                .clipShape(RoundedRectangle(cornerRadius: Radius.appIcon, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: Radius.appIcon, style: .continuous).stroke(.separator, lineWidth: 0.5))
                 .accessibilityLabel(L10n.t(drop.type == .image ? "image" : "text"))
                 .frame(width: 22, height: 20, alignment: .leading)
                 .padding(.top, 1)  // optical: centers the icon on the title's cap height

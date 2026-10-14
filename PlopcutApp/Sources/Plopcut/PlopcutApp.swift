@@ -37,7 +37,7 @@ struct PlopcutApp: App {
                 .modifier(OpenMainWindowBinding(runtime: capture))
                 .environment(folder)
                 .modifier(FirstRunSheet(model: folder))
-                .frame(minWidth: 960, minHeight: 640)
+                .frame(minWidth: LayoutMetrics.windowMin.width, minHeight: LayoutMetrics.windowMin.height)
                 .task {
                     CompositionMonitor.shared.install()
                     _ = SourceAppIcons.shared  // starts building the app index before the list needs it
@@ -49,7 +49,7 @@ struct PlopcutApp: App {
                     await model.reload()
                 }
         }
-        .defaultSize(width: 1120, height: 720)
+        .defaultSize(LayoutMetrics.windowDefault)
         .windowToolbarStyle(.unified)
         .commands { CommandGroup(after: .pasteboard) { TrashCommand() } }
     }

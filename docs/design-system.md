@@ -10,7 +10,7 @@ plopcut은 SwiftUI와 AppKit의 기본 컨트롤, 시스템 색, 시스템 텍�
 
 ## 간격
 
-간격은 코드의 `Spacing`(`PlopcutApp/Sources/Plopcut/Spacing.swift`) 일곱 단계만 씁니다. 값은 보기 좋은 숫자를 고르는 것이
+간격은 코드의 `Spacing`(`PlopcutApp/Sources/Plopcut/DesignSystem/Spacing.swift`) 일곱 단계만 씁니다. 값은 보기 좋은 숫자를 고르는 것이
 아니라 **역할**로 고릅니다. 같은 역할이면 어느 화면에서든 같은 값입니다. 관계가 가까울수록 작은 값을 써서, 간격만으로 무엇이
 무엇에 딸렸는지 읽히게 합니다.
 
@@ -38,16 +38,23 @@ plopcut은 SwiftUI와 AppKit의 기본 컨트롤, 시스템 색, 시스템 텍�
 검색 축약과 패널 배치는 모두 창 콘텐츠 영역의 실제 너비(`GeometryReader`)로 계산합니다. 참고 이미지는 패널 관계를 보여 주고,
 다음 토큰은 구현 크기를 정의합니다.
 
-| 토큰 | 값 | 용도 |
+코드에서는 `LayoutMetrics`(`DesignSystem/LayoutMetrics.swift`)의 이름으로 씁니다. 사이드바·목록의 기본 너비와 범위는
+`settings.json`과 같은 원본인 `PlopcutCore`의 `PaneWidths`에서 가져옵니다.
+
+| 코드 이름 | 값 | 용도 |
 | --- | ---: | --- |
-| `layout-sidebar-width` | 220 pt (180–320) | 펼친 사이드바 기본 너비와 끌어서 조절할 수 있는 범위 |
-| `layout-library-width` | 330 pt (300–560) | Drop 목록 기본 너비와 조절 범위. 최소 300 |
-| `layout-inspector-width` | 280 pt | 정보 인스펙터 너비(고정, 옆 배치와 오버레이 공통) |
-| `layout-content-min-width` | 360 pt | 본문 최소 너비 |
-| `layout-divider` | 8 pt | 인스펙터 배치 계산에 넣는 패널 구분선 하나의 몫 |
-| `layout-window-min` | 960 × 640 pt | 메인 창 최소 크기(기본 1120 × 720) |
-| `layout-side-by-side` | 1176 pt | 인스펙터를 본문 옆에 두는 최소 콘텐츠 너비 |
-| `layout-compact-search` | 1050 pt | 이 너비 미만에서 검색을 아이콘으로 축약 |
+| `sidebarDefault`, `sidebarRange` | 220 pt (180–320) | 펼친 사이드바 기본 너비와 끌어서 조절할 수 있는 범위 |
+| `listRange` (기본은 `PaneWidths.default.library`) | 330 pt (300–560) | Drop 목록 기본 너비와 조절 범위. 최소 300 |
+| `inspectorWidth` | 280 pt | 정보 인스펙터 너비(고정, 옆 배치와 오버레이 공통) |
+| `bodyMin` | 360 pt | 본문 최소 너비 |
+| `dividerAllowance` | 8 pt | 인스펙터 배치 계산에 넣는 패널 구분선 하나의 몫 |
+| `windowMin`, `windowDefault` | 960 × 640, 1120 × 720 pt | 메인 창 최소·기본 크기 |
+| `sideBySideWidth` | 1176 pt | 인스펙터를 본문 옆에 두는 최소 콘텐츠 너비. 위 값들의 합으로 계산 |
+| `compactSearchWidth` | 1050 pt | 이 너비 미만에서 검색을 아이콘으로 축약 |
+| `popoverWidth` | 280 pt | 작은 폼을 담는 팝오버(필터) |
+
+배치 판단은 숫자를 직접 비교하지 않고 `LayoutMetrics.inspectorFitsBeside(contentWidth:sidebarHidden:)`,
+`LayoutMetrics.searchIsCompact(windowWidth:)`를 씁니다.
 
 사이드바와 목록의 기본 너비는 `settings.json`의 `paneWidths`에서 읽습니다. 사이드바 인셋, 행 높이, 구분선 모양은
 `NavigationSplitView`와 `NSSplitView`가 그립니다.
@@ -136,13 +143,14 @@ Settings의 테마 선택(시스템·라이트·다크)은 `NSApp.appearance`로
 
 | 토큰 | 값 | 용도 |
 | --- | ---: | --- |
-| `radius-field` | 6 pt | 직접 그린 입력 면: 편집 중인 제목, 노트, 팝업 노트·미리보기, 단축키 필드 |
-| `radius-app-icon` | 4 pt | 목록 행의 출처 앱 아이콘 |
-| `chip` | `.buttonStyle(.bordered)` + `.controlSize(.small)` | 태그 칩, 필터 칩, 최근 태그. 삭제 칩은 `xmark` 아이콘과 함께 표시 |
-| `size-row-icon` | 22 × 20 pt 상자 | 목록 행 선두 아이콘 자리. 앱 아이콘(18 pt, 회색조)이 없으면 유형 심볼 |
-| `size-focus-outline` | 2 pt | 직접 그린 입력 면의 포커스 외곽선(`Color.accentColor`) |
-| `size-note-min` | 96 pt | 인스펙터 노트 입력 최소 높이 |
-| `size-popup` | 430 × 388 pt | Save Popup 기본 콘텐츠 크기. 내용이 많으면 화면 높이까지 늘어남 |
+| `Radius.field` | 6 pt | 직접 그린 입력 면과 콘텐츠 우물: 제목, 노트, 팝업 노트·미리보기, 단축키 필드 |
+| `Radius.appIcon` | 4 pt | 목록 행의 출처 앱 아이콘 |
+| 입력 면 외곽선 | 1 pt `.secondary` 30%, 포커스 2 pt `Color.accentColor` | `inputSurface(focused:chrome:)` |
+| 칩 | `.bordered` + `.small` | `chipStyle()`, 삭제 칩은 `RemovableChip` |
+| 행 아이콘 자리 | 22 × 20 pt 상자 | 목록 행 선두 아이콘. 앱 아이콘(18 pt, 회색조)이 없으면 유형 심볼 |
+
+한 컴포넌트에서만 쓰는 크기(인스펙터 노트 최소 높이 96, 팝업 노트 높이 52, 팝업 기본 크기 430 × 390, 이미지 최대 너비 640,
+단축키 필드 최소 너비 180, 첫 실행 시트 너비 420)는 그 타입 안에 이름 있는 상수로 두고 이유를 주석으로 적습니다.
 
 아이콘은 SF Symbols를 쓰고 의미별 기호는 [구현 명세 5장](swift-migration/spec.md)을 따릅니다. 아이콘만 있는 버튼에는 현지화된
 `Label` 문구(접근성 이름)와 `.help` 툴팁을 제공합니다. 출처 앱 아이콘이 있으면 표시하고, 없으면 Drop 유형 심볼을 표시합니다.
@@ -178,7 +186,7 @@ WCAG AA 대비를 목표로 합니다. 일반 텍스트는 최소 4.5:1, 큰 텍
 
 | 동작의 범위 | 위치 | 구현 |
 | --- | --- | --- |
-| 창 전체나 현재 컬렉션에 적용(새로 고침, 필터, 패널 토글, 화면 전환) | 도구 막대 | `.toolbar`의 `ToolbarItemGroup(placement: .primaryAction)`. 아이콘 `Label`과 `.help`. 목록 전용 동작은 `LibraryListView`, 창 전용 동작은 `MainWindow`에 둡니다. |
+| 창 전체나 현재 컬렉션에 적용(새로 고침, 필터, 패널 토글, 화면 전환) | 도구 막대 | `.toolbar`의 `ToolbarItemGroup(placement: .primaryAction)`에 `ToolbarButton`. 목록 전용 동작은 `LibraryListView`, 창 전용 동작은 `MainWindow`에 둡니다. |
 | 선택한 Drop 하나에 적용(출처 열기, 내보내기, 휴지통) | 본문 동작 줄과 목록 우클릭 메뉴 양쪽 | 본문은 `DropDetailView`의 `actions` 줄에 `Label` 버튼. 우클릭 메뉴는 같은 동작을 같은 순서로, 파괴적 동작은 구분선 뒤 맨 끝에 둡니다. |
 | 선택한 Drop의 속성 편집(노트, 태그 같은 저장 값) | 인스펙터 섹션 | `.headline` 제목 + 내용. 저장은 `DropEditor`의 자동 저장 경로를 씁니다. 별도 저장 버튼을 두지 않습니다. |
 | 키보드 단축키가 필요한 동작 | 메뉴 명령 | `.commands`의 `CommandGroup`. 포커스에 따라 켜고 끌 때는 `TrashCommand`처럼 `FocusedValues`를 씁니다. 텍스트 편집 단축키와 겹치지 않게 합니다. |
@@ -195,16 +203,48 @@ WCAG AA 대비를 목표로 합니다. 일반 텍스트는 최소 4.5:1, 큰 텍
 | --- | --- | --- |
 | 명령이 실패해 사용자가 알아야 함 | 경고 대화상자 | `LibraryModel.alertMessage`, 복구 동작이 있으면 `alertRecovery` 버튼 |
 | 되돌릴 수 없는 동작의 확인 | 확인 시트 | `.confirmationDialog`, 파괴 버튼은 `role: .destructive` |
-| 한 필드의 입력 오류 | 필드 바로 아래 문구 | `.caption` + `.red` |
-| 진행은 되지만 알아야 할 경고 | 관련 내용 옆 문구 | `.caption` + `.orange` |
+| 한 필드의 입력 오류 | 필드 바로 아래 문구 | `FeedbackText(kind: .fieldError)`: `.caption` + `.red` |
+| 진행은 되지만 알아야 할 경고 | 관련 내용 옆 문구 | `FeedbackText(kind: .warning)`: `.caption` + `.orange` |
 | 결과가 화면에 바로 보이지 않는 동작의 완료 | 알림 배너 | `LibraryModel.notice`(`NoticeBanner`, 3초) |
 | 진행 중이거나 바뀐 저장 상태 | 해당 영역의 상태 문구 | `.caption` + `.secondary`(노트 저장 상태처럼) |
 | 패널 전체가 비었거나, 로딩 중이거나, 읽기 실패 | 패널 자리 안내 | `ContentUnavailableView`, `ProgressView` |
-| Save Popup의 오류 | 팝업 안 문구와 음성 안내 | `.red` 문구 + `AccessibilityNotification.Announcement` |
+| 폼이나 섹션 동작의 실패(Save Popup, Settings) | 폼 끝 문구 | `FeedbackText(kind: .error)`: `.callout` + `.red`. 팝업은 `AccessibilityNotification.Announcement`도 보냄 |
 | 메인 창 없이 실행된 캡처의 결과 | 메뉴 막대 제목 | `MenuBarFeedback`(900 ms) |
 
 새 피드백 방식을 만들지 않고 위 중 하나를 고릅니다. 성공은 색이 아니라 문구로 알리고, 결과가 화면에서 바로 보이면(예: 목록에 새
 Drop이 나타남) 따로 알리지 않습니다.
+
+## 공통 컴포넌트
+
+공통 컴포넌트는 `PlopcutApp/Sources/Plopcut/DesignSystem/`에 있습니다. 새 UI는 아래 패턴을 직접 다시 만들지 않고 이
+컴포넌트를 씁니다.
+
+| 컴포넌트 | 쓰는 곳 | 담은 규칙 |
+| --- | --- | --- |
+| `Spacing` | 모든 간격 | 역할별 간격 7단계("간격") |
+| `LayoutMetrics`, `Radius` | 창·패널 치수, 직접 그리는 반경 | 패널 너비와 배치 경계, 반경 |
+| `inputSurface(focused:chrome:)` | 제목, 인스펙터 노트, 팝업 노트, 단축키 필드 | 필드 바탕, 1 pt 외곽선, 포커스 2 pt 강조색. `.whileFocused`는 편집할 때만 테두리를 보임 |
+| `contentWell()` | 팝업 미리보기 | 읽기 전용 콘텐츠의 오목한 바탕 |
+| `chipStyle()`, `RemovableChip` | 태그 칩, 필터 칩, 최근 태그 | 칩 모양, 삭제 칩의 `xmark`와 "제거 + 값" 접근성 이름 |
+| `TagEntryField` | 인스펙터와 Save Popup의 태그 입력 | Return·쉼표·붙여넣기·추가 버튼 등록, 한글 조합 확정 키 무시, 중복 안내, 칩, 포커스 유지 |
+| `FeedbackText` | 필드 오류, 경고, 폼 오류 | "피드백" 표의 크기·색·VoiceOver 특성 |
+| `ToolbarButton` | 도구 막대 버튼 | SF Symbol + 같은 문구의 접근성 이름과 툴팁 |
+
+### 분리 기준
+
+다음 세 가지를 모두 만족하면 공통 컴포넌트로 분리합니다.
+
+1. **반복**: 같은 모양이나 동작이 두 곳 이상에 있다.
+2. **규칙을 담음**: 이 문서의 규칙(토큰, 피드백, 접근성)이나 틀리기 쉬운 동작(한글 조합, 포커스 복귀)을 담고 있어서,
+   복사본끼리 어긋나면 일관성이나 동작이 깨진다.
+3. **차이가 매개변수로 표현됨**: 사용처 사이의 차이를 매개변수 몇 개로 나타낼 수 있다. 구조가 다르면 억지로 합치지 않는다.
+
+분리하지 않는 것: 시스템 컨트롤을 규칙 없이 감싸기만 하는 것, 한 화면에서만 쓰는 배치, 한 컴포넌트 고유의 크기(그 타입 안
+이름 있는 상수로 둔다), 시스템이 스타일을 정하는 곳(Form 섹션 꼬리말의 저장 폴더 안내).
+
+형태는 이렇게 고릅니다. 아무 컨트롤에나 입히는 모양은 수식어(`inputSurface`, `chipStyle`), 내용과 동작을 가진 것은
+뷰(`TagEntryField`, `RemovableChip`)로 만듭니다. 여러 모델이 같은 컴포넌트를 쓰면 프로토콜로 연결합니다(`TagEditing`).
+컴포넌트는 바깥 여백을 갖지 않고 안쪽 간격만 정합니다. 바깥 배치는 쓰는 쪽이 정합니다.
 
 ## 컴포넌트 동작과 상태
 
@@ -281,7 +321,8 @@ Drop 목록으로 포커스를 돌립니다. 검색 편집 중에는 첫 Escape�
 `V-` 항목을 씁니다.
 
 - [ ] **배치·피드백**: "새 요소의 배치와 피드백" 표의 자리와 방식을 따랐다.
-- [ ] **시스템 값**: hex 색, 고정 글꼴 크기, 직접 그린 컨트롤이 없다. 직접 그린 입력 면은 `radius-field`와 포커스 외곽선 규칙을 따른다.
+- [ ] **시스템 값**: hex 색, 고정 글꼴 크기, 직접 그린 컨트롤이 없다.
+- [ ] **공통 컴포넌트**: "공통 컴포넌트" 표에 있는 패턴을 다시 만들지 않고 그 컴포넌트를 썼다. 레이아웃 치수는 `LayoutMetrics`, 반경은 `Radius`를 쓴다.
 - [ ] **간격**: 모든 간격이 `Spacing` 토큰이고 역할 표에 맞는다. 숫자를 직접 쓴 곳은 주석이 있는 시각 정렬 보정뿐이다.
 - [ ] **문구**: 사용자에게 보이는 모든 문구가 [문구 사전](swift-migration/strings.md)과 `StringTable.swift`에 `ko`·`en` 함께 있고
   `L10n.t`로 읽는다. 한국어와 영어 모두에서 잘리거나 넘치지 않는다.

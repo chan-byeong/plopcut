@@ -115,3 +115,7 @@ final class SavePopupModel {
         onCancel()
     }
 }
+
+extension SavePopupModel: TagEditing {
+    var currentTags: [String] { tags }
+}

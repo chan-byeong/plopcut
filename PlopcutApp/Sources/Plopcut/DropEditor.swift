@@ -343,3 +343,7 @@ final class DropEditor {
         return update
     }
 }
+
+extension DropEditor: TagEditing {
+    var currentTags: [String] { draft.tags }
+}

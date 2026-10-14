@@ -3,6 +3,8 @@ import PlopcutCore
 import SwiftUI
 
 struct DropDetailView: View {
+    /// Images stop growing here so a wide window does not blow a screenshot past its natural size.
+    private static let imageMaxWidth: CGFloat = 640
     @Bindable var model: LibraryModel
     var listFocused: FocusState<Bool>.Binding
     @FocusState private var titleFocused: Bool
@@ -38,8 +40,7 @@ struct DropDetailView: View {
                 .textFieldStyle(.plain).font(.title.bold())
                 // The edit chrome grows outward, so the title text stays where it is when the field is focused.
                 .padding(.horizontal, Spacing.s).padding(.vertical, Spacing.xs).padding(.horizontal, -Spacing.s)
-                .background(titleFocused ? Color(nsColor: .textBackgroundColor) : .clear, in: RoundedRectangle(cornerRadius: 6))
-                .overlay(RoundedRectangle(cornerRadius: 6).stroke(titleFocused ? Color.accentColor : .clear, lineWidth: 2))
+                .inputSurface(focused: titleFocused, chrome: .whileFocused)
                 .focused($titleFocused)
                 .accessibilityLabel(L10n.t("dropTitle"))
                 .onSubmit { finishTitle(commit: true) }
@@ -48,7 +49,7 @@ struct DropDetailView: View {
                     if focused { editor.beginTitleEdit() } else { Task { await editor.commitTitle() } }
                 }
             if case .failed(let code) = editor.state, code == "blankTitle" || code == "invalid_title" {
-                Text(ErrorText.message(forCode: code)).font(.caption).foregroundStyle(.red)
+                FeedbackText(ErrorText.message(forCode: code), kind: .fieldError)
             }
         }
     }
@@ -69,7 +70,7 @@ struct DropDetailView: View {
 
     @ViewBuilder private func body(of drop: Drop) -> some View {
         if let url = drop.imageURL, let image = NSImage(contentsOf: url) {
-            Image(nsImage: image).resizable().scaledToFit().frame(maxWidth: 640)
+            Image(nsImage: image).resizable().scaledToFit().frame(maxWidth: Self.imageMaxWidth)
                 .accessibilityLabel(L10n.t("image"))
         } else if drop.type == .image {
             Label(L10n.t("imagePreviewUnavailable"), systemImage: "photo.badge.exclamationmark").foregroundStyle(.secondary)
@@ -91,6 +92,8 @@ struct InspectorView: View {
     private var editor: DropEditor { model.editor }
     /// Optical: NSTextView's line fragment padding, so the placeholder starts where typed text does.
     private static let textViewLinePadding: CGFloat = 5
+    /// About four lines of body text.
+    private static let noteMinHeight: CGFloat = 96
 
     var body: some View {
         ScrollView {
@@ -128,9 +131,8 @@ struct InspectorView: View {
             }
             TextEditor(text: Binding(get: { editor.draft.note }, set: { editor.setNote($0) }))
                 .font(.body).scrollContentBackground(.hidden).slimScrollers()
-                .padding(Spacing.xs).frame(minHeight: 96)
-                .background(Color(nsColor: .textBackgroundColor), in: RoundedRectangle(cornerRadius: 6))
-                .overlay(RoundedRectangle(cornerRadius: 6).stroke(noteFocused ? Color.accentColor : Color.secondary.opacity(0.3), lineWidth: noteFocused ? 2 : 1))
+                .padding(Spacing.xs).frame(minHeight: Self.noteMinHeight)
+                .inputSurface(focused: noteFocused)
                 .overlay(alignment: .topLeading) {
                     if editor.draft.note.isEmpty { Text(L10n.t("noNote")).foregroundStyle(.secondary).padding(.horizontal, Spacing.xs + Self.textViewLinePadding).padding(.vertical, Spacing.xs).allowsHitTesting(false) }
                 }
@@ -160,51 +162,10 @@ struct InspectorView: View {
     // MARK: Tags
 
     private var tagSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.s) {
-            Text(L10n.t("tags")).font(.headline)
-            HStack {
-                TextField(L10n.t("tagPlaceholder"), text: Bindable(editor).tagInput)
-                    .focused($tagFocused)
-                    .onSubmit { register() }
-                    .onExitCommand { tagFocused = false }
-                    .onChange(of: tagFocused) { _, focused in
-                        CompositionMonitor.shared.reset()
-                        if !focused { Task { await editor.flush() } }
-                    }
-                    .onChange(of: editor.tagInput) { old, value in
-                        if !value.isEmpty { editor.tagMessage = nil }
-                        // A typed comma registers; a comma left behind by a composition commit must not register
-                        // the next syllable. Pasted text with commas still registers.
-                        let pasted = value.count - old.count > 1
-                        if value.hasSuffix(",") || (pasted && value.contains(",")) { register() }
-                    }
-                    .accessibilityLabel(L10n.t("tags"))
-                Button(L10n.t("addTag")) { register() }
-                    .disabled(editor.tagInput.trimmingCharacters(in: .whitespaces).isEmpty)
-            }
-            if let message = editor.tagMessage { Text(message).font(.caption).foregroundStyle(.orange) }
-            if editor.draft.tags.isEmpty {
-                Text(L10n.t("noTags")).foregroundStyle(.secondary)
-            } else {
-                FlowLayout {
-                    ForEach(editor.draft.tags, id: \.self) { tag in
-                        Button {
-                            editor.removeTag(tag)
-                            tagFocused = true
-                        } label: { Label("#\(tag)", systemImage: "xmark").labelStyle(.titleAndIcon).font(.caption) }
-                            .buttonStyle(.bordered).controlSize(.small)
-                            .accessibilityLabel("\(L10n.t("removeTag")) #\(tag)")
-                    }
-                }
-            }
+        section(L10n.t("tags")) {
+            TagEntryField(model: editor, focused: $tagFocused, emptyText: L10n.t("noTags"), onExit: { tagFocused = false })
+                .onChange(of: tagFocused) { _, focused in if !focused { Task { await editor.flush() } } }
         }
-    }
-
-    /// Enter and comma register tags, but not the key that only commits an input-method composition (spec I-01).
-    private func register() {
-        if CompositionMonitor.shared.shouldIgnoreRegistration { return }
-        editor.registerTagInput()
-        tagFocused = true
     }
 
     private func section(_ title: String, @ViewBuilder _ body: () -> some View) -> some View {
