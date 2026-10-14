@@ -26,10 +26,7 @@ is the source of truth for product behavior and the on-disk format.
 ## Engineering
 
 Before changing the UI, read [design decisions](Design.md) and the
-[design system](docs/design-system.md). Where they mention Tauri, AppKit
-toolbar bridging, `compactSearch`, or `inspectorOverlay`, follow only their
-layout, token, state, and accessibility rules; the implementation boundary
-sections do not apply.
+[design system](docs/design-system.md).
 
 Prefer native SwiftUI and AppKit controls and system behavior (focus rings,
 selection emphasis, SF Symbols, toolbars, inspectors) over custom drawing.
