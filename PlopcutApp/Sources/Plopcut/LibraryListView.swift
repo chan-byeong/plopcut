@@ -30,7 +30,7 @@ struct LibraryListView: View {
 
     /// Title and count live in the window toolbar (navigationTitle/Subtitle); only filter chips stay in the pane.
     @ViewBuilder private var header: some View {
-        if model.hasRefiningFilters { chips.padding(.horizontal, 16).padding(.vertical, 8) }
+        if model.hasRefiningFilters { chips.padding(.horizontal, Spacing.l).padding(.vertical, Spacing.s) }
     }
 
     private var chips: some View {
@@ -48,7 +48,7 @@ struct LibraryListView: View {
 
     private var warningBanner: some View {
         Label(L10n.t("unreadableDrops", ["count": String(model.warnings.count)]), systemImage: "exclamationmark.triangle")
-            .font(.caption).foregroundStyle(.orange).padding(.horizontal, 16).padding(.bottom, 6)
+            .font(.caption).foregroundStyle(.orange).padding(.horizontal, Spacing.l).padding(.bottom, Spacing.s)
             .frame(maxWidth: .infinity, alignment: .leading)
             .help(model.warnings.map(\.message).joined(separator: "\n"))
     }
@@ -133,7 +133,7 @@ struct FilterPopover: View {
                 ForEach([DateRange.all, .today, .last7Days, .last30Days], id: \.self) { Text(Self.title($0)).tag($0) }
             }
         }
-        .padding(16).frame(width: 280)
+        .padding(Spacing.l).frame(width: 280)
     }
 }
 
@@ -155,7 +155,7 @@ struct DropRow: View {
                 .overlay(RoundedRectangle(cornerRadius: 4, style: .continuous).stroke(.separator, lineWidth: 0.5))
                 .accessibilityLabel(L10n.t(drop.type == .image ? "image" : "text"))
                 .frame(width: 22, height: 20, alignment: .leading)
-                .padding(.top, 1)
+                .padding(.top, 1)  // optical: centers the icon on the title's cap height
         } else {
             // The same 22 x 20 box as above, so the title starts at the same place with or without an app icon.
             Image(systemName: Self.typeSymbol(for: drop.type)).foregroundStyle(.secondary)
@@ -165,23 +165,23 @@ struct DropRow: View {
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 8) {
+        HStack(alignment: .top, spacing: Spacing.s) {
             leadingIcon
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
                 HStack {
                     Text(drop.title).fontWeight(.semibold).lineLimit(1)
-                    Spacer(minLength: 4)
+                    Spacer(minLength: Spacing.xs)
                     Text(Formatting.time(drop.createdAt)).font(.caption).foregroundStyle(.secondary)
                 }
                 Text(Formatting.preview(drop)).font(.callout).foregroundStyle(.secondary).lineLimit(1)
-                HStack(spacing: 6) {
+                HStack(spacing: Spacing.s) {
                     if let app = drop.source.appName { Text(app).font(.caption).foregroundStyle(.secondary) }
                     ForEach(drop.tags.prefix(3), id: \.self) { Text("#\($0)").font(.caption).foregroundStyle(.tint) }
                     if drop.tags.count > 3 { Text("+\(drop.tags.count - 3)").font(.caption).foregroundStyle(.secondary) }
                 }
             }
         }
-        .padding(.vertical, 3)
+        .padding(.vertical, Spacing.xs)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Formatting.rowAccessibilityLabel(drop))
     }

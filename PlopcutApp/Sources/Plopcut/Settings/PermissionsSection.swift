@@ -19,9 +19,9 @@ struct PermissionsSection: View {
 
     private func row(_ item: PermissionItem) -> some View {
         let status = model.status(of: item)
-        return VStack(alignment: .leading, spacing: 4) {
+        return VStack(alignment: .leading, spacing: Spacing.xs) {
             // The button stays outside the combined element so VoiceOver can still activate it.
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: Spacing.xs) {
                 LabeledContent(L10n.t(PermissionsModel.itemKey(item))) {
                     Text(L10n.t(PermissionsModel.statusKey(status)))
                         .foregroundStyle(status == .missing ? Color.red : Color.secondary)

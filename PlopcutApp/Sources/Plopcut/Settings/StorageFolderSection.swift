@@ -19,7 +19,7 @@ struct StorageFolderSection: View {
         } footer: {
             // A Section footer is plain subtext under the card: no row background, and it takes the standard
             // footnote style. Failures keep red because their meaning differs from a plain status.
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
                 if let problem = model.problem {
                     Text(problem).foregroundStyle(.red)
                 }
@@ -57,7 +57,7 @@ struct FirstRunSheet: ViewModifier {
 
     func body(content: Content) -> some View {
         content.sheet(isPresented: Binding(get: { model.needsFirstRun }, set: { _ in })) {
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: Spacing.m) {
                 Text(L10n.t("chooseStorage")).font(.headline)
                 Text(L10n.t("firstRunBody")).fixedSize(horizontal: false, vertical: true)
                 Text(model.path).textSelection(.enabled).lineLimit(2).truncationMode(.middle).foregroundStyle(.secondary)
@@ -69,7 +69,7 @@ struct FirstRunSheet: ViewModifier {
                         .keyboardShortcut(.defaultAction)
                 }
             }
-            .padding(20)
+            .padding(Spacing.xl)
             .frame(width: 420)
             .interactiveDismissDisabled()
         }

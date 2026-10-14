@@ -12,15 +12,18 @@ struct DropDetailView: View {
     var body: some View {
         if let drop = model.selectedDrop {
             ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
-                    Text(drop.type == .image ? L10n.t("imageDrops") : drop.type == .text ? L10n.t("textDrops") : drop.type.rawValue)
-                        .font(.caption).foregroundStyle(.secondary)
-                    titleField
+                VStack(alignment: .leading, spacing: Spacing.l) {
+                    // The type is an eyebrow over the title, so the two stay together.
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        Text(drop.type == .image ? L10n.t("imageDrops") : drop.type == .text ? L10n.t("textDrops") : drop.type.rawValue)
+                            .font(.caption).foregroundStyle(.secondary)
+                        titleField
+                    }
                     actions(for: drop)
                     Divider()
                     body(of: drop)
                 }
-                .padding(24).frame(maxWidth: .infinity, alignment: .leading)
+                .padding(Spacing.xxl).frame(maxWidth: .infinity, alignment: .leading)
             }
             .slimScrollers()
         } else {
@@ -30,10 +33,11 @@ struct DropDetailView: View {
 
     /// Always-visible inline rename: the text never moves, the field chrome appears only while editing (spec 2.6).
     private var titleField: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
             TextField("", text: Bindable(editor).titleText)
                 .textFieldStyle(.plain).font(.title.bold())
-                .padding(.horizontal, 6).padding(.vertical, 2).padding(.horizontal, -6)
+                // The edit chrome grows outward, so the title text stays where it is when the field is focused.
+                .padding(.horizontal, Spacing.s).padding(.vertical, Spacing.xs).padding(.horizontal, -Spacing.s)
                 .background(titleFocused ? Color(nsColor: .textBackgroundColor) : .clear, in: RoundedRectangle(cornerRadius: 6))
                 .overlay(RoundedRectangle(cornerRadius: 6).stroke(titleFocused ? Color.accentColor : .clear, lineWidth: 2))
                 .focused($titleFocused)
@@ -85,11 +89,13 @@ struct InspectorView: View {
     @FocusState private var tagFocused: Bool
 
     private var editor: DropEditor { model.editor }
+    /// Optical: NSTextView's line fragment padding, so the placeholder starts where typed text does.
+    private static let textViewLinePadding: CGFloat = 5
 
     var body: some View {
         ScrollView {
             if let drop = model.selectedDrop {
-                VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: Spacing.l) {
                     noteSection
                     tagSection
                     section(L10n.t("source")) {
@@ -97,7 +103,7 @@ struct InspectorView: View {
                         Text("\(L10n.t("savedAt")) \(Formatting.dateTime(drop.createdAt))").font(.caption).foregroundStyle(.secondary)
                     }
                     DisclosureGroup(L10n.t("sourceDetails")) {
-                        VStack(alignment: .leading, spacing: 6) {
+                        VStack(alignment: .leading, spacing: Spacing.s) {
                             detail(L10n.t("window"), drop.source.windowTitle)
                             detail(L10n.t("updatedAt"), Formatting.dateTime(drop.updatedAt))
                             detail(L10n.t("url"), drop.source.url)
@@ -105,7 +111,7 @@ struct InspectorView: View {
                         }
                     }
                 }
-                .padding(16).frame(maxWidth: .infinity, alignment: .leading)
+                .padding(Spacing.l).frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .slimScrollers()
@@ -114,7 +120,7 @@ struct InspectorView: View {
     // MARK: Note
 
     private var noteSection: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
             HStack {
                 Text(L10n.t("note")).font(.headline)
                 Spacer()
@@ -122,11 +128,11 @@ struct InspectorView: View {
             }
             TextEditor(text: Binding(get: { editor.draft.note }, set: { editor.setNote($0) }))
                 .font(.body).scrollContentBackground(.hidden).slimScrollers()
-                .padding(4).frame(minHeight: 96)
+                .padding(Spacing.xs).frame(minHeight: 96)
                 .background(Color(nsColor: .textBackgroundColor), in: RoundedRectangle(cornerRadius: 6))
                 .overlay(RoundedRectangle(cornerRadius: 6).stroke(noteFocused ? Color.accentColor : Color.secondary.opacity(0.3), lineWidth: noteFocused ? 2 : 1))
                 .overlay(alignment: .topLeading) {
-                    if editor.draft.note.isEmpty { Text(L10n.t("noNote")).foregroundStyle(.secondary).padding(.horizontal, 9).padding(.vertical, 4).allowsHitTesting(false) }
+                    if editor.draft.note.isEmpty { Text(L10n.t("noNote")).foregroundStyle(.secondary).padding(.horizontal, Spacing.xs + Self.textViewLinePadding).padding(.vertical, Spacing.xs).allowsHitTesting(false) }
                 }
                 .focused($noteFocused)
                 .accessibilityLabel(L10n.t("note"))
@@ -136,7 +142,7 @@ struct InspectorView: View {
     }
 
     @ViewBuilder private var saveStatus: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: Spacing.s) {
             switch editor.state {
             case .idle: Text(L10n.t("automaticSave"))
             case .pending: Text(L10n.t("changesPending"))
@@ -154,7 +160,7 @@ struct InspectorView: View {
     // MARK: Tags
 
     private var tagSection: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: Spacing.s) {
             Text(L10n.t("tags")).font(.headline)
             HStack {
                 TextField(L10n.t("tagPlaceholder"), text: Bindable(editor).tagInput)
@@ -202,12 +208,12 @@ struct InspectorView: View {
     }
 
     private func section(_ title: String, @ViewBuilder _ body: () -> some View) -> some View {
-        VStack(alignment: .leading, spacing: 4) { Text(title).font(.headline); body() }
+        VStack(alignment: .leading, spacing: Spacing.xs) { Text(title).font(.headline); body() }
     }
 
     @ViewBuilder private func detail(_ label: String, _ value: String?) -> some View {
         if let value, !value.isEmpty {
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text(label).font(.caption).foregroundStyle(.secondary)
                 Text(value).textSelection(.enabled)
             }

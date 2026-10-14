@@ -18,16 +18,16 @@ struct SavePopupView: View {
     @State private var noteControl = PopupNoteEditorControl()
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Spacing.m) {
             ScrollView {
-                fields.padding(.horizontal, 16).padding(.top, 4)
+                fields.padding(.horizontal, Spacing.l).padding(.top, Spacing.xs)
             }
             .scrollBounceBehavior(.basedOnSize)
             .slimScrollers()
             .layoutPriority(1)
-            buttons.padding(.horizontal, 16)
+            buttons.padding(.horizontal, Spacing.l)
         }
-        .padding(.bottom, 16)
+        .padding(.bottom, Spacing.l)
         .frame(width: Self.contentSize.width)
         .frame(minHeight: min(Self.contentSize.height, maxHeight), maxHeight: maxHeight, alignment: .top)
         .fixedSize(horizontal: false, vertical: true)
@@ -38,9 +38,9 @@ struct SavePopupView: View {
     }
 
     private var fields: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Spacing.m) {
             header
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: Spacing.xs) {
                 preview
                 source
             }
@@ -56,7 +56,7 @@ struct SavePopupView: View {
     private var header: some View {
         HStack {
             Text(L10n.t(model.selectedType == .image ? "saveImage" : "saveText")).font(.headline).accessibilityAddTraits(.isHeader)
-            Spacer(minLength: 8)
+            Spacer(minLength: Spacing.s)
             if model.isMixed { typePicker }
         }
     }
@@ -78,7 +78,7 @@ struct SavePopupView: View {
         } else {
             ScrollView {
                 Text(model.draft.text ?? "")
-                    .font(.body).frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled).padding(8)
+                    .font(.body).frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled).padding(Spacing.s)
             }
             .slimScrollers()
             .frame(height: Self.previewHeight)
@@ -87,7 +87,7 @@ struct SavePopupView: View {
     }
 
     private var source: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 6) {
+        HStack(alignment: .firstTextBaseline, spacing: Spacing.s) {
             Text(L10n.t("source")).font(.caption).foregroundStyle(.secondary)
             Text(model.sourceSummary).font(.callout).lineLimit(2).textSelection(.enabled)
         }
@@ -98,7 +98,7 @@ struct SavePopupView: View {
     @ViewBuilder private var warnings: some View {
         let texts = model.draft.warnings.compactMap(Self.warningText)
         if !texts.isEmpty {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
                 ForEach(texts, id: \.self) { Text($0).font(.caption).foregroundStyle(.orange) }
             }
         }
@@ -113,7 +113,7 @@ struct SavePopupView: View {
     }
 
     private var noteField: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
             Text(L10n.t("note")).font(.callout.weight(.semibold)).accessibilityHidden(true)
             PopupNoteEditor(
                 text: $model.note, placeholder: L10n.t("optionalNote"), accessibilityLabel: L10n.t("note"),
@@ -122,13 +122,13 @@ struct SavePopupView: View {
                     CompositionMonitor.shared.reset()
                 }
             )
-            .frame(height: 52).padding(4)
+            .frame(height: 52).padding(Spacing.xs)
             .overlay(RoundedRectangle(cornerRadius: 6).stroke(noteFocused ? Color.accentColor : Color.secondary.opacity(0.3), lineWidth: noteFocused ? 2 : 1))
         }
     }
 
     private var tagField: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
             Text(L10n.t("tags")).font(.callout.weight(.semibold)).accessibilityHidden(true)
             HStack {
                 TextField(L10n.t("tagPlaceholder"), text: $model.tagInput)
