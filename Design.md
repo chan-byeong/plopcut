@@ -16,7 +16,8 @@ SwiftUI와 AppKit의 기본 컨트롤, 시스템 색, 시스템 재질을 그대
 시스템이 그리고, 콘텐츠는 불투명한 바탕에 둡니다 ([Apple 재질 지침](https://developer.apple.com/design/human-interface-guidelines/materials),
 [Apple 도구 막대 지침](https://developer.apple.com/design/human-interface-guidelines/toolbars),
 [Apple 사이드바 지침](https://developer.apple.com/design/human-interface-guidelines/sidebars)).
-직접 정하는 값은 패널 너비 같은 레이아웃 수치뿐이며, 색·서체·컨트롤 모양은 시스템 값을 따릅니다.
+직접 정하는 값은 패널 너비 같은 레이아웃 수치와 브랜드 색(강조색, 선택 행 채움, 마크 색)뿐이며, 그 밖의 색·서체·컨트롤 모양은
+시스템 값을 따릅니다.
 
 ## 확정 시안
 
@@ -33,14 +34,29 @@ SwiftUI와 AppKit의 기본 컨트롤, 시스템 색, 시스템 재질을 그대
 - 사이드바는 창 가장자리에 붙이지 않고 인셋을 둡니다(macOS 26의 떠 있는 사이드바).
 - 본문과 상단은 같은 불투명 바탕을 사용합니다. 본문은 넓게 유지하고 우측 정보 인스펙터와 명확히 구분합니다.
 - 정보 인스펙터는 Library의 우측에 둡니다.
-- 선택 행은 활성 창에서 시스템 강조색(기본 파란색)을 사용합니다. 재질은 사이드바와 도구 막대에만 절제해 적용합니다.
+- 선택 행은 활성 창에서 브랜드 블루 `#2F6BFF` 채움(라이트·다크 공통)을 사용합니다. 앱 강조색은 라이트 `#2F6BFF`, 다크 `#4F8CFF`입니다.
+  사이드바 아이콘과 목록 행 태그는 보조 회색입니다. 재질은 사이드바와 도구 막대에만 절제해 적용합니다.
 - 사이드바와 인스펙터를 접어도 각 토글은 계속 사용할 수 있어야 합니다.
+
+## 브랜드와 UI v2 (PLO-89)
+
+2026-10-15 소유자가 디자인 캔버스에서 브랜드 마크와 UI v2(Library 라이트·다크, 빈 Library, Settings, Save Popup), 메뉴 막대
+저장 피드백을 채택했습니다. 이 문서와 [디자인 시스템](docs/design-system.md), [구현 명세](docs/swift-migration/spec.md)는 이 결정을
+반영했고, 코드는 후속 구현 이슈에서 바꿉니다.
+
+- 브랜드 마크는 소문자 p와 마침표의 "p." 모노그램입니다. 앱 아이콘은 그래파이트 바탕에 흰 p와 파란 점이고, 메뉴 막대는 같은
+  마크의 단색 템플릿 이미지입니다. 형태와 색은 [구현 명세 5.1](docs/swift-migration/spec.md#51-브랜드-마크와-앱-아이콘)이 기준입니다.
+- 메뉴 막대는 제목 문구 대신 마크의 점으로 저장 결과를 알립니다. 성공하면 점이 떨어져 앉고 체크로 바뀌었다가 돌아오고, 실패하면
+  흔들린 뒤 느낌표가 남습니다.
+- 도구 막대는 필터, 검색, 인스펙터 토글만 둡니다. 태그는 `#design`처럼 표기합니다.
+- 빈 Library와 Save Popup에 컬러 마크를, Settings 정보 섹션에 앱 아이콘을 둡니다.
 
 ## 화면 구조
 
 펼친 Library는 네이티브 도구 막대 아래에 탐색, 검색 가능한 Drop 목록, 선택한 Drop의 본문, 정보 인스펙터를 둡니다. 도구
-막대에는 창 제어, 사이드바 토글, 현재 컬렉션 이름과 Drop 수, 필터, 새로 고침, 인스펙터 토글, Library·Settings 전환, 검색을
-배치하며 앱 이름은 표시하지 않습니다.
+막대에는 창 제어, 사이드바 토글, 현재 컬렉션 이름과 Drop 수, 그리고 [필터 · 필터 지우기] [검색] [인스펙터 토글] 묶음을 이 순서로
+배치하며(인스펙터 토글이 맨 오른쪽) 앱 이름은 표시하지 않습니다. 새로 고침은 메뉴 명령(`Cmd+R`)이고, Settings는 사이드바의 `설정`
+행으로 엽니다. Settings 화면의 도구 막대에는 제목만 둡니다.
 
 사이드바는 서체관리자의 소스 목록처럼 유형(라이브러리·텍스트·이미지), 태그, Settings 중 정확히 하나를 선택합니다. 선택한
 컬렉션 이름과 Drop 수는 창 제목과 부제목으로 도구 막대에 표시합니다. 필터 버튼은 도구 막대에 있고 앱과 기간만 좁히며,
@@ -57,7 +73,8 @@ SwiftUI와 AppKit의 기본 컨트롤, 시스템 색, 시스템 재질을 그대
 입력을 엽니다. Escape로 닫아도 검색어를 유지합니다.
 
 Settings 화면과 캡처 팝업은 기존 제품 역할을 유지합니다. 공통 색상, 글꼴, 간격, 포커스, 컨트롤 규칙만 적용하며 Library
-시안을 근거로 새 화면 배치를 추론하지 않습니다. 새 기능의 동작·피드백 위치, Settings 항목 추가 규칙, 새 UI 점검표는
+시안을 근거로 새 화면 배치를 추론하지 않습니다. PLO-89에서 채택한 추가 요소(Settings 정보 섹션의 앱 아이콘·이름·버전, 팝업 제목
+옆 마크, 출처 앞 앱 아이콘, 하단 단축키 힌트)만 더합니다. 새 기능의 동작·피드백 위치, Settings 항목 추가 규칙, 새 UI 점검표는
 [디자인 시스템](docs/design-system.md)을 따릅니다.
 
 ## 주요 사용자 흐름
@@ -80,8 +97,8 @@ Library는 사이드바, 목록, 본문, 우측 인스펙터의 네 영역으로
 
 | 영역 | 구현 기준 |
 | --- | --- |
-| 창 도구 막대 | 통합 도구 막대(`.windowToolbarStyle(.unified)`)가 창 제어와 사이드바 토글을 담당하고, 제목·부제목(`navigationTitle`·`navigationSubtitle`)에 컬렉션 이름과 Drop 수를 표시합니다. 나머지 동작은 `ToolbarItemGroup` 버튼이며 시스템이 캡슐로 묶습니다. 앱 이름 제목과 독립 배경 띠·아래 선은 없습니다. |
-| 사이드바 | `NavigationSplitView`의 사이드바 열에 `.sidebar` 스타일 `List`를 씁니다. 섹션 제목, 행 높이, 선택 색, 재질은 시스템이 그립니다. Settings 행은 사이드바 아래에 고정합니다. |
+| 창 도구 막대 | 통합 도구 막대(`.windowToolbarStyle(.unified)`)가 창 제어와 사이드바 토글을 담당하고, 제목·부제목(`navigationTitle`·`navigationSubtitle`)에 컬렉션 이름과 Drop 수를 표시합니다. 나머지는 [필터 · 필터 지우기(`xmark.circle`)] [검색] [인스펙터 토글] 세 묶음의 `ToolbarItemGroup` 버튼이며 시스템이 캡슐로 묶습니다. 새로 고침 버튼과 Library·Settings 전환 버튼은 없습니다(새로 고침은 메뉴 `Cmd+R`). Settings에서는 제목만 둡니다. 앱 이름 제목과 독립 배경 띠·아래 선은 없습니다. |
+| 사이드바 | `NavigationSplitView`의 사이드바 열에 `.sidebar` 스타일 `List`를 씁니다. 섹션 제목, 행 높이, 재질은 시스템이 그리고, 선택 채움은 `#2F6BFF`, 행 아이콘은 보조 회색, 태그 행 아이콘은 `number`입니다. Settings 행은 사이드바 아래에 고정합니다. |
 | 패널 배치 | 사이드바 선택을 유지하고 실제 콘텐츠 너비로 인스펙터 배치를 계산합니다. 공간이 부족하면 인스펙터만 오버레이로 엽니다. 인스펙터는 `.inspector` 대신 본문 옆 `HStack`으로 둡니다(체크리스트 D-15). |
 | 검색 | 도구 막대의 `.searchable` 필드입니다. 1050 pt 미만에서는 아이콘으로 줄입니다. 클릭·`Cmd+F`로 입력을 열고 Escape로 닫아도 검색어를 유지합니다. |
 | 편집·출처 | 노트 자동 저장, 태그 초안·칩, 출처 요약·상세 정보를 유지합니다. 패널 변경 중 편집기를 다시 만들지 않습니다. |
@@ -101,6 +118,7 @@ UI는 SwiftUI로 구성하고, SwiftUI가 제공하지 않는 동작만 AppKit�
 - 패널 너비 저장: `PaneWidthRecorder.swift`, `SplitViewRestorer.swift`(AppKit `NSSplitView` 구분선 복원)
 - 한글 조합 판정: `CompositionGuard.swift`. 팝업 노트 입력기(AppKit `NSTextView`): `Capture/PopupNoteEditor.swift`
 - 간격·치수·반경과 공통 컴포넌트(입력 면, 칩, 태그 입력, 피드백 문구, 도구 막대 버튼): `DesignSystem/`
+- 앱 아이콘: `PlopcutApp/Resources/AppIcon.svg`·`AppIcon.icns`. 메뉴 막대 아이콘과 저장 피드백: `MenuBar/`
 - 스크롤 막대 크기: `SlimScroller.swift`. 테마 적용(`NSApp.appearance`): `Settings/SettingsModel.swift`
 - Drop 모델, 태그 정규화, 설정: `PlopcutCore/Sources/PlopcutCore`의 `Models.swift`, `Tags.swift`, `Settings.swift`
 

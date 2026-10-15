@@ -48,7 +48,7 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 | C-06 | 단축키 문자열은 Tauri 문법(`Shift+Cmd+K`)으로 저장. Swift가 이 문자열을 파싱해야 하며 파싱 불가면 저장 거부. 파일은 바뀌지 않아야 한다. Swift 설정 화면은 문자열 입력 대신 키 녹화로 받는다(STA-69): 입력란을 누르고 키 조합을 누르면 같은 문법의 문자열(`Ctrl+Option+Shift+Cmd+키` 순서)이 되고, 수식 키만 누르면 확정하지 않으며, 수식 키가 없거나 D-03 범위 밖의 키는 이유를 보이고 거부하고, Esc만 누르면 녹화를 취소한다. | 테스트: `update_rejects_unparseable_selected_text_shortcut`, `update_rejecting_invalid_shortcut_leaves_persisted_settings_file_untouched` | 단위(앱): `ShortcutRecordingTests`(허용 키 전체, 수식 키 순서, 수식 키가 아닌 플래그 무시, 수식 키만은 미리보기만, 수식 키 없음·범위 밖 거부, Esc 취소, 기록한 문자열이 누른 키로 등록됨), `ShortcutModelTests`(거부 이유 표시와 녹화 유지, 거절된 단축키가 필드에 남지 않음). 단위: 수식어(`Shift`, `Cmd`/`Command`, `Ctrl`/`Control`, `Alt`/`Option`)와 키 이름. 수동(STA-69): 실제 키 녹화 | ☐ |
 | C-07 | 원자적 쓰기(임시 파일 + 이름 변경)로 쓰고 쓰기 실패 시 임시 파일을 지운다. 동시 갱신은 직렬화. | `atomic_write_settings`, `SETTINGS_UPDATE_LOCK` | 단위 | ☑ |
 | C-08 | 단축키 변경 순서: 새 것 등록 → 이전 것 해제 → 설정 저장. 어느 단계가 실패해도 이전 단축키가 살아 있어야 한다. 이 순서는 설정 화면의 `저장` 버튼을 누를 때 한 번에 실행한다. 녹화·선택 중에는 실제 단축키와 설정 파일이 바뀌지 않고, `취소`나 설정 화면을 떠나면 고른 조합을 버리고 이전 단축키를 유지한다(STA-70). | 테스트: `changing_selected_text_shortcut_replaces_the_old_registration`, `failed_registration_keeps_the_previous_shortcut_active`, `persistence_failure_restores_the_previous_shortcut` | 단위(가짜 등록기): `ShortcutControllerTests` (등록→해제→저장 순서, 등록 실패·저장 실패 롤백, 롤백 실패 `shortcut_rollback_failed`), `ShortcutModelTests`(실제 `ShortcutController`와 가짜 등록기로 저장 전에는 등록·저장 호출 없음, 저장 때 등록→해제→저장, 녹화 취소·버리기 후 변화 없음) + 수동(실제 충돌, STA-70 저장 전 미적용) | ☐ |
-| C-09 | 시작 시 저장된 단축키 하나만 등록(다른 단축키는 등록하지 않음). 등록 실패는 보관 오류와 메뉴 막대 `Error`로 알린다. | 테스트: `startup_registers_only_the_selected_text_shortcut` | 단위: `ShortcutControllerTests.startupRegistersOnlyTheStoredShortcut` + 수동 | ☑ |
+| C-09 | 시작 시 저장된 단축키 하나만 등록(다른 단축키는 등록하지 않음). 등록 실패는 보관 오류와 메뉴 막대 실패 표시(T-03)로 알린다. | 테스트: `startup_registers_only_the_selected_text_shortcut` | 단위: `ShortcutControllerTests.startupRegistersOnlyTheStoredShortcut` + 수동 | ☑ |
 | C-10 | `theme`가 `system`이면 앱 외형을 시스템에 맡기고, `light`/`dark`는 시스템을 덮어쓴다. | `useTheme.ts`. Swift: `SettingsModel.colorScheme`, 테스트 `colorSchemeFollowsTheme`, `changingThemePersistsAndKeepsOtherFields` | 단위(모델) + 수동(창 외형) | ☑ |
 | C-11 | 읽은 `theme`이 잘못되면 `system`으로 보정, `storageFolderPath`가 공백이면 기본 폴더. | `read_app_settings_from_path` | 단위 | ☑ |
 | C-12 | 번들 ID를 바꾸면 손쉬운 사용·자동화 권한을 새로 허용해야 한다. 설정과 Drop은 영향이 없다. `app.notedrop.dev` → `com.plopcut.app`(STA-85). | — | 수동 | ☑ |
@@ -72,7 +72,7 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 | P-10 | 결과 Draft는 `note` 없음, `tags` 빈 배열. | `capture_selected_text_with` | 단위 | ☑ |
 | P-11 | `modal`이면 팝업, `instant`이면 텍스트만 즉시 저장(노트 `""`, 태그 없음). | `instant_save_payload_from_draft`, `handle_capture_draft` | 단위: `CaptureConfirmationTests`, `CaptureRouterTests`(`instantTextIsSavedWithAnEmptyNoteAndNoTags`, `theModeIsReadAtEveryCapture`) + 수동 | ☑ |
 | P-12 | `instant`에서도 이미지·`mixed`는 팝업. (도구 막대 캡처 버튼은 D-05 결정으로 만들지 않는다.) | `handle_capture_draft` | 단위: `instantStillOpensThePopupForImagesAndMixedContent`, `instantImageAndMixedOpenThePopupAndSaveNothing` + 수동 | ☑ |
-| P-13 | 선택 텍스트 캡처 실패: 오류 보관 + 메인 창 표시 + 메뉴 막대 `Error`. 보관 오류는 메인 창에서 **한 번만** 소비. | `emit_selected_text_capture_event`, 테스트: `pending_capture_error_is_returned_once` | 단위·수동 | ☑ |
+| P-13 | 선택 텍스트 캡처 실패: 오류 보관 + 메인 창 표시 + 메뉴 막대 실패 표시(T-03). 보관 오류는 메인 창에서 **한 번만** 소비. | `emit_selected_text_capture_event`, 테스트: `pending_capture_error_is_returned_once` | 단위·수동 | ☑ |
 | P-14 | 별도 팝업 창이 이미 열려 있으면 단축키는 새 캡처를 하지 않고 열린 팝업을 앞으로 가져온다(결정 STA-47). 팝업이 열려 있으면 최전면 앱이 plopcut 자신이라 선택 텍스트를 읽을 수 없기 때문이다. 레거시의 "새 Draft로 교체"와 다르다. | `open_capture_window` | 수동: 팝업을 연 채 단축키 재입력 | ☑ |
 | P-15 | 레거시는 클립보드 접근을 `swift -e` 서브프로세스로 했다. Swift 앱은 `NSPasteboard`를 직접 쓰므로 이 구조는 이어받지 않는다(같은 시맨틱만 유지). | `capture.rs` | — | ☑ |
 | P-16 | 접근성 읽기(`AXUIElementCreateApplication(최전면 앱)` → 포커스 요소 → `AXSelectedText`)가 비어 있지 않은 값을 주면 클립보드를 읽거나 쓰지 않고, `Cmd+C`도 보내지 않는다. 시스템 전역 요소는 쓰지 않는다(Chrome에서 실패). | [ax-probe.md](ax-probe.md) | 단위(가짜 호출 기록) + 수동: 메모·Chrome에서 캡처 전후 클립보드 `changeCount` 동일 | ☑ |
@@ -87,7 +87,7 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 | K-03 | 이미지 디코딩 실패 시 텍스트가 있으면 텍스트로 진행하고 경고 `clipboard_image_unavailable`. 텍스트도 없으면 그 오류로 실패. | 테스트: `undecodableImageFallsBackToTextWithAWarning`, `undecodableImageWithoutTextFails`, `readFailureIsReportedAsUnavailable` | 단위 | ☑ |
 | K-04 | 이미지는 PNG가 있으면 PNG, 없으면 TIFF를 PNG로 변환해 사용. | `read_clipboard_snapshot` | 수동: 스크린샷(PNG)과 TIFF를 내는 앱 | ☑ |
 | K-05 | 최전면 앱이 plopcut이면 출처를 비우고 제목을 다시 추론. 다른 앱이면 출처 유지. | 테스트: `omitsPlopcutAsSourceAndReinfersTheTitle`, `keepsTheSourceOfAnotherApp` | 단위 | ☑ |
-| K-06 | 클립보드 캡처 실패는 오류 보관 + 메뉴 막대 `Error`만(메인 창을 띄우지 않음). | `CaptureRuntime.reportQuietly`(Error만 표시하고 오류를 보관, 메인 창은 띄우지 않음) | 수동 | ☑ |
+| K-06 | 클립보드 캡처 실패는 오류 보관 + 메뉴 막대 실패 표시(T-03)만(메인 창을 띄우지 않음). | `CaptureRuntime.reportQuietly`(Error만 표시하고 오류를 보관, 메인 창은 띄우지 않음) | 수동 | ☑ |
 
 ## M. 출처 수집
 
@@ -153,10 +153,11 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 
 | ID | 동작 | 근거 | 확인 방법 | ☐ |
 | --- | --- | --- | --- | --- |
-| T-01 | 템플릿 아이콘, 툴팁 `plopcut`, 좌클릭은 메뉴가 아니라 메인 창 열기. 메뉴는 좌클릭이 아닌 방식(우클릭)으로 연다. | `tray.rs` | 수동 | ☑ |
+| T-01 | 템플릿 아이콘, 툴팁 `plopcut`, 좌클릭은 메뉴가 아니라 메인 창 열기. 메뉴는 좌클릭이 아닌 방식(우클릭)으로 연다. 아이콘은 "p." 마크의 단색 템플릿 이미지([구현 명세 5.1](spec.md#51-브랜드-마크와-앱-아이콘), PLO-89에서 변경. 마크 교체 전까지 이 부분은 미구현). | `tray.rs`, PLO-89 | 수동 | ☐ |
 | T-02 | 메뉴 항목 ID는 `save-clipboard`, `open-library`. 알 수 없는 ID는 무시. | 테스트: `routes_stable_tray_menu_ids`, `save_clipboard_menu_action_starts_clipboard_capture` | 단위 | ☑ |
-| T-03 | 성공 `Saved`, 실패 `Error`를 900 ms 동안 제목과 툴팁에 표시하고 원복. | `show_feedback` | 단위: `MenuBarTests`(`errorShowsFor900msThenRestores`, `savedShowsFor900msThenRestores`) + 수동 | ☑ |
+| T-03 | 제목 문구 없이 점 자리 기호로 알린다(스펙 2.1). 성공: 점이 떨어져 앉고(200 ms) 체크로 바뀐 뒤 약 1.1초 뒤 점으로 복원. 실패: 240 ms 흔들림 후 느낌표가 메뉴를 열 때까지 남고, 메뉴를 열면 점으로 복원. 실패 중 성공이 오면 성공 표시로 바뀐다. '동작 줄이기'에서는 움직임 없이 기호만 바뀐다. 접근성 이름·툴팁이 상태(`menuBarSaved`, `menuBarFailed`)를 알린다. (레거시와 PLO-89 이전 Swift는 `Saved`/`Error`를 900 ms 제목으로 표시했다.) | `show_feedback`, PLO-89 | 단위: 상태 전환과 시간(가짜 시계), 메뉴 열기 시 복원 + 수동: 동작 줄이기, VoiceOver | ☐ |
 | T-04 | 메인 창을 열 때 보관된 캡처 오류를 확인하도록 신호를 보낸다. | `show_main_window` | 수동 | ☑ |
+| T-05 | 실패 표시 중 메뉴 맨 위에 `저장 실패` 제목, 오류 사유(지역화 문구), 구분선, `설정 열기`가 있고, `설정 열기`는 메인 창의 Settings 화면을 연다. 실패 표시가 없으면 이 항목이 없다. | PLO-89 | 단위(메뉴 구성) + 수동 | ☐ |
 
 ## N. 지역화
 
@@ -166,6 +167,20 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 | N-02 | 두 언어의 키 집합이 같다(한쪽에만 있는 문구 없음). | `i18n.tsx` `Dictionary` 타입 | 단위 | ☑ |
 | N-03 | 알려진 오류 코드는 지역화한 문구로, 그 밖에는 `defaultError`. (레거시는 그 밖의 코드를 원본 메시지로, 문자열 오류를 그대로 보여 줬다. Swift는 `detail`이 로그용이라 의도적으로 다르게 간다. 아래 STA-61 기록 참고.) | `translateError` | 단위 | ☑ |
 | N-04 | 권한 상세 문구는 항목×상태(허용/없음)로 키가 있고, `알 수 없음`은 `permissionUnknownDetail`. | `permissionDetail` | 단위 | ☑ (`PermissionsModelTests.detailKeysFollowItemAndStatusAndUnknownIsShared`, `everyDetailAndStatusKeyHasBothLanguages`) |
+
+## U. 브랜드와 UI v2 (PLO-89)
+
+2026-10-15 소유자가 채택한 브랜드 마크와 UI v2입니다. 기준은 [스펙](spec.md) 2.3–2.5, 3.5, 4, 5장, [구현 명세 5.1](spec.md#51-브랜드-마크와-앱-아이콘),
+[디자인 시스템](../design-system.md)입니다. 구현 이슈가 끝나면 체크합니다.
+
+| ID | 동작 | 근거 | 확인 방법 | ☐ |
+| --- | --- | --- | --- | --- |
+| U-01 | 앱 아이콘이 그래파이트 `#26282C` 바탕에 흰 p와 `#4F8CFF` 점인 "p." 모노그램이다(그라데이션 없음). 메뉴 막대는 같은 마크의 템플릿 이미지다. | [구현 명세 5.1](spec.md#51-브랜드-마크와-앱-아이콘) | 수동: Finder·Dock·메뉴 막대(라이트·다크) | ☐ |
+| U-02 | 앱 강조색이 라이트 `#2F6BFF`, 다크 `#4F8CFF`이고, 활성 창의 사이드바·목록 선택 행 채움은 두 모드 모두 `#2F6BFF`, 비활성 창은 중성색이다. 사이드바 아이콘과 목록 행 태그는 `.secondary` 회색이다. | 스펙 2.4, 5장 | 수동: 라이트·다크, '대비 증가' | ☐ |
+| U-03 | Library 도구 막대가 [필터 · 필터 지우기(`xmark.circle`, 필터가 있을 때만)] [검색] [인스펙터 토글(맨 오른쪽)]뿐이다. 새로고침은 메뉴 `Cmd+R`, 설정 전환 버튼은 없다. Settings 도구 막대는 제목만 있다. | 스펙 2.3 | 단위(메뉴 명령) + 수동 | ☐ |
+| U-04 | 태그 아이콘이 `number`이고 목록 행, 인스펙터·팝업 칩, 최근 태그가 `#design`처럼 표시된다. 저장 값에는 `#`이 없다. | 스펙 1.5, 2.4, 2.5, 5장 | 단위(저장 값) + 수동 | ☐ |
+| U-05 | 빈 Library에 컬러 마크, `noDropsTitle`, `noDropsShortcutHint`, 현재 단축키 키캡(기본 ⇧ ⌘ C), `noDropsClipboardHint`가 보이고 키캡 묶음이 단축키를 하나의 접근성 이름으로 읽는다. | 스펙 2.5 | 수동 + VoiceOver | ☐ |
+| U-06 | Settings 정보 섹션에 앱 아이콘, `plopcut`, `aboutVersion`이 한 줄로 있다. Save Popup 제목 앞에 작은 마크, 출처 앞에 출처 앱 아이콘, 하단에 `popupShortcutHint`가 있다. | 스펙 3.5, 4장 | 수동(한국어·영어) | ☐ |
 
 ## D. 결정이 필요한 차이와 알려진 공백
 
@@ -185,6 +200,7 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 | D-10 | STA-38에서 도입한 SF Symbols 렌더링, 포커스 링, 제목 인라인 이름 변경, 목록 비포커스 선택 약화, 설정 화면 토글은 **실제 앱에서 확인되지 않았다.** | 레거시 앱에서 확인하지 말고 Swift 구현에서 기준(서체관리자)으로 직접 확인. | | ☑ |
 | D-11 | 라이트 테마의 도구 막대와 960 pt 너비 실화면 확인이 남아 있다. | Swift 구현에서 확인. | | ☑ |
 | D-12 | 문구 `shortcutFormatHint`가 "Tauri 형식"이라고 안내한다. 저장 문자열은 호환을 위해 같은 형식(`Shift+Cmd+K`)을 쓰지만 사용자에게 구현 용어를 보이면 안 된다. | 문구에서 Tauri를 빼고 형식 예시만 안내. | **결정(STA-55): `shortcutFormatHint`를 "수식키와 키를 +로 연결, 예: Shift+Cmd+K, F21–F24 미지원"으로 교체.** | ☑ |
+| D-17 | 메뉴 막대 저장 피드백(`Saved`/`Error` 제목 900 ms), 도구 막대 구성, 시스템 강조색, 태그 아이콘이 소유자가 2026-10-15 채택한 브랜드·UI v2와 다르다. | 문서를 먼저 고치고 구현은 후속 이슈로 나눈다. | **결정(PLO-89): 메뉴 막대는 점·체크·느낌표 기호 피드백(T-03, T-05), 도구 막대 축소, 강조색 `#2F6BFF`/`#4F8CFF`, 태그 `number`·`#` 표기, 새 앱 아이콘(U 항목).** | ☑ |
 
 ## 4단계 수동 확인 기록 (STA-47, 2026-10-08)
 
