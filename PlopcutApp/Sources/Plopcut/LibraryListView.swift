@@ -56,7 +56,7 @@ struct LibraryListView: View {
             ContentUnavailableView(error, systemImage: "exclamationmark.triangle")
         } else if model.drops.isEmpty {
             ContentUnavailableView {
-                AppLogo().frame(width: 72, height: 72)
+                BrandMarkView().frame(width: 72, height: 72)
             } description: {
                 Text(L10n.t("noDrops"))
             }
@@ -91,18 +91,6 @@ struct LibraryListView: View {
                 }
             }
         }
-    }
-}
-
-/// The app icon from the bundle (copied by scripts/make-app.sh); falls back to the running app's icon outside a bundle.
-struct AppLogo: View {
-    private static let image: NSImage = {
-        if let url = Bundle.main.url(forResource: "AppIcon", withExtension: "icns"), let image = NSImage(contentsOf: url) { return image }
-        return NSApp?.applicationIconImage ?? NSImage()
-    }()
-
-    var body: some View {
-        Image(nsImage: Self.image).resizable().scaledToFit().accessibilityLabel(L10n.t("appLogo"))
     }
 }
 
