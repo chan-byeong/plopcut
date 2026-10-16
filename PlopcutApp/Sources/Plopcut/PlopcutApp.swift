@@ -51,7 +51,10 @@ struct PlopcutApp: App {
         }
         .defaultSize(LayoutMetrics.windowDefault)
         .windowToolbarStyle(.unified)
-        .commands { CommandGroup(after: .pasteboard) { TrashCommand() } }
+        .commands {
+            CommandGroup(after: .pasteboard) { TrashCommand() }
+            CommandGroup(after: .toolbar) { RefreshCommand(model: model) }
+        }
     }
 }
 

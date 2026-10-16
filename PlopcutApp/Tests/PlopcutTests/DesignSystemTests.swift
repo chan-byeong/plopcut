@@ -1,6 +1,7 @@
 import Foundation
 import CoreGraphics
 import PlopcutCore
+import SwiftUI
 import Testing
 @testable import Plopcut
 
@@ -83,5 +84,14 @@ import Testing
     @Test func tagsAreShownWithAHash() {
         #expect(Formatting.tag("design") == "#design")
         #expect(Formatting.tag("two words") == "#two words")
+    }
+}
+
+@MainActor
+@Suite struct MenuCommandTests {
+    // U-03: refresh moved from the toolbar to the View menu as Cmd+R.
+    @Test func refreshIsCommandR() {
+        #expect(RefreshCommand.shortcut.key == "r")
+        #expect(RefreshCommand.shortcut.modifiers == .command)
     }
 }

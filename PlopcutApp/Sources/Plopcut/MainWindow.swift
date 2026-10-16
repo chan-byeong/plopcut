@@ -9,6 +9,7 @@ struct MainWindow: View {
     @State private var searchPresented = false
     /// In narrow windows the field only exists after the icon (or Cmd+F) opens it.
     @State private var searchOpen = false
+    @State private var filtersOpen = false
     @State private var sidebarColumnWidth: CGFloat = 0
     @State private var listColumnWidth: CGFloat = 0
     @State private var recorder = PaneWidthRecorder()
@@ -57,7 +58,9 @@ struct MainWindow: View {
                     min: LayoutMetrics.sidebarRange.lowerBound, ideal: model.paneWidths.sidebar, max: LayoutMetrics.sidebarRange.upperBound)
         } content: {
             if model.collection == .settings {
+                // The window title comes from this column; in Settings it is the only toolbar item (spec 2.3).
                 Color.clear.navigationSplitViewColumnWidth(0)
+                    .navigationTitle(L10n.t("settings"))
                     .onAppear { listColumnWidth = 0 }
             } else {
                 LibraryListView(model: model, listFocused: $listFocused)
@@ -139,22 +142,28 @@ struct MainWindow: View {
 
     @ToolbarContentBuilder
     private func toolbarContent(sideBySide: Bool, width: CGFloat) -> some ToolbarContent {
+        // [Filter · Clear filters] [Inspector toggle], then the search field, which macOS keeps at the trailing edge
+        // (spec 2.3, PLO-92). Refresh is the Cmd+R menu command and Settings is the sidebar row, so neither has a
+        // button; Settings shows only its title.
         ToolbarItemGroup(placement: .primaryAction) {
-            if LayoutMetrics.searchIsCompact(windowWidth: width) && model.collection != .settings {
-                ToolbarButton(L10n.t("search"), systemImage: "magnifyingglass") { openSearch() }
-            }
-            ToolbarButton(L10n.t("refreshLibrary"), systemImage: "arrow.clockwise") { Task { await model.reload() } }
-            let inspectorShown = sideBySide ? model.inspectorVisible : model.inspectorOverlayOpen
-            ToolbarButton(
-                L10n.t(inspectorShown ? "hideInspector" : "showInspector"), systemImage: "sidebar.right",
-                help: L10n.t("inspectorPanelHelp")
-            ) {
-                if sideBySide { model.inspectorVisible.toggle() } else { model.inspectorOverlayOpen.toggle() }
-            }
-            .disabled(model.collection == .settings)
-            let inSettings = model.collection == .settings
-            ToolbarButton(L10n.t(inSettings ? "openLibrary" : "openSettings"), systemImage: inSettings ? "tray.full" : "gearshape") {
-                model.collection = inSettings ? .all : .settings
+            if model.collection != .settings {
+                ToolbarButton(L10n.t("openFilters"), systemImage: "line.3.horizontal.decrease") { filtersOpen.toggle() }
+                    .popover(isPresented: $filtersOpen) { FilterPopover(model: model) }
+                    .disabled(model.drops.isEmpty)
+                if model.hasRefiningFilters {
+                    ToolbarButton(L10n.t("clearFilters"), systemImage: "xmark.circle") { model.clearFilters() }
+                }
+                if LayoutMetrics.searchIsCompact(windowWidth: width) {
+                    ToolbarButton(L10n.t("search"), systemImage: "magnifyingglass") { openSearch() }
+                }
+                let inspectorShown = sideBySide ? model.inspectorVisible : model.inspectorOverlayOpen
+                ToolbarButton(
+                    L10n.t(inspectorShown ? "hideInspector" : "showInspector"), systemImage: "sidebar.right",
+                    help: L10n.t("inspectorPanelHelp")
+                ) {
+                    if sideBySide { model.inspectorVisible.toggle() } else { model.inspectorOverlayOpen.toggle() }
+                }
+                .disabled(model.drops.isEmpty)
             }
         }
     }
