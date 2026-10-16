@@ -26,8 +26,8 @@ final class MenuBarController: NSObject {
                 return { task.cancel() }
             })
         if let button = statusItem.button {
-            let image = NSImage(systemSymbolName: "square.and.pencil", accessibilityDescription: MenuBarFeedback.idleTooltip)
-            image?.isTemplate = true
+            let image = BrandMark.templateImage(.dot)
+            image.accessibilityDescription = MenuBarFeedback.idleTooltip
             button.image = image
             button.imagePosition = .imageLeading
             button.toolTip = MenuBarFeedback.idleTooltip
