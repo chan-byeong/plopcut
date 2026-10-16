@@ -16,6 +16,10 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp ".build/$CONFIG/Plopcut" "$APP/Contents/MacOS/plopcut"
 # App icon, reused for the Dock and the empty Library logo (Bundle.main "AppIcon").
 cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
+# SwiftPM does not compile asset catalogs; actool builds Assets.car so NSAccentColorName finds AccentColor (spec 5).
+xcrun actool Resources/Assets.xcassets --compile "$APP/Contents/Resources" --platform macosx \
+  --minimum-deployment-target "$MIN_MACOS" --accent-color AccentColor \
+  --output-partial-info-plist .build/assets-info.plist >/dev/null
 # SwiftPM stamps the SDK as the deployment target (14.0), which keeps macOS on the pre-Liquid-Glass window style.
 # Restamp with the real SDK so system chrome matches native apps.
 SDK_VERSION="$(xcrun --show-sdk-version)"
@@ -29,6 +33,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleDevelopmentRegion</key><string>en</string>
   <key>CFBundleLocalizations</key><array><string>en</string><string>ko</string></array>
   <key>CFBundleIconFile</key><string>AppIcon</string>
+  <key>NSAccentColorName</key><string>AccentColor</string>
   <key>CFBundleExecutable</key><string>plopcut</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>$APP_VERSION</string>

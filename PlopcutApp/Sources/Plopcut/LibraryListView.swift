@@ -159,7 +159,7 @@ struct DropRow: View {
                 Text(Formatting.preview(drop)).font(.callout).foregroundStyle(.secondary).lineLimit(1)
                 HStack(spacing: Spacing.s) {
                     if let app = drop.source.appName { Text(app).font(.caption).foregroundStyle(.secondary) }
-                    ForEach(drop.tags.prefix(3), id: \.self) { Text("#\($0)").font(.caption).foregroundStyle(.tint) }
+                    ForEach(drop.tags.prefix(3), id: \.self) { Text(Formatting.tag($0)).font(.caption).foregroundStyle(.secondary) }
                     if drop.tags.count > 3 { Text("+\(drop.tags.count - 3)").font(.caption).foregroundStyle(.secondary) }
                 }
             }
