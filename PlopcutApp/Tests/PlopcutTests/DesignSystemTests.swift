@@ -95,3 +95,20 @@ import Testing
         #expect(RefreshCommand.shortcut.modifiers == .command)
     }
 }
+
+@Suite struct KeycapsTests {
+    // U-05: the default shortcut is ⇧ ⌘ C and reads as one name.
+    @Test func defaultShortcutCaps() {
+        #expect(Keycaps.caps("Shift+Cmd+C") == ["⇧", "⌘", "C"])
+        #expect(Keycaps.spoken("Shift+Cmd+C") == "Shift Cmd C")
+    }
+
+    @Test func modifiersFollowTheMacOrderAndKeysUseSymbols() {
+        #expect(Keycaps.caps("Cmd+Alt+Ctrl+Shift+Enter") == ["⌃", "⌥", "⇧", "⌘", "↩"])
+        #expect(Keycaps.caps("Ctrl+F5") == ["⌃", "F5"])
+    }
+
+    @Test func anUnreadableShortcutIsShownAsWritten() {
+        #expect(Keycaps.caps("nonsense") == ["nonsense"])
+    }
+}

@@ -4,7 +4,7 @@ Linear: STA-39
 
 레거시 `src/i18n/i18n.tsx`에서 그대로 추출한 사용자 문구입니다. 키는 [스펙](spec.md)과 [체크리스트](behavior-checklist.md)가 참조하는 이름입니다. 시스템 언어가 `ko`로 시작하면 한국어, 아니면 영어를 씁니다. 두 언어의 키 집합은 같습니다(158개). `shortcutFormatHint`만 구현 용어(Tauri)를 말하므로 Swift 구현의 단축키 형식에 맞게 고쳐 씁니다(체크리스트 D-12). `{count}` 같은 자리 표시자는 치환합니다.
 
-Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA-72, 로고 접근성 라벨), `settingsFailure`·`deleteFailed`·`dropNotFound`·`exportFailed`(STA-78, 알려진 오류 코드의 문구), `dropCountOne`(영어 단수형), `dropTitle`(제목 입력란 접근성 라벨), `ok`(알림 단추), `unreadableDrops`(읽지 못한 드롭 경고, STA-80), `showLogInFinder`(Settings의 로그 파일 보기 단추, STA-80), `menuBarSaved`·`menuBarFailed`(메뉴 막대 저장 피드백의 접근성 이름·툴팁, PLO-93).
+Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA-72, 로고 접근성 라벨), `settingsFailure`·`deleteFailed`·`dropNotFound`·`exportFailed`(STA-78, 알려진 오류 코드의 문구), `dropCountOne`(영어 단수형), `dropTitle`(제목 입력란 접근성 라벨), `ok`(알림 단추), `unreadableDrops`(읽지 못한 드롭 경고, STA-80), `showLogInFinder`(Settings의 로그 파일 보기 단추, STA-80), `menuBarSaved`·`menuBarFailed`(메뉴 막대 저장 피드백의 접근성 이름·툴팁, PLO-93), `noDropsTitle`·`noDropsShortcutHint`·`noDropsClipboardHint`(빈 Library, 레거시 `noDrops`를 대체), `aboutVersion`(정보 섹션, 레거시 `appVersion`을 대체), `popupShortcutHint`(Save Popup 단축키 힌트, PLO-94).
 
 | 키 | en | ko |
 | --- | --- | --- |
@@ -60,10 +60,13 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `older` | Older | 이전 |
 | `loadingDrops` | Loading drops… | 드롭 불러오는 중… |
 | `noMatches` | No drops match the current filters | 현재 필터와 일치하는 드롭이 없습니다 |
-| `noDrops` | No saved drops yet. Capture text with Shift + Cmd + C. | 저장된 드롭이 없습니다. Shift + Cmd + C로 텍스트를 캡처하세요. |
+| `noDropsTitle` | No saved drops yet | 저장된 드롭이 없습니다 |
+| `noDropsShortcutHint` | Select text in another app, then press: | 다른 앱에서 텍스트를 선택한 뒤 누르세요. |
+| `noDropsClipboardHint` | Save images with Save Clipboard... in the menu bar. | 이미지는 메뉴 막대의 클립보드 저장...으로 저장합니다. |
 | `appLogo` | plopcut logo | plopcut 로고 |
 | `menuBarSaved` | plopcut, drop saved | plopcut, 드롭을 저장했습니다 |
 | `menuBarFailed` | plopcut, save failed | plopcut, 저장 실패 |
+| `popupShortcutHint` | ⌘↩ Save · esc Cancel | ⌘↩ 저장 · esc 취소 |
 | `dropTitle` | Drop title | 드롭 제목 |
 | `ok` | OK | 확인 |
 | `unreadableDrops` | Some drops could not be read ({count}) | 일부 드롭을 읽지 못했습니다 ({count}) |
@@ -127,7 +130,7 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `captureConfirmation` | Save confirmation | 저장 확인 |
 | `modal` | Show popup | 팝업 표시 |
 | `instant` | Save text instantly | 텍스트 즉시 저장 |
-| `appVersion` | App version | 앱 버전 |
+| `aboutVersion` | Version {version} | 버전 {version} |
 | `showLogInFinder` | Show Log in Finder | Finder에서 로그 보기 |
 | `permissionStatus` | Permission status | 권한 상태 |
 | `loadingPermissions` | Loading permissions… | 권한 확인 중… |
@@ -187,24 +190,6 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `deleteFailed` | The drop could not be moved to the Trash. It is still in the Library. | 드롭을 휴지통으로 이동하지 못했습니다. 드롭은 라이브러리에 그대로 있습니다. |
 | `dropNotFound` | This drop no longer exists. Refresh the library. | 이 드롭이 더 이상 없습니다. 라이브러리를 새로고침하세요. |
 | `exportFailed` | The Markdown file could not be written. Choose another location. | Markdown 파일을 쓰지 못했습니다. 다른 위치를 선택하세요. |
-
-## 구현 대기 문구 (PLO-89)
-
-브랜드·UI v2에서 정한 새 문구입니다. 아직 `StringTable.swift`에 없으므로 위 표와 분리해 둡니다. 구현할 때 각 행을 `ko`·`en`과 함께
-`StringTable.swift`와 위 표로 옮기고(`stringTableMatchesStringsMarkdown`이 두 곳을 비교합니다) 이 표에서 지웁니다. 열이 네 개라
-테스트는 이 표를 읽지 않습니다.
-
-| 키 | en | ko | 쓰는 곳 |
-| --- | --- | --- | --- |
-| `noDropsTitle` | No saved drops yet | 저장된 드롭이 없습니다 | 빈 Library 제목(스펙 2.5) |
-| `noDropsShortcutHint` | Select text in another app, then press: | 다른 앱에서 텍스트를 선택한 뒤 누르세요. | 빈 Library, 키캡 위 안내 |
-| `noDropsClipboardHint` | Save images with Save Clipboard... in the menu bar. | 이미지는 메뉴 막대의 클립보드 저장...으로 저장합니다. | 빈 Library, 키캡 아래 안내 |
-| `aboutVersion` | Version {version} | 버전 {version} | Settings 정보 섹션(스펙 4장) |
-| `popupShortcutHint` | ⌘↩ Save · esc Cancel | ⌘↩ 저장 · esc 취소 | Save Popup 버튼 줄 왼쪽(스펙 3.5) |
-
-기존 키를 다시 쓰는 곳: 메뉴 막대 오류 항목의 제목 `pendingFailed`와 `openSettings`, 메뉴 명령 `refreshLibrary`(`Cmd+R`), 마크의
-접근성 이름 `appLogo`. 빈 Library가 새 키 세 개로 바뀌면 `noDrops`는 쓰지 않으므로 지우고, 정보 섹션이 `aboutVersion`을 쓰면
-`appVersion`이 남는 곳이 있는지 확인해 없으면 지웁니다.
 
 ## 문구 점검 기록 (STA-80)
 
