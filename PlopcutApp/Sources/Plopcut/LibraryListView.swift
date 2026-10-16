@@ -5,7 +5,6 @@ import SwiftUI
 struct LibraryListView: View {
     @Bindable var model: LibraryModel
     var listFocused: FocusState<Bool>.Binding
-    @State private var filtersOpen = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -15,15 +14,6 @@ struct LibraryListView: View {
         }
         .navigationTitle(model.title)
         .navigationSubtitle(Formatting.dropCount(model.filtered.count))
-        .toolbar {
-            ToolbarItemGroup(placement: .primaryAction) {
-                if model.hasRefiningFilters {
-                    ToolbarButton(L10n.t("clearFilters"), systemImage: "arrow.counterclockwise") { model.clearFilters() }
-                }
-                ToolbarButton(L10n.t("openFilters"), systemImage: "line.3.horizontal.decrease") { filtersOpen.toggle() }
-                    .popover(isPresented: $filtersOpen) { FilterPopover(model: model) }
-            }
-        }
     }
 
     /// Title and count live in the window toolbar (navigationTitle/Subtitle); only filter chips stay in the pane.
