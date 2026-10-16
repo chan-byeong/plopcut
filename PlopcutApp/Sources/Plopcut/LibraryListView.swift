@@ -4,6 +4,8 @@ import SwiftUI
 
 struct LibraryListView: View {
     @Bindable var model: LibraryModel
+    /// Absent in views built without the capture runtime (tests); the empty state then shows the default shortcut.
+    @Environment(ShortcutModel.self) private var shortcut: ShortcutModel?
     var listFocused: FocusState<Bool>.Binding
 
     var body: some View {
@@ -45,10 +47,15 @@ struct LibraryListView: View {
         } else if let error = model.loadError {
             ContentUnavailableView(error, systemImage: "exclamationmark.triangle")
         } else if model.drops.isEmpty {
+            // The color mark, the title, the current shortcut as key caps and the clipboard hint (spec 2.5, U-05).
             ContentUnavailableView {
-                BrandMarkView().frame(width: 72, height: 72)
+                Label { Text(L10n.t("noDropsTitle")) } icon: { BrandMarkView().frame(width: 72, height: 72) }
             } description: {
-                Text(L10n.t("noDrops"))
+                VStack(spacing: Spacing.s) {
+                    Text(L10n.t("noDropsShortcutHint"))
+                    Keycaps(shortcut: shortcut?.saved ?? SettingsStore.defaultShortcut)
+                    Text(L10n.t("noDropsClipboardHint"))
+                }
             }
         } else if groups.isEmpty {
             ContentUnavailableView(L10n.t("noMatches"), systemImage: "magnifyingglass")

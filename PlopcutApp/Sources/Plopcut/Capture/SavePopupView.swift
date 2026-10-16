@@ -55,7 +55,8 @@ struct SavePopupView: View {
     }
 
     private var header: some View {
-        HStack {
+        HStack(spacing: Spacing.s) {
+            BrandMarkView().frame(width: 16, height: 16)
             Text(L10n.t(model.selectedType == .image ? "saveImage" : "saveText")).font(.headline).accessibilityAddTraits(.isHeader)
             Spacer(minLength: Spacing.s)
             if model.isMixed { typePicker }
@@ -90,6 +91,12 @@ struct SavePopupView: View {
     private var source: some View {
         HStack(alignment: .firstTextBaseline, spacing: Spacing.s) {
             Text(L10n.t("source")).font(.caption).foregroundStyle(.secondary)
+            // The source app's icon before the summary; none for an unknown source (spec 3.5).
+            if let icon = SourceAppIcons.shared.icon(forAppNamed: model.draft.source.appName) {
+                Image(nsImage: icon).resizable().frame(width: 14, height: 14)
+                    .alignmentGuide(.firstTextBaseline) { $0[.bottom] - 2 }
+                    .accessibilityHidden(true)
+            }
             Text(model.sourceSummary).font(.callout).lineLimit(2).textSelection(.enabled)
         }
         .accessibilityElement(children: .combine)
@@ -150,6 +157,7 @@ struct SavePopupView: View {
 
     private var buttons: some View {
         HStack {
+            Text(L10n.t("popupShortcutHint")).font(.caption).foregroundStyle(.secondary).accessibilityHidden(true)
             Spacer()
             Button(L10n.t("cancel")) { model.cancel() }.keyboardShortcut(.cancelAction)
             Button(L10n.t("save")) {

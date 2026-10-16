@@ -27,7 +27,14 @@ struct SettingsView: View {
             ShortcutSection()
             PermissionsSection()
             Section(L10n.t("about")) {
-                LabeledContent(L10n.t("appVersion"), value: model.appVersion)
+                // App icon, name and version on one line (spec 4, U-06).
+                HStack(spacing: Spacing.s) {
+                    Image(nsImage: NSImage(named: NSImage.applicationIconName) ?? NSImage()).resizable().frame(width: 32, height: 32)
+                        .accessibilityHidden(true)
+                    Text("plopcut").font(.headline)
+                    Text(L10n.t("aboutVersion", ["version": model.appVersion])).foregroundStyle(.secondary)
+                }
+                .accessibilityElement(children: .combine)
                 Button(L10n.t("showLogInFinder")) { AppLog.revealInFinder() }
             }
             if let message = model.errorMessage {
