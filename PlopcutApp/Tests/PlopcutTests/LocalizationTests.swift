@@ -24,6 +24,15 @@ import Testing
         }
     }
 
+    // PLO-96: menu items, placeholders and progress text carry no ellipsis, at the end or inside another phrase.
+    @Test func noPhraseUsesAnEllipsis() {
+        for (key, entry) in StringTable.entries {
+            for text in [entry.en, entry.ko] {
+                #expect(!text.contains("…") && !text.contains("..."), "\(key): \(text)")
+            }
+        }
+    }
+
     // N-03
     private static let knownCodes: [String: String] = [
         "no_selected_text": "noSelectedText", "clipboard_empty": "clipboardEmpty",

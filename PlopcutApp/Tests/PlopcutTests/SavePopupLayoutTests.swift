@@ -109,8 +109,56 @@ extension SavePopupWindowTests {
             #expect(abs(window.frame.midY - screen.midY) < 1)
         }
 
+        // PLO-96: the popup takes the keyboard without activating plopcut, so the main window never comes forward and
+        // the app the user was in stays active after a save or a cancel.
+        @Test func thePopupDoesNotActivateTheApp() async throws {
+            let controller = SavePopupWindowController()
+            let window = try await show(model(Self.textDraft), in: controller)
+            defer { controller.close() }
+            #expect(window.styleMask.contains(.nonactivatingPanel))
+            #expect(window.canBecomeKey)
+        }
+
         private static func scrollViews(in view: NSView) -> [NSScrollView] {
             ((view as? NSScrollView).map { [$0] } ?? []) + view.subviews.flatMap { scrollViews(in: $0) }
+        }
+    }
+}
+
+extension SavePopupWindowTests {
+    /// PLO-96: plopcut stays inactive while its popup is open, so AppKit skips key equivalents (Cmd+Enter, Escape, the
+    /// Edit menu's Cmd+V). The panel routes those itself; plain typing goes through as usual.
+    @MainActor
+    @Suite struct KeyRouting {
+        private func key(_ code: UInt16, _ characters: String, _ flags: NSEvent.ModifierFlags = []) throws -> NSEvent {
+            try #require(NSEvent.keyEvent(
+                with: .keyDown, location: .zero, modifierFlags: flags, timestamp: 0, windowNumber: 0, context: nil,
+                characters: characters, charactersIgnoringModifiers: characters, isARepeat: false, keyCode: code))
+        }
+
+        @Test func commandKeysAndEscapeAreRoutedAsKeyEquivalents() throws {
+            #expect(SavePopupPanel.routesAsKeyEquivalent(try key(36, "\r", .command)))
+            #expect(SavePopupPanel.routesAsKeyEquivalent(try key(9, "v", .command)))
+            #expect(SavePopupPanel.routesAsKeyEquivalent(try key(53, "\u{1b}")))
+        }
+
+        @Test func editShortcutsMapToTheTextActions() throws {
+            #expect(SavePopupPanel.editAction(for: try key(9, "v", .command)) == #selector(NSText.paste(_:)))
+            #expect(SavePopupPanel.editAction(for: try key(8, "c", .command)) == #selector(NSText.copy(_:)))
+            #expect(SavePopupPanel.editAction(for: try key(7, "x", .command)) == #selector(NSText.cut(_:)))
+            #expect(SavePopupPanel.editAction(for: try key(0, "a", .command)) == #selector(NSText.selectAll(_:)))
+            #expect(SavePopupPanel.editAction(for: try key(6, "z", .command)) == Selector(("undo:")))
+            #expect(SavePopupPanel.editAction(for: try key(6, "z", [.command, .shift])) == Selector(("redo:")))
+            // A Korean layout reports its own letter; the key's position still says which shortcut it is.
+            #expect(SavePopupPanel.editAction(for: try key(9, "ㅍ", .command)) == #selector(NSText.paste(_:)))
+            #expect(SavePopupPanel.editAction(for: try key(9, "v")) == nil)
+            #expect(SavePopupPanel.editAction(for: try key(36, "\r", .command)) == nil)
+        }
+
+        @Test func typingIsLeftToTheTextFields() throws {
+            #expect(!SavePopupPanel.routesAsKeyEquivalent(try key(0, "a")))
+            #expect(!SavePopupPanel.routesAsKeyEquivalent(try key(36, "\r")))
+            #expect(!SavePopupPanel.routesAsKeyEquivalent(try key(0, "A", .shift)))
         }
     }
 }

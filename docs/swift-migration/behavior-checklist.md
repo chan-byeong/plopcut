@@ -72,13 +72,13 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 | P-10 | 결과 Draft는 `note` 없음, `tags` 빈 배열. | `capture_selected_text_with` | 단위 | ☑ |
 | P-11 | `modal`이면 팝업, `instant`이면 텍스트만 즉시 저장(노트 `""`, 태그 없음). | `instant_save_payload_from_draft`, `handle_capture_draft` | 단위: `CaptureConfirmationTests`, `CaptureRouterTests`(`instantTextIsSavedWithAnEmptyNoteAndNoTags`, `theModeIsReadAtEveryCapture`) + 수동 | ☑ |
 | P-12 | `instant`에서도 이미지·`mixed`는 팝업. (도구 막대 캡처 버튼은 D-05 결정으로 만들지 않는다.) | `handle_capture_draft` | 단위: `instantStillOpensThePopupForImagesAndMixedContent`, `instantImageAndMixedOpenThePopupAndSaveNothing` + 수동 | ☑ |
-| P-13 | 선택 텍스트 캡처 실패: 오류 보관 + 메인 창 표시 + 메뉴 막대 실패 표시(T-03). 보관 오류는 메인 창에서 **한 번만** 소비. | `emit_selected_text_capture_event`, 테스트: `pending_capture_error_is_returned_once` | 단위·수동 | ☑ |
-| P-14 | 별도 팝업 창이 이미 열려 있으면 단축키는 새 캡처를 하지 않고 열린 팝업을 앞으로 가져온다(결정 STA-47). 팝업이 열려 있으면 최전면 앱이 plopcut 자신이라 선택 텍스트를 읽을 수 없기 때문이다. 레거시의 "새 Draft로 교체"와 다르다. | `open_capture_window` | 수동: 팝업을 연 채 단축키 재입력 | ☑ |
+| P-13 | 선택 텍스트 캡처 실패: 오류 보관 + 메뉴 막대 실패 표시(T-03)만, 메인 창은 열지 않는다(PLO-96). 예외로 `permission_missing`은 메인 창을 열어 이유와 `시스템 설정 열기`를 보인다. 보관 오류는 메인 창에서 **한 번만** 소비. | `CaptureRuntime.report`, 테스트: `pending_capture_error_is_returned_once` | 단위·수동 | ☐ |
+| P-14 | 별도 팝업 창이 이미 열려 있으면 단축키는 새 캡처를 하지 않고 열린 팝업을 앞으로 가져온다(결정 STA-47). 팝업이 열려 있으면 키보드가 팝업에 있어 선택 텍스트 캡처가 팝업 자신을 읽기 때문이다(PLO-96부터 팝업은 앱을 활성화하지 않지만 키보드는 가져간다). 레거시의 "새 Draft로 교체"와 다르다. | `open_capture_window` | 수동: 팝업을 연 채 단축키 재입력 | ☑ |
 | P-15 | 레거시는 클립보드 접근을 `swift -e` 서브프로세스로 했다. Swift 앱은 `NSPasteboard`를 직접 쓰므로 이 구조는 이어받지 않는다(같은 시맨틱만 유지). | `capture.rs` | — | ☑ |
 | P-16 | 접근성 읽기(`AXUIElementCreateApplication(최전면 앱)` → 포커스 요소 → `AXSelectedText`)가 비어 있지 않은 값을 주면 클립보드를 읽거나 쓰지 않고, `Cmd+C`도 보내지 않는다. 시스템 전역 요소는 쓰지 않는다(Chrome에서 실패). | [ax-probe.md](ax-probe.md) | 단위(가짜 호출 기록) + 수동: 메모·Chrome에서 캡처 전후 클립보드 `changeCount` 동일 | ☑ |
 | P-17 | 접근성 읽기가 실패하거나 값이 비거나 공백뿐이면 클립보드 폴백(P-02~P-09)으로 넘어가며, 그 자체로 `no_selected_text`로 보지 않는다. 최전면 앱이 plopcut이면 접근성 읽기를 건너뛴다. | [ax-probe.md](ax-probe.md) | 단위 + 수동: Safari·터미널(Hyper)에서 폴백으로 저장 | ☑ |
 
-## K. 클립보드 캡처 (메뉴 막대 `Save Clipboard...`)
+## K. 클립보드 캡처 (메뉴 막대 `Save Clipboard`)
 
 | ID | 동작 | 근거 | 확인 방법 | ☐ |
 | --- | --- | --- | --- | --- |
@@ -153,10 +153,10 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 
 | ID | 동작 | 근거 | 확인 방법 | ☐ |
 | --- | --- | --- | --- | --- |
-| T-01 | 템플릿 아이콘, 툴팁 `plopcut`, 좌클릭은 메뉴가 아니라 메인 창 열기. 메뉴는 좌클릭이 아닌 방식(우클릭)으로 연다. 아이콘은 "p." 마크의 단색 템플릿 이미지([구현 명세 5.1](spec.md#51-브랜드-마크와-앱-아이콘), PLO-89에서 변경, PLO-90에서 구현). | `tray.rs`, PLO-89 | 수동 | ☐ |
+| T-01 | 템플릿 아이콘, 툴팁 `plopcut`. 좌클릭과 우클릭 모두 같은 메뉴를 열고, 메뉴를 열어도 앱이 활성화되거나 메인 창이 앞으로 오지 않는다(PLO-96에서 변경, 이전에는 좌클릭이 메인 창 열기). 메인 창은 메뉴의 `Open Library`로 연다. 아이콘은 "p." 마크의 단색 템플릿 이미지([구현 명세 5.1](spec.md#51-브랜드-마크와-앱-아이콘), PLO-89에서 변경, PLO-90에서 구현). | `MenuBarController`(`NSMenuDelegate`), PLO-89, PLO-96 | 수동 | ☐ |
 | T-02 | 메뉴 항목 ID는 `save-clipboard`, `open-library`. 알 수 없는 ID는 무시. | 테스트: `routes_stable_tray_menu_ids`, `save_clipboard_menu_action_starts_clipboard_capture` | 단위 | ☑ |
 | T-03 | 제목 문구 없이 점 자리 기호로 알린다(스펙 2.1). 성공: 점이 떨어져 앉고(200 ms) 체크로 바뀐 뒤 약 1.1초 뒤 점으로 복원. 실패: 240 ms 흔들림 후 느낌표가 메뉴를 열 때까지 남고, 메뉴를 열면 점으로 복원. 실패 중 성공이 오면 성공 표시로 바뀐다. '동작 줄이기'에서는 움직임 없이 기호만 바뀐다. 접근성 이름·툴팁이 상태(`menuBarSaved`, `menuBarFailed`)를 알린다. (레거시와 PLO-89 이전 Swift는 `Saved`/`Error`를 900 ms 제목으로 표시했다.) | `show_feedback`, PLO-89 | 단위: 상태 전환과 시간(가짜 시계), 메뉴 열기 시 복원 + 수동: 동작 줄이기, VoiceOver | ☐ |
-| T-04 | 메인 창을 열 때 보관된 캡처 오류를 확인하도록 신호를 보낸다. | `show_main_window` | 수동 | ☑ |
+| T-04 | 메인 창을 열 때 보관된 캡처 오류를 확인하도록 신호를 보낸다. 캡처 실패 자체는 메인 창을 열지 않는다(`permission_missing` 제외, PLO-96). | `show_main_window` | 수동 | ☑ |
 | T-05 | 실패 표시 중 메뉴 맨 위에 `저장 실패` 제목, 오류 사유(지역화 문구), 구분선, `설정 열기`가 있고, `설정 열기`는 메인 창의 Settings 화면을 연다. 실패 표시가 없으면 이 항목이 없다. | PLO-89 | 단위(메뉴 구성) + 수동 | ☐ |
 
 ## N. 지역화
@@ -188,7 +188,7 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 
 | ID | 상황 | 제안 | 결정 | ☐ |
 | --- | --- | --- | --- | --- |
-| D-01 | PRD는 `Shift+Cmd+V`(클립보드 캡처)를 요구하지만 구현된 적이 없다. 클립보드 캡처는 메뉴 막대의 `Save Clipboard...`뿐이다. | 먼저 레거시와 같게 메뉴만 구현. 단축키는 별도 요청이 있을 때. | | ☑ |
+| D-01 | PRD는 `Shift+Cmd+V`(클립보드 캡처)를 요구하지만 구현된 적이 없다. 클립보드 캡처는 메뉴 막대의 `Save Clipboard`뿐이다. | 먼저 레거시와 같게 메뉴만 구현. 단축키는 별도 요청이 있을 때. | | ☑ |
 | D-02 | 타입에 `mixed`가 있지만 **저장되는 Drop은 `text` 또는 `image`뿐**이다(`mixed` Draft는 팝업에서 하나를 고른다). 레거시는 `mixed` Drop을 목록에는 보여 주지만 본문과 이미지를 읽지 않는다(픽스처로 확인). | 최소한 레거시와 같게(깨지지 않고 목록에 표시). 본문·이미지 표시는 별도 결정. | | ☑ |
 | D-03 | 레거시 단축키 문자열은 Tauri 문법이다. 전체 허용 범위(예: 방향키, 펑션키, `CmdOrCtrl`)는 문서화되어 있지 않다. | 최소 `Shift/Cmd/Ctrl/Alt` + 문자·숫자·펑션키를 지원하고 나머지는 거부. | | ☑ |
 | D-04 | 이미지 Drop의 `image.png`가 아닌 다른 `imagePath`를 읽는 경로는 있으나(`drop.imagePath`) 쓰는 경로는 항상 `image.png`다. | 읽기는 `imagePath` 우선, 쓰기는 `image.png`. | | ☑ |
@@ -216,7 +216,7 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 한글 조합 중 Enter, 터미널 폴백)이 모두 동작한다고 보고했습니다. 항목별 출력은 남기지 않았고 사용자 보고에 근거합니다.
 
 **범위 밖으로 확인된 것**: 이미지, 텍스트와 이미지가 함께 있는 클립보드의 **저장**은 4단계 범위가 아닙니다. 선택 텍스트 캡처는
-텍스트 Drop만 만들고(스펙 3.1), 이미지와 `mixed`는 클립보드 캡처(스펙 3.2, K-01~K-06, 메뉴 막대 `Save Clipboard...`)와 팝업의
+텍스트 Drop만 만들고(스펙 3.1), 이미지와 `mixed`는 클립보드 캡처(스펙 3.2, K-01~K-06, 메뉴 막대 `Save Clipboard`)와 팝업의
 이미지 미리보기·유형 선택이 필요해 5단계에서 구현합니다(STA-47에서 확정). 이미지가 들어 있던 클립보드를 텍스트 캡처 뒤에
 복원하는 동작(P-09)은 이번에 따로 확인하지 않았습니다.
 
@@ -284,7 +284,7 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 
 ## 5단계 클립보드 캡처 기록 (STA-56)
 
-메뉴 막대 `Save Clipboard...`로 텍스트 클립보드를 캡처한다. K-01, K-02, K-03, K-05는 단위 테스트(`ClipboardCaptureTests`)로 확인함. 이미지와 `mixed` 저장은 STA-57에서 들어왔다(아래 기록).
+메뉴 막대 `Save Clipboard`로 텍스트 클립보드를 캡처한다. K-01, K-02, K-03, K-05는 단위 테스트(`ClipboardCaptureTests`)로 확인함. 이미지와 `mixed` 저장은 STA-57에서 들어왔다(아래 기록).
 
 수동 확인이 남음(실제 앱): K-06(실패 시 `Error`만 보이고 메인 창이 뜨지 않음), 메뉴 항목에서 팝업이 열리고 저장되는지, plopcut이 앞일 때 출처가 비는지.
 
@@ -335,7 +335,7 @@ STA-70 원인: 단축키 입력란 `TextField`에 `.onSubmit { model.apply() }`�
 
 수동 확인이 남음(실제 앱): 아래 확인 전까지 C-06, C-08을 ☐로 둔다.
 
-1. 설정 → `선택 텍스트 단축키` 필드를 누르면 테두리가 강조되고 `키를 누르세요…`가 보인다. Shift+Cmd를 누르고 있으면 `Shift+Cmd+`가 보이고 떼면 다시 안내로 돌아간다.
+1. 설정 → `선택 텍스트 단축키` 필드를 누르면 테두리가 강조되고 `키를 누르세요`가 보인다. Shift+Cmd를 누르고 있으면 `Shift+Cmd+`가 보이고 떼면 다시 안내로 돌아간다.
 2. Shift+Cmd+K를 누르면 필드가 `Shift+Cmd+K`, `아직 저장하지 않았습니다…` 안내가 보인다. 이 상태에서 다른 앱의 텍스트를 선택하고 Shift+Cmd+C를 누르면 캡처되고 Shift+Cmd+K는 반응하지 않는다. `settings.json`의 `selectedTextShortcut`은 그대로다.
 3. `저장`을 누르면 Shift+Cmd+K로 캡처되고 Shift+Cmd+C는 반응하지 않으며 `settings.json`이 바뀐다. 재실행 후에도 유지된다.
 4. 녹화 중 K만 누르면 수식 키 안내, Cmd+-(빼기)나 숫자 키패드 키는 쓸 수 없는 키 안내가 나오고 녹화가 계속된다. Esc를 누르면 녹화가 끝나고 필드는 이전 값이다.
@@ -348,7 +348,7 @@ STA-70 원인: 단축키 입력란 `TextField`에 `.onSubmit { model.apply() }`�
 
 ## 5단계 이미지와 mixed 저장 기록 (STA-57)
 
-`Save Clipboard...`로 이미지만 있는 클립보드는 `image` Draft, 텍스트와 이미지가 함께 있으면 `mixed` Draft가 된다. Save Popup은 이미지 미리보기를 보여 주고, `mixed`는 텍스트/이미지 분할 선택(기본 텍스트)을 주며 고른 유형 하나만 저장한다(D-02). 이미지는 `DropStore.saveImage`로 `image.png`에 저장하고, 비었거나 PNG가 아닌 이미지는 저장하지 않고 이유를 보여 준다(S-10). 캡처 단계에서도 PNG 시그니처가 아니면 `clipboard_image_unavailable`로 취급해 텍스트가 있으면 경고와 함께 텍스트로 진행한다. 임시 오류 코드 `clipboard_image_unsupported`와 문구 `clipboardImageUnsupported`는 제거했다.
+`Save Clipboard`로 이미지만 있는 클립보드는 `image` Draft, 텍스트와 이미지가 함께 있으면 `mixed` Draft가 된다. Save Popup은 이미지 미리보기를 보여 주고, `mixed`는 텍스트/이미지 분할 선택(기본 텍스트)을 주며 고른 유형 하나만 저장한다(D-02). 이미지는 `DropStore.saveImage`로 `image.png`에 저장하고, 비었거나 PNG가 아닌 이미지는 저장하지 않고 이유를 보여 준다(S-10). 캡처 단계에서도 PNG 시그니처가 아니면 `clipboard_image_unavailable`로 취급해 텍스트가 있으면 경고와 함께 텍스트로 진행한다. 임시 오류 코드 `clipboard_image_unsupported`와 문구 `clipboardImageUnsupported`는 제거했다.
 
 단위 테스트로 확인함: 분류와 제목(`ClipboardCaptureTests`), 비PNG 바이트 거부, 팝업의 유형 선택과 저장 요청(`SavePopupImageTests`).
 
@@ -356,11 +356,11 @@ STA-70 원인: 단축키 입력란 `TextField`에 `.onSubmit { model.apply() }`�
 
 ## 5단계 instant 모드 기록 (STA-58)
 
-저장 확인 방식(`captureConfirmationMode`)이 캡처 동작에 연결됐다. 단축키와 `Save Clipboard...` 모두 같은 경로(`CaptureRouter`)를 지나며, 모드는 캡처마다 설정 파일에서 읽어서 재시작 없이 반영된다(읽을 수 없으면 팝업). `instant`에서 텍스트 Draft는 팝업 없이 노트 `""`·태그 없음으로 저장되고, 메뉴 막대에 `Saved`가 900 ms 보이고, Library가 새로고침되며 새 Drop이 선택된다. 이미지와 `mixed`는 `instant`에서도 팝업이다. 즉시 저장이 실패하면 오류를 보관하고(메인 창을 띄우지 않음) `Error`를 보인다. 즉시 저장은 태그가 없으므로 `recentTags`를 갱신하지 않는다.
+저장 확인 방식(`captureConfirmationMode`)이 캡처 동작에 연결됐다. 단축키와 `Save Clipboard` 모두 같은 경로(`CaptureRouter`)를 지나며, 모드는 캡처마다 설정 파일에서 읽어서 재시작 없이 반영된다(읽을 수 없으면 팝업). `instant`에서 텍스트 Draft는 팝업 없이 노트 `""`·태그 없음으로 저장되고, 메뉴 막대에 `Saved`가 900 ms 보이고, Library가 새로고침되며 새 Drop이 선택된다. 이미지와 `mixed`는 `instant`에서도 팝업이다. 즉시 저장이 실패하면 오류를 보관하고(메인 창을 띄우지 않음) `Error`를 보인다. 즉시 저장은 태그가 없으므로 `recentTags`를 갱신하지 않는다.
 
 단위 테스트로 확인함: 모드×유형 결정(`CaptureConfirmationTests`), 즉시 저장 요청 모양·팝업 경로·모드 재읽기·실패 보고(`CaptureRouterTests`), `Saved`/`Error` 900 ms와 교체(`MenuBarTests`).
 
-수동 확인이 남음(실제 앱): `instant`로 바꾼 뒤 텍스트 선택 캡처(`Shift+Cmd+C`)와 `클립보드 저장...`이 팝업 없이 저장되고 `Saved`가 보이며 Library에 새 Drop이 선택됨, 이미지·mixed는 `instant`에서도 팝업, `modal`로 되돌리면 다시 팝업, 저장 폴더를 쓸 수 없을 때 `Error`가 보이고 다음에 메인 창을 열면 오류가 한 번 나옴.
+수동 확인이 남음(실제 앱): `instant`로 바꾼 뒤 텍스트 선택 캡처(`Shift+Cmd+C`)와 `클립보드 저장`이 팝업 없이 저장되고 `Saved`가 보이며 Library에 새 Drop이 선택됨, 이미지·mixed는 `instant`에서도 팝업, `modal`로 되돌리면 다시 팝업, 저장 폴더를 쓸 수 없을 때 `Error`가 보이고 다음에 메인 창을 열면 오류가 한 번 나옴.
 
 ## 5단계 수동 확인 기록 (STA-61)
 
@@ -409,7 +409,7 @@ P-02는 실제 대기 시간을 보는 수동 항목이라 ☐로 남긴다.
 
 - P-15: 레거시의 `swift -e` 서브프로세스 클립보드 접근 구조는 이어받지 않는다. `NSPasteboard`를 직접 쓰고 같은 동작만 유지한다(이미 그렇게 구현됨).
 - M-04: 파일 경로는 수집하지 않는다. 신뢰할 수 있는 API가 없어 `filePath`는 항상 `null`이다(현재 구현 그대로).
-- D-01: 클립보드 캡처 단축키(`Shift+Cmd+V`)는 만들지 않고 메뉴 막대 `Save Clipboard...`만 둔다. 단축키는 별도 요청이 있을 때 새 이슈로 한다.
+- D-01: 클립보드 캡처 단축키(`Shift+Cmd+V`)는 만들지 않고 메뉴 막대 `Save Clipboard`만 둔다. 단축키는 별도 요청이 있을 때 새 이슈로 한다.
 - D-02: `mixed` Drop 폴더는 레거시와 같게 깨지지 않고 목록에만 표시한다. 본문과 이미지 표시는 필요할 때 새 이슈로 한다. 새로 저장하는 Drop은 `text` 또는 `image`뿐이다.
 - D-03: 단축키 허용 범위는 현재 구현 그대로다. `Shift/Cmd/Ctrl/Option` 조합에 문자, 숫자, `F1`~`F24`(등록은 `F21`~`F24`를 거부하고 안내), 방향키, `Space`, `Enter`, `Tab`, `Escape`, `Backspace`, `Delete`, `Home`, `End`, `PageUp`, `PageDown`을 받고 나머지는 거부한다.
 - D-04: 이미지 Drop은 읽기에서 `drop.json`의 `imagePath`를 우선하고(없으면 `image.png`), 쓰기는 항상 `image.png`다.
@@ -421,7 +421,7 @@ P-02는 실제 대기 시간을 보는 수동 항목이라 ☐로 남긴다.
 사용자가 실제 앱(ad-hoc 서명 디버그 빌드)에서 직접 확인했고 모두 문제가 없다고 보고했다.
 
 - P-13: 선택 없이 `Shift+Cmd+C` 시 메뉴 막대 `Error`, 메인 창 표시, 보관 오류 알림, 창을 닫고 다시 열면 알림이 다시 뜨지 않음.
-- T-04: 조용한 실패(`pbcopy < /dev/null` 뒤 `클립보드 저장...`) 후 메뉴 막대로 메인 창을 열면 보관 오류가 한 번 표시됨. 이 확인을 준비하다가 메뉴 막대로 열 때는 보관 오류를 보여 주지 않던 결함을 찾아 `CaptureRuntime.showMainWindow`에서 한 번 꺼내 보이도록 고쳤다.
+- T-04: 조용한 실패(`pbcopy < /dev/null` 뒤 `클립보드 저장`) 후 메뉴 막대로 메인 창을 열면 보관 오류가 한 번 표시됨. 이 확인을 준비하다가 메뉴 막대로 열 때는 보관 오류를 보여 주지 않던 결함을 찾아 `CaptureRuntime.showMainWindow`에서 한 번 꺼내 보이도록 고쳤다.
 - C-12: 번들 ID를 바꾼 복사본에서 손쉬운 사용이 `권한 필요`로 나오고, Drop과 설정은 그대로.
 - I-05, D-10: SF Symbols, 포커스 링, 제목 인라인 이름 변경, 목록 비포커스 선택 약화, 설정 화면 토글.
 - D-11: 라이트 테마 도구 막대와 960 pt 최소 너비.
@@ -552,3 +552,11 @@ S·C 항목을 픽스처 **복사본**으로 다시 확인하고 항목마다 Sw
 - 단위: `EventLogTests`(덧붙이기와 시각, 회전, 쓰기 실패 무시, 동시 쓰기, 민감 문구가 코드만 남는지), `DropEditorTests`·`SavePopupModelTests`(주입한 `EventLogging`에 코드 한 줄만, 내용·경로 없음), `LoggingTests`(권한 변경 한 번만 기록, 시작 줄, 문구, 테스트가 실제 로그에 쓰지 않음).
 
 수동 확인이 남음(실제 앱): `Finder에서 로그 보기`가 파일을 선택해 Finder를 여는지(로그가 없을 때는 폴더), 처음 실행 후 시작 줄이 생기는지, 손쉬운 사용을 끄고 캡처했을 때 `permission_missing` 줄이 생기고 문구·경로가 없는지, 설정에서 권한을 바꾼 뒤 돌아왔을 때 권한 변경 줄, 로그 폴더를 읽기 전용으로 만들어도 앱이 정상 동작하는지, 1MB를 넘긴 뒤 `.1` 파일 생성, 한국어·영어 시스템 언어의 단추 문구.
+
+## PLO-96: 말줄임표 제거, 메뉴 막대 클릭, 저장 시 포커스
+
+- 문구: 메뉴 항목, 플레이스홀더, 진행 상태 문구에서 `...`/`…`를 지웠다(`Save Clipboard`, `클립보드 저장`, `저장 중` 등). 단위: `LocalizationTests.noPhraseUsesAnEllipsis`.
+- 메뉴 막대(T-01): 상태 항목에 메뉴를 늘 붙여 두고 열 때마다 `menuNeedsUpdate`에서 다시 만든다. 좌클릭·우클릭 모두 메뉴를 열고 앱을 활성화하지 않는다.
+- Save Popup: `.nonactivatingPanel`로 만들고 `NSApp.activate`를 뺐다. 팝업이 키보드를 받지만 plopcut은 활성화되지 않아 메인 창이 앞으로 오지 않고, 저장·취소 뒤 사용자가 쓰던 앱에 포커스가 남는다. 단위: `SavePopupWindowTests.Layout.thePopupDoesNotActivateTheApp`.
+- Save Popup 키: plopcut이 비활성이면 AppKit이 단축키(key equivalent)를 앱에 주지 않아 `Cmd+Enter`, Escape, 편집 메뉴(`Cmd+V` 등)가 듣지 않았다. `SavePopupPanel.sendEvent`가 처리되지 않은 명령 키와 Escape를 창의 단추 단축키로, 그다음 편집 명령(잘라내기, 복사, 붙여넣기, 전체 선택, 실행 취소, 실행 복귀)으로 보낸다. 한국어 자판처럼 라틴 문자가 없는 자판은 키 위치로 판단한다. 단위: `SavePopupWindowTests.KeyRouting`, `NoteEditor.editShortcutsReachTheNoteWithoutTheEditMenu`.
+- 실패(P-13, T-04): 선택 텍스트 캡처 실패도 메뉴 막대 실패 표시와 오류 보관만 한다. `permission_missing`만 예외로 메인 창을 연다(소유자 결정).

@@ -162,6 +162,16 @@ extension SavePopupWindowTests {
             }
         }
 
+        // PLO-96: plopcut stays inactive behind the popup, so no menu offers the Edit shortcuts. The test process has no
+        // main menu either, so only the panel's own routing can select the text here.
+        @Test func editShortcutsReachTheNoteWithoutTheEditMenu() async throws {
+            try await withPopup { popup in
+                popup.commit("abc")
+                popup.press("a", keyCode: 0, modifiers: .command)
+                #expect(popup.note.selectedRange() == NSRange(location: 0, length: 3))
+            }
+        }
+
         @Test func thePlaceholderStartsWhereTheCaretIs() async throws {
             try await withPopup { popup in
                 #expect(popup.note.showsPlaceholder)

@@ -29,7 +29,7 @@ never uploaded. Settings has a `Show Log in Finder` row.
 
 - The **selected text** of the frontmost app, only when you press the capture
   shortcut or choose a capture command.
-- The **clipboard**, only when you run `Save Clipboard...`. plopcut does not
+- The **clipboard**, only when you run `Save Clipboard`. plopcut does not
   monitor the clipboard in the background.
 - The **frontmost app name, window title**, and, for Google Chrome only, the
   **URL of the active tab**, at the moment of capture. macOS asks for Automation

@@ -25,7 +25,7 @@ behavior decisions it records.
 
 - A **Shift+Cmd+V** clipboard shortcut. The PRD mentioned it, but it was never
   implemented. Clipboard capture is opened from the menu bar item
-  `Save Clipboard...`.
+  `Save Clipboard`.
 - A **capture button in the toolbar** for selected text. The frontmost app is
   plopcut when the button is pressed, so it cannot read another app's selection.
   Use the global shortcut instead.

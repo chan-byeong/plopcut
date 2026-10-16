@@ -1,9 +1,10 @@
 import AppKit
 
-/// The menu bar item: left click opens the main window, right click shows the menu (checklist T-01).
+/// The menu bar item: a left or right click shows the menu without activating the app (checklist T-01, PLO-96).
 @MainActor
-final class MenuBarController: NSObject {
+final class MenuBarController: NSObject, NSMenuDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+    private let menu = NSMenu()
     private let openMainWindow: () -> Void
     private let openSettings: () -> Void
     private let saveClipboard: () -> Void
@@ -25,12 +26,10 @@ final class MenuBarController: NSObject {
                 return { task.cancel() }
             },
             reduceMotion: { NSWorkspace.shared.accessibilityDisplayShouldReduceMotion })
-        if let button = statusItem.button {
-            button.imagePosition = .imageOnly
-            button.target = self
-            button.action = #selector(clicked(_:))
-            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
-        }
+        statusItem.button?.imagePosition = .imageOnly
+        // The status item opens its own menu on any click; the items are rebuilt each time it opens.
+        menu.delegate = self
+        statusItem.menu = menu
         show(.idle)
     }
 
@@ -97,21 +96,14 @@ final class MenuBarController: NSObject {
         }
     }
 
-    // MARK: Clicks
+    // MARK: Menu
 
-    @objc private func clicked(_ sender: NSStatusBarButton) {
-        guard let event = NSApp.currentEvent else { return openMainWindow() }
-        if event.type == .rightMouseUp || event.modifierFlags.contains(.control) {
-            let menu = NSMenu()
-            for item in Self.menuItems(failure: feedback?.menuWillOpen()) {
-                if item.action != nil { item.target = self }
-                menu.addItem(item)
-            }
-            statusItem.menu = menu
-            statusItem.button?.performClick(nil)  // shows the menu for this click only
-            statusItem.menu = nil
-        } else {
-            openMainWindow()
+    /// Runs as the menu opens; the failure item needs `menuWillOpen()`'s answer, which also clears the exclamation mark.
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        menu.removeAllItems()
+        for item in Self.menuItems(failure: feedback?.menuWillOpen()) {
+            if item.action != nil { item.target = self }
+            menu.addItem(item)
         }
     }
 

@@ -1,6 +1,6 @@
 import Foundation
 
-/// The explicit "Save Clipboard..." capture (spec 3.2). Reads the clipboard once and never writes to it.
+/// The explicit "Save Clipboard" capture (spec 3.2). Reads the clipboard once and never writes to it.
 public struct ClipboardCapture: Sendable {
     private let clipboard: ClipboardAccess
     private let collector: SourceCollector

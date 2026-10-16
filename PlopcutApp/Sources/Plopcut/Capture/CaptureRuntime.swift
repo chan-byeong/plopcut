@@ -81,7 +81,7 @@ final class CaptureRuntime {
         // While Settings records a new shortcut, pressing the live one keeps it instead of capturing (STA-69).
         if createdShortcutModel?.currentShortcutPressed() == true { return }
         guard let coordinator else { return }
-        // plopcut is frontmost while its popup is open, so a capture would read plopcut itself. Show the
+        // The popup holds the keyboard while it is open, so a capture would read the popup itself. Show the
         // popup instead (a deliberate difference from checklist P-14, which expects the draft to be replaced).
         if popup.isVisible { popup.bringToFront(); return }
         Task { await coordinator.trigger() }
@@ -105,31 +105,31 @@ final class CaptureRuntime {
         ).capture()
     }
 
-    /// Menu bar `Save Clipboard...` (spec 3.2).
+    /// Menu bar `Save Clipboard` (spec 3.2).
     private func saveClipboard() {
         guard let clipboardCoordinator else { return }
         if popup.isVisible { popup.bringToFront(); return }
         Task { await clipboardCoordinator.trigger() }
     }
 
-    /// A failed clipboard capture only shows the failure in the menu bar and keeps the message for the next time the
-    /// main window opens; it never raises the window itself (checklist K-06).
+    /// A failed capture or save only shows the failure in the menu bar and keeps the message for the next time the
+    /// main window opens; it never raises the window itself (checklist K-06, P-13, PLO-96).
     private func reportQuietly(_ error: PlopcutError) {
         AppLog.shared.log(error: error)
         menuBar?.showError(reason: ErrorText.message(for: error))
         model.pendingCapture.store(error)
     }
 
+    /// A failed selected-text capture stays quiet like the others, except a missing Accessibility permission: the
+    /// shortcut cannot work at all without it, so the main window opens with the reason and `Open System Settings`.
     private func report(_ error: PlopcutError) {
-        AppLog.shared.log(error: error)
-        if error.code == "permission_missing", !didPromptForAccessibility {
+        reportQuietly(error)
+        guard error.code == "permission_missing" else { return }
+        if !didPromptForAccessibility {
             didPromptForAccessibility = true  // once per launch; the message in the main window repeats the guidance
             _ = AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": true] as CFDictionary)
         }
-        menuBar?.showError(reason: ErrorText.message(for: error))
-        model.pendingCapture.store(error)
         showMainWindow()
-        model.presentPendingCaptureError()
     }
 
     func showMainWindow() {

@@ -1,10 +1,13 @@
 import AppKit
+import Carbon.HIToolbox
 import SwiftUI
 
 /// The separate Save Popup window (spec 2.1): sized to its content, always on top, centered, no title.
 /// The hosting view adds the transparent title bar's height to `SavePopupView.contentSize`. The window never gets
 /// taller than the screen's visible area and stays inside it when it grows (STA-67).
 /// One window is reused; a new draft replaces the previous one (checklist P-14).
+/// A non-activating panel: it takes the keyboard without activating plopcut, so the main window stays where it is and
+/// the app the user was working in keeps focus after a save or a cancel (PLO-96).
 @MainActor
 final class SavePopupWindowController: NSObject, NSWindowDelegate {
     private var panel: NSPanel?
@@ -37,7 +40,6 @@ final class SavePopupWindowController: NSObject, NSWindowDelegate {
             }
         }
         keepInside(panel)
-        NSApp.activate(ignoringOtherApps: true)
         panel.makeKeyAndOrderFront(nil)
     }
 
@@ -48,7 +50,6 @@ final class SavePopupWindowController: NSObject, NSWindowDelegate {
 
     /// Brings the open popup back to the front without touching its draft.
     func bringToFront() {
-        NSApp.activate(ignoringOtherApps: true)
         panel?.makeKeyAndOrderFront(nil)
     }
 
@@ -59,9 +60,9 @@ final class SavePopupWindowController: NSObject, NSWindowDelegate {
     }
 
     private func makePanel() -> NSPanel {
-        let panel = NSPanel(
+        let panel = SavePopupPanel(
             contentRect: NSRect(origin: .zero, size: SavePopupView.contentSize),
-            styleMask: [.titled, .closable, .fullSizeContentView], backing: .buffered, defer: false)
+            styleMask: [.titled, .closable, .fullSizeContentView, .nonactivatingPanel], backing: .buffered, defer: false)
         panel.titleVisibility = .hidden
         panel.titlebarAppearsTransparent = true
         panel.level = .floating
@@ -93,5 +94,55 @@ final class SavePopupWindowController: NSObject, NSWindowDelegate {
         if model?.isSaving == true { return false }
         model = nil
         return true
+    }
+}
+
+/// The popup's panel. It does not activate plopcut, and AppKit only offers key equivalents to the active app, so the
+/// panel routes the ones that reach it unhandled: the buttons' Cmd+Enter and Escape, then the text editing commands the
+/// Edit menu would send (Cmd+V and the like). When plopcut is active, AppKit has already offered them to the window and
+/// the menu, so only a key nobody handled gets here and asking again changes nothing.
+final class SavePopupPanel: NSPanel {
+    override func sendEvent(_ event: NSEvent) {
+        if event.type == .keyDown, Self.routesAsKeyEquivalent(event), handleKeyEquivalent(event) {
+            return
+        }
+        super.sendEvent(event)
+    }
+
+    private func handleKeyEquivalent(_ event: NSEvent) -> Bool {
+        if performKeyEquivalent(with: event) { return true }
+        if let action = Self.editAction(for: event), let responder = firstResponder {
+            return responder.tryToPerform(action, with: self)
+        }
+        return false
+    }
+
+    /// The Edit menu's text commands by their usual shortcuts.
+    static func editAction(for event: NSEvent) -> Selector? {
+        let flags = event.modifierFlags.intersection([.command, .shift, .option, .control])
+        let key = letter(of: event)
+        switch (flags, key) {
+        case ([.command], "x"): return #selector(NSText.cut(_:))
+        case ([.command], "c"): return #selector(NSText.copy(_:))
+        case ([.command], "v"): return #selector(NSText.paste(_:))
+        case ([.command], "a"): return #selector(NSText.selectAll(_:))
+        case ([.command], "z"): return Selector(("undo:"))
+        case ([.command, .shift], "z"): return Selector(("redo:"))
+        default: return nil
+        }
+    }
+
+    /// The typed letter, or for a layout without Latin letters (Korean), the letter at that key's ANSI position.
+    private static func letter(of event: NSEvent) -> String? {
+        if let typed = event.charactersIgnoringModifiers?.lowercased(), typed.count == 1, typed.first?.isASCII == true {
+            return typed
+        }
+        let letters = [kVK_ANSI_X: "x", kVK_ANSI_C: "c", kVK_ANSI_V: "v", kVK_ANSI_A: "a", kVK_ANSI_Z: "z"]
+        return letters[Int(event.keyCode)]
+    }
+
+    /// Command shortcuts and Escape; plain typing (Return in the tag field included) stays with the text fields.
+    static func routesAsKeyEquivalent(_ event: NSEvent) -> Bool {
+        event.modifierFlags.contains(.command) || event.keyCode == UInt16(kVK_Escape)
     }
 }

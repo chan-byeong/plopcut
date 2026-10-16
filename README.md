@@ -18,7 +18,7 @@ clipboard or the selected text only when you ask it to capture.
 
 - **Capture selected text** with the global shortcut (default `Shift`+`Command`+`C`).
   The shortcut is changeable in Settings.
-- **Save the clipboard** from the menu bar item (`Save Clipboard...`).
+- **Save the clipboard** from the menu bar item (`Save Clipboard`).
 - **Add a note and tags** in the save popup. You can also choose to save plain
   text instantly, without the popup, in Settings.
 - **Browse the Library**: search, filter by type, tag, app, or date, and open
@@ -70,7 +70,7 @@ status in Settings.
 | --- | --- | --- |
 | Accessibility | System Settings › Privacy & Security › Accessibility | Reads the selected text in the app you are using and, as a fallback, sends `Command`+`C` to copy it. Selected-text capture does not work without it. |
 | Automation (Google Chrome) | System Settings › Privacy & Security › Automation | Reads the URL of Chrome's active tab so the drop can keep its source link. macOS asks the first time. Without it, capture still works but the URL is not saved. |
-| Clipboard | No plopcut setting. Recent macOS versions may show their own prompt when an app reads the clipboard. | Reads the clipboard only when you run `Save Clipboard...`. |
+| Clipboard | No plopcut setting. Recent macOS versions may show their own prompt when an app reads the clipboard. | Reads the clipboard only when you run `Save Clipboard`. |
 
 ## Where your data is stored
 

@@ -22,7 +22,7 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `refreshLibrary` | Refresh library | 라이브러리 새로고침 |
 | `capture` | Capture | 캡처 |
 | `openSettings` | Open settings | 설정 열기 |
-| `saveClipboard` | Save Clipboard... | 클립보드 저장... |
+| `saveClipboard` | Save Clipboard | 클립보드 저장 |
 | `openLibrary` | Open library | 라이브러리 열기 |
 | `showSidebar` | Show sidebar | 사이드바 표시 |
 | `hideSidebar` | Hide sidebar | 사이드바 숨기기 |
@@ -34,7 +34,7 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `inspectorPanelHelp` | Shows or hides the Information inspector panel. | 정보 인스펙터 패널을 표시하거나 숨깁니다. |
 | `imagePreviewUnavailable` | Image preview unavailable | 이미지 미리보기를 사용할 수 없습니다 |
 | `search` | Search drops | 드롭 검색 |
-| `searchPlaceholder` | Search title, text, note, tag, source… | 제목, 텍스트, 노트, 태그, 출처 검색… |
+| `searchPlaceholder` | Search title, text, note, tag, source | 제목, 텍스트, 노트, 태그, 출처 검색 |
 | `clearSearch` | Clear search | 검색 지우기 |
 | `drops` | drops | 개 |
 | `allDrops` | All drops | 모든 드롭 |
@@ -58,11 +58,11 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `yesterday` | Yesterday | 어제 |
 | `previous7` | Previous 7 Days | 지난 7일 |
 | `older` | Older | 이전 |
-| `loadingDrops` | Loading drops… | 드롭 불러오는 중… |
+| `loadingDrops` | Loading drops | 드롭 불러오는 중 |
 | `noMatches` | No drops match the current filters | 현재 필터와 일치하는 드롭이 없습니다 |
 | `noDropsTitle` | No saved drops yet | 저장된 드롭이 없습니다 |
 | `noDropsShortcutHint` | Select text in another app, then press: | 다른 앱에서 텍스트를 선택한 뒤 누르세요. |
-| `noDropsClipboardHint` | Save images with Save Clipboard... in the menu bar. | 이미지는 메뉴 막대의 클립보드 저장...으로 저장합니다. |
+| `noDropsClipboardHint` | Save images with Save Clipboard in the menu bar. | 이미지는 메뉴 막대의 클립보드 저장으로 저장합니다. |
 | `appLogo` | plopcut logo | plopcut 로고 |
 | `menuBarSaved` | plopcut, drop saved | plopcut, 드롭을 저장했습니다 |
 | `menuBarFailed` | plopcut, save failed | plopcut, 저장 실패 |
@@ -75,7 +75,7 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `unsaved` | Unsaved changes | 저장되지 않은 변경 |
 | `automaticSave` | Automatic save | 자동 저장 |
 | `changesPending` | Changes pending | 변경됨 |
-| `saving` | Saving… | 저장 중… |
+| `saving` | Saving | 저장 중 |
 | `saved` | Saved | 저장됨 |
 | `saveFailed` | Save failed | 저장 실패 |
 | `retrySave` | Retry | 다시 시도 |
@@ -87,8 +87,8 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `copyUrl` | Copy URL | URL 복사 |
 | `copyFile` | Copy file path | 파일 경로 복사 |
 | `note` | Note | 노트 |
-| `noNote` | No note… | 노트 없음… |
-| `tagPlaceholder` | research, quote… | 리서치, 인용… |
+| `noNote` | No note | 노트 없음 |
+| `tagPlaceholder` | research, quote | 리서치, 인용 |
 | `tagAlreadyAdded` | Already added | 이미 추가됨 |
 | `removeTag` | Remove | 제거 |
 | `source` | Source | 출처 |
@@ -122,7 +122,7 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `shortcutRegistrationFailed` | Could not register that shortcut. Another app may already use it. The previous shortcut still works. | 이 단축키를 등록하지 못했습니다. 다른 앱이 이미 사용 중일 수 있습니다. 이전 단축키는 그대로 동작합니다. |
 | `shortcutRollbackFailed` | The shortcut could not be saved and the previous one could not be restored. Set a shortcut again. | 단축키를 저장하지 못했고 이전 단축키도 복원하지 못했습니다. 단축키를 다시 설정하세요. |
 | `shortcutField` | Shortcut | 단축키 |
-| `shortcutRecording` | Press keys… | 키를 누르세요… |
+| `shortcutRecording` | Press keys | 키를 누르세요 |
 | `shortcutRecordHint` | Click the field and press the new key combination. Esc cancels the recording. | 입력란을 클릭하고 새 키 조합을 누르세요. Esc를 누르면 입력을 취소합니다. |
 | `shortcutUnsaved` | Not saved yet. The current shortcut keeps working until you press Save. | 아직 저장하지 않았습니다. 저장을 누르기 전까지 기존 단축키가 그대로 동작합니다. |
 | `shortcutNeedsModifier` | Hold Shift, Cmd, Ctrl or Option together with the key. | Shift, Cmd, Ctrl, Option 중 하나 이상을 함께 누르세요. |
@@ -133,7 +133,7 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `aboutVersion` | Version {version} | 버전 {version} |
 | `showLogInFinder` | Show Log in Finder | Finder에서 로그 보기 |
 | `permissionStatus` | Permission status | 권한 상태 |
-| `loadingPermissions` | Loading permissions… | 권한 확인 중… |
+| `loadingPermissions` | Loading permissions | 권한 확인 중 |
 | `accessibility` | Accessibility | 손쉬운 사용 |
 | `clipboard` | Clipboard | 클립보드 |
 | `automation` | Automation | 자동화 |
@@ -153,14 +153,14 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `saveImage` | Save Image Drop | 이미지 드롭 저장 |
 | `unknownApp` | Unknown app | 알 수 없는 앱 |
 | `unknownWindow` | Unknown window | 알 수 없는 윈도우 |
-| `optionalNote` | Optional note… | 선택 사항… |
+| `optionalNote` | Optional note | 선택 사항 |
 | `recentTags` | Recent tags | 최근 태그 |
 | `addTag` | Add tag | 태그 추가 |
 | `save` | Save | 저장 |
 | `preparing` | Preparing capture | 캡처 준비 중 |
 | `chooseType` | Drop type to save | 저장할 드롭 유형 |
 | `image` | Image | 이미지 |
-| `capturing` | Capturing selected text… | 선택한 텍스트 캡처 중… |
+| `capturing` | Capturing selected text | 선택한 텍스트 캡처 중 |
 | `captureSaved` | Drop saved. | 드롭을 저장했습니다. |
 | `pendingFailed` | Save failed | 저장 실패 |
 | `folderCancelled` | Folder selection cancelled. | 폴더 선택을 취소했습니다. |
@@ -197,5 +197,10 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 - `removeTag`(ko): `removeFilter`("제거")와 같은 동사로 맞추려 "삭제"를 "제거"로 고쳤다.
 - 영어 단수형: `dropCountOne` 추가(`1 drops` 방지). 한국어는 단수·복수 구분이 없다.
 - 하드코딩 영어 제거: 읽지 못한 드롭 경고(`unreadableDrops`), 알림창 단추(`ok`). 접근성 라벨 `dropTitle` 추가.
-- 의도적으로 그대로 둠: `Save Clipboard...`(세 점, 스펙·체크리스트가 같은 표기를 쓴다), 미리보기가 없을 때의 영어 `No preview`(스펙 2.5), 그룹 제목의 `Previous 7 Days`(macOS 목록 머리글 표기).
+- 의도적으로 그대로 둠: 미리보기가 없을 때의 영어 `No preview`(스펙 2.5), 그룹 제목의 `Previous 7 Days`(macOS 목록 머리글 표기).
 - `StringTable.swift`와 이 표가 같은 키·문구를 가지는지는 `AccessibilityAndCopyTests.stringTableMatchesStringsMarkdown`이 검사한다(`shortcutFormatHint`는 Swift 단축키 형식으로 고쳐 쓰므로 제외).
+
+## 말줄임표 제거 (PLO-96)
+
+- 메뉴 항목, 플레이스홀더, 진행 상태 문구 끝의 `...`/`…`를 모두 지웠다: `saveClipboard`, `searchPlaceholder`, `loadingDrops`, `saving`, `noNote`, `tagPlaceholder`, `shortcutRecording`, `loadingPermissions`, `optionalNote`, `capturing`. `noDropsClipboardHint` 안의 메뉴 이름도 새 표기(`Save Clipboard`, `클립보드 저장`)로 맞췄다.
+- 문구에 `...`/`…`가 없는지는 `LocalizationTests.noPhraseUsesAnEllipsis`가 검사한다.
