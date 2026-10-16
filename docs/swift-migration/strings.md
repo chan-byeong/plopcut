@@ -186,6 +186,26 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `dropNotFound` | This drop no longer exists. Refresh the library. | 이 드롭이 더 이상 없습니다. 라이브러리를 새로고침하세요. |
 | `exportFailed` | The Markdown file could not be written. Choose another location. | Markdown 파일을 쓰지 못했습니다. 다른 위치를 선택하세요. |
 
+## 구현 대기 문구 (PLO-89)
+
+브랜드·UI v2에서 정한 새 문구입니다. 아직 `StringTable.swift`에 없으므로 위 표와 분리해 둡니다. 구현할 때 각 행을 `ko`·`en`과 함께
+`StringTable.swift`와 위 표로 옮기고(`stringTableMatchesStringsMarkdown`이 두 곳을 비교합니다) 이 표에서 지웁니다. 열이 네 개라
+테스트는 이 표를 읽지 않습니다.
+
+| 키 | en | ko | 쓰는 곳 |
+| --- | --- | --- | --- |
+| `noDropsTitle` | No saved drops yet | 저장된 드롭이 없습니다 | 빈 Library 제목(스펙 2.5) |
+| `noDropsShortcutHint` | Select text in another app, then press: | 다른 앱에서 텍스트를 선택한 뒤 누르세요. | 빈 Library, 키캡 위 안내 |
+| `noDropsClipboardHint` | Save images with Save Clipboard... in the menu bar. | 이미지는 메뉴 막대의 클립보드 저장...으로 저장합니다. | 빈 Library, 키캡 아래 안내 |
+| `menuBarSaved` | plopcut, drop saved | plopcut, 드롭을 저장했습니다 | 메뉴 막대 성공 표시의 접근성 이름·툴팁(스펙 2.1) |
+| `menuBarFailed` | plopcut, save failed | plopcut, 저장 실패 | 메뉴 막대 실패 표시의 접근성 이름·툴팁 |
+| `aboutVersion` | Version {version} | 버전 {version} | Settings 정보 섹션(스펙 4장) |
+| `popupShortcutHint` | ⌘↩ Save · esc Cancel | ⌘↩ 저장 · esc 취소 | Save Popup 버튼 줄 왼쪽(스펙 3.5) |
+
+기존 키를 다시 쓰는 곳: 메뉴 막대 오류 항목의 제목 `pendingFailed`와 `openSettings`, 메뉴 명령 `refreshLibrary`(`Cmd+R`), 마크의
+접근성 이름 `appLogo`. 빈 Library가 새 키 세 개로 바뀌면 `noDrops`는 쓰지 않으므로 지우고, 정보 섹션이 `aboutVersion`을 쓰면
+`appVersion`이 남는 곳이 있는지 확인해 없으면 지웁니다.
+
 ## 문구 점검 기록 (STA-80)
 
 - `shortcutRecordHint`(ko): "녹화를 취소합니다"는 영상 녹화로 읽혀 "입력을 취소합니다"로 고쳤다.
