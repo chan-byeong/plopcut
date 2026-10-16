@@ -1,3 +1,4 @@
+import Foundation
 import CoreGraphics
 import PlopcutCore
 import Testing
@@ -49,3 +50,38 @@ import Testing
     }
 }
 
+
+@Suite struct BrandColorTests {
+    /// sRGB components (0…1) of each appearance in the AccentColor asset; `nil` is the default (light) entry.
+    static func accentColors() throws -> [String?: [Double]] {
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .appendingPathComponent("../../Resources/Assets.xcassets/AccentColor.colorset/Contents.json")
+        let json = try #require(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
+        var result: [String?: [Double]] = [:]
+        for entry in try #require(json["colors"] as? [[String: Any]]) {
+            let appearance = (entry["appearances"] as? [[String: String]])?.first?["value"]
+            let components = try #require((entry["color"] as? [String: Any])?["components"] as? [String: String])
+            result[appearance] = try ["red", "green", "blue"].map { key in
+                let hex = try #require(components[key])
+                return Double(try #require(Int(hex.dropFirst(2), radix: 16))) / 255
+            }
+        }
+        return result
+    }
+
+    // U-02: light #2F6BFF, dark #4F8CFF (spec 5).
+    @Test func accentAssetMatchesTheSpec() throws {
+        let colors = try Self.accentColors()
+        #expect(colors[nil] == [0x2F, 0x6B, 0xFF].map { Double($0) / 255 })
+        #expect(colors["dark"] == [0x4F, 0x8C, 0xFF].map { Double($0) / 255 })
+    }
+
+}
+
+@Suite struct TagDisplayTests {
+    // U-04: shown with #, stored without.
+    @Test func tagsAreShownWithAHash() {
+        #expect(Formatting.tag("design") == "#design")
+        #expect(Formatting.tag("two words") == "#two words")
+    }
+}

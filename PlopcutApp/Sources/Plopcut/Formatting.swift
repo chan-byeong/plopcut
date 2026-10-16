@@ -28,11 +28,14 @@ enum Formatting {
         count == 1 ? L10n.t("dropCountOne") : L10n.t("dropCount", ["count": String(count)])
     }
 
+    /// How a tag is shown everywhere (`#design`). The stored value never has the `#` (spec 5, checklist U-04).
+    static func tag(_ tag: String) -> String { "#\(tag)" }
+
     /// What VoiceOver reads for a list row: title, type, time, preview, app and tags as one phrase.
     static func rowAccessibilityLabel(_ drop: Drop) -> String {
         var parts = [drop.title, L10n.t(drop.type == .image ? "image" : "text"), time(drop.createdAt), preview(drop)]
         if let app = drop.source.appName { parts.append(app) }
-        if !drop.tags.isEmpty { parts.append(drop.tags.map { "#\($0)" }.joined(separator: " ")) }
+        if !drop.tags.isEmpty { parts.append(drop.tags.map(tag).joined(separator: " ")) }
         return parts.filter { !$0.isEmpty }.joined(separator: ", ")
     }
 

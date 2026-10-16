@@ -53,7 +53,7 @@ struct TagEntryField<Model: TagEditing>: View {
             } else {
                 FlowLayout {
                     ForEach(model.currentTags, id: \.self) { tag in
-                        RemovableChip(text: "#\(tag)", removeLabel: L10n.t("removeTag")) {
+                        RemovableChip(text: Formatting.tag(tag), removeLabel: L10n.t("removeTag")) {
                             model.removeTag(tag)
                             focused.wrappedValue = true
                         }

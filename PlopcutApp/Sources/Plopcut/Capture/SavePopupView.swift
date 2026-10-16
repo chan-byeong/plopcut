@@ -138,7 +138,7 @@ struct SavePopupView: View {
                     Text(L10n.t("recentTags")).font(.caption).foregroundStyle(.secondary)
                     FlowLayout {
                         ForEach(suggestions, id: \.self) { tag in
-                            Button("#\(tag)") { model.addRecentTag(tag) }.chipStyle()
+                            Button(Formatting.tag(tag)) { model.addRecentTag(tag) }.chipStyle()
                         }
                     }
                 }

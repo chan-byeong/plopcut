@@ -14,7 +14,7 @@ struct SidebarView: View {
                 if model.allTags.isEmpty {
                     Text(L10n.t("noTags")).foregroundStyle(.secondary)
                 } else {
-                    ForEach(model.allTags, id: \.self) { tag in row(tag, "tag", .tag(tag)) }
+                    ForEach(model.allTags, id: \.self) { tag in row(tag, "number", .tag(tag)) }
                 }
             }
         }
@@ -30,7 +30,8 @@ struct SidebarView: View {
 
     private func row(_ title: String, _ symbol: String, _ value: SidebarSelection) -> some View {
         let count = model.count(for: value)
-        return Label(title, systemImage: symbol)
+        // Gray icons (color-icon-secondary); the selected row turns them white with the title.
+        return Label { Text(title) } icon: { Image(systemName: symbol).foregroundStyle(.secondary) }
             .badge(value == .settings ? 0 : count)
             .tag(value)
     }
