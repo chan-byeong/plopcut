@@ -59,6 +59,8 @@ enum StringTable {
         "noMatches": (en: "No drops match the current filters", ko: "현재 필터와 일치하는 드롭이 없습니다"),
         "noDrops": (en: "No saved drops yet. Capture text with Shift + Cmd + C.", ko: "저장된 드롭이 없습니다. Shift + Cmd + C로 텍스트를 캡처하세요."),
         "appLogo": (en: "plopcut logo", ko: "plopcut 로고"),
+        "menuBarSaved": (en: "plopcut, drop saved", ko: "plopcut, 드롭을 저장했습니다"),
+        "menuBarFailed": (en: "plopcut, save failed", ko: "plopcut, 저장 실패"),
         "selectedDrop": (en: "Selected drop", ko: "선택한 드롭"),
         "drop": (en: "drop", ko: "드롭"),
         "unsaved": (en: "Unsaved changes", ko: "저장되지 않은 변경"),

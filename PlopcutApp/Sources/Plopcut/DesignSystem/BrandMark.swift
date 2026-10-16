@@ -46,12 +46,15 @@ enum BrandMark {
     }
 
     /// The single-color menu bar image (18 pt). The system tints it, and the handler redraws it at every backing scale.
-    static func templateImage(_ accent: Accent, size: CGFloat = 18) -> NSImage {
+    /// `accentLift` raises the accent and `shift` moves the whole mark sideways, both in mark units, for the save
+    /// feedback frames (spec 2.1).
+    static func templateImage(_ accent: Accent, accentLift: CGFloat = 0, shift: CGFloat = 0, size: CGFloat = 18) -> NSImage {
         let image = NSImage(size: NSSize(width: size, height: size), flipped: true) { rect in
             guard let context = NSGraphicsContext.current?.cgContext else { return false }
-            let transform = transform(fitting: rect)
+            let transform = transform(fitting: rect).translatedBy(x: shift, y: 0)
+            let accentTransform = transform.translatedBy(x: 0, y: -accentLift)
             context.addPath(letter.copy(using: [transform]) ?? letter)
-            context.addPath(Self.accent(accent).copy(using: [transform]) ?? Self.accent(accent))
+            context.addPath(Self.accent(accent).copy(using: [accentTransform]) ?? Self.accent(accent))
             context.setFillColor(NSColor.black.cgColor)
             context.fillPath()
             return true

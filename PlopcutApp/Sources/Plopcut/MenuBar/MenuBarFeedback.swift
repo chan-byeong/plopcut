@@ -4,41 +4,92 @@ import Foundation
 enum MenuBarAction: String {
     case saveClipboard = "save-clipboard"
     case openLibrary = "open-library"
+    /// Shown only under a save failure (checklist T-05).
+    case openSettings = "open-settings"
 
     init?(id: String) { self.init(rawValue: id) }
 }
 
-/// Shows `Saved` or `Error` next to the menu bar icon for 900 ms, then puts the title and tooltip back (checklist T-03).
-/// The status item and the timer are injected so the timing can be tested.
+/// What the status item shows: the symbol in the dot's place, an optional movement, and the tooltip that is also the
+/// accessibility name.
+struct MenuBarAppearance: Equatable {
+    enum Motion: Equatable {
+        /// The dot falls into place (success).
+        case drop
+        /// The mark shakes left and right (failure).
+        case shake
+    }
+
+    let accent: BrandMark.Accent
+    let motion: Motion?
+    let tooltip: String
+
+    static let idle = MenuBarAppearance(accent: .dot, motion: nil, tooltip: MenuBarFeedback.idleTooltip)
+}
+
+/// The save feedback in the dot's place (spec 2.1, checklist T-03). Success drops the dot (200 ms), turns it into a
+/// check, and puts the dot back about 1.1 s after the start. Failure shakes the mark (240 ms) and leaves an
+/// exclamation mark until the menu opens; the menu then lists the reason (T-05). A success during a failure replaces
+/// it. With Reduce Motion the symbols change at the same times without moving.
+/// The status item, the timer and the Reduce Motion setting are injected so the states and timing can be tested.
 @MainActor
 final class MenuBarFeedback {
-    static let idleTooltip = "plopcut"
-    static let errorText = "Error"
-    static let savedText = "Saved"
-    static let duration: Duration = .milliseconds(900)
+    nonisolated static let idleTooltip = "plopcut"
+    static let dropDuration: Duration = .milliseconds(200)
+    static let shakeDuration: Duration = .milliseconds(240)
+    /// From the start of the drop until the dot is back.
+    static let savedDuration: Duration = .milliseconds(1100)
 
-    private let apply: (_ title: String?, _ tooltip: String) -> Void
+    /// The reason shown at the top of the menu while the exclamation mark is up.
+    private(set) var failureReason: String?
+
+    private let apply: (MenuBarAppearance) -> Void
     private let schedule: (Duration, @escaping @MainActor () -> Void) -> () -> Void
-    private var cancelRestore: (() -> Void)?
+    private let reduceMotion: () -> Bool
+    private var cancelPending: [() -> Void] = []
 
     init(
-        apply: @escaping (_ title: String?, _ tooltip: String) -> Void,
-        schedule: @escaping (Duration, @escaping @MainActor () -> Void) -> () -> Void
+        apply: @escaping (MenuBarAppearance) -> Void,
+        schedule: @escaping (Duration, @escaping @MainActor () -> Void) -> () -> Void,
+        reduceMotion: @escaping () -> Bool
     ) {
         self.apply = apply
         self.schedule = schedule
+        self.reduceMotion = reduceMotion
     }
 
-    func showError() { show(Self.errorText) }
-
-    func showSaved() { show(Self.savedText) }
-
-    private func show(_ text: String) {
-        cancelRestore?()
-        apply(text, text)
-        cancelRestore = schedule(Self.duration) { [weak self] in
-            self?.cancelRestore = nil
-            self?.apply(nil, Self.idleTooltip)
+    func showSaved() {
+        reset()
+        let motion: MenuBarAppearance.Motion? = reduceMotion() ? nil : .drop
+        apply(MenuBarAppearance(accent: .dot, motion: motion, tooltip: L10n.t("menuBarSaved")))
+        after(Self.dropDuration) { [weak self] in
+            self?.apply(MenuBarAppearance(accent: .check, motion: nil, tooltip: L10n.t("menuBarSaved")))
         }
+        after(Self.savedDuration) { [weak self] in self?.apply(.idle) }
+    }
+
+    func showError(reason: String) {
+        reset()
+        failureReason = reason
+        let motion: MenuBarAppearance.Motion? = reduceMotion() ? nil : .shake
+        apply(MenuBarAppearance(accent: .exclamation, motion: motion, tooltip: L10n.t("menuBarFailed")))
+    }
+
+    /// Called as the menu opens: returns the failure to list at the top of the menu, if any, and puts the dot back.
+    func menuWillOpen() -> String? {
+        guard let reason = failureReason else { return nil }
+        reset()
+        apply(.idle)
+        return reason
+    }
+
+    private func reset() {
+        cancelPending.forEach { $0() }
+        cancelPending = []
+        failureReason = nil
+    }
+
+    private func after(_ delay: Duration, _ work: @escaping @MainActor () -> Void) {
+        cancelPending.append(schedule(delay, work))
     }
 }

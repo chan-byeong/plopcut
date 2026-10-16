@@ -4,7 +4,7 @@ Linear: STA-39
 
 레거시 `src/i18n/i18n.tsx`에서 그대로 추출한 사용자 문구입니다. 키는 [스펙](spec.md)과 [체크리스트](behavior-checklist.md)가 참조하는 이름입니다. 시스템 언어가 `ko`로 시작하면 한국어, 아니면 영어를 씁니다. 두 언어의 키 집합은 같습니다(158개). `shortcutFormatHint`만 구현 용어(Tauri)를 말하므로 Swift 구현의 단축키 형식에 맞게 고쳐 씁니다(체크리스트 D-12). `{count}` 같은 자리 표시자는 치환합니다.
 
-Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA-72, 로고 접근성 라벨), `settingsFailure`·`deleteFailed`·`dropNotFound`·`exportFailed`(STA-78, 알려진 오류 코드의 문구), `dropCountOne`(영어 단수형), `dropTitle`(제목 입력란 접근성 라벨), `ok`(알림 단추), `unreadableDrops`(읽지 못한 드롭 경고, STA-80), `showLogInFinder`(Settings의 로그 파일 보기 단추, STA-80).
+Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA-72, 로고 접근성 라벨), `settingsFailure`·`deleteFailed`·`dropNotFound`·`exportFailed`(STA-78, 알려진 오류 코드의 문구), `dropCountOne`(영어 단수형), `dropTitle`(제목 입력란 접근성 라벨), `ok`(알림 단추), `unreadableDrops`(읽지 못한 드롭 경고, STA-80), `showLogInFinder`(Settings의 로그 파일 보기 단추, STA-80), `menuBarSaved`·`menuBarFailed`(메뉴 막대 저장 피드백의 접근성 이름·툴팁, PLO-93).
 
 | 키 | en | ko |
 | --- | --- | --- |
@@ -62,6 +62,8 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `noMatches` | No drops match the current filters | 현재 필터와 일치하는 드롭이 없습니다 |
 | `noDrops` | No saved drops yet. Capture text with Shift + Cmd + C. | 저장된 드롭이 없습니다. Shift + Cmd + C로 텍스트를 캡처하세요. |
 | `appLogo` | plopcut logo | plopcut 로고 |
+| `menuBarSaved` | plopcut, drop saved | plopcut, 드롭을 저장했습니다 |
+| `menuBarFailed` | plopcut, save failed | plopcut, 저장 실패 |
 | `dropTitle` | Drop title | 드롭 제목 |
 | `ok` | OK | 확인 |
 | `unreadableDrops` | Some drops could not be read ({count}) | 일부 드롭을 읽지 못했습니다 ({count}) |
@@ -197,8 +199,6 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `noDropsTitle` | No saved drops yet | 저장된 드롭이 없습니다 | 빈 Library 제목(스펙 2.5) |
 | `noDropsShortcutHint` | Select text in another app, then press: | 다른 앱에서 텍스트를 선택한 뒤 누르세요. | 빈 Library, 키캡 위 안내 |
 | `noDropsClipboardHint` | Save images with Save Clipboard... in the menu bar. | 이미지는 메뉴 막대의 클립보드 저장...으로 저장합니다. | 빈 Library, 키캡 아래 안내 |
-| `menuBarSaved` | plopcut, drop saved | plopcut, 드롭을 저장했습니다 | 메뉴 막대 성공 표시의 접근성 이름·툴팁(스펙 2.1) |
-| `menuBarFailed` | plopcut, save failed | plopcut, 저장 실패 | 메뉴 막대 실패 표시의 접근성 이름·툴팁 |
 | `aboutVersion` | Version {version} | 버전 {version} | Settings 정보 섹션(스펙 4장) |
 | `popupShortcutHint` | ⌘↩ Save · esc Cancel | ⌘↩ 저장 · esc 취소 | Save Popup 버튼 줄 왼쪽(스펙 3.5) |
 

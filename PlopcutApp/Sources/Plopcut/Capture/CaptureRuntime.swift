@@ -30,6 +30,10 @@ final class CaptureRuntime {
         started = true
         menuBar = MenuBarController(
             openMainWindow: { [weak self] in self?.showMainWindow() },
+            openSettings: { [weak self] in
+                self?.model.collection = .settings
+                self?.showMainWindow()
+            },
             saveClipboard: { [weak self] in self?.saveClipboard() })
 
         let gate = CaptureGate()
@@ -108,11 +112,11 @@ final class CaptureRuntime {
         Task { await clipboardCoordinator.trigger() }
     }
 
-    /// A failed clipboard capture only flashes `Error` in the menu bar and keeps the message for the next time the
+    /// A failed clipboard capture only shows the failure in the menu bar and keeps the message for the next time the
     /// main window opens; it never raises the window itself (checklist K-06).
     private func reportQuietly(_ error: PlopcutError) {
         AppLog.shared.log(error: error)
-        menuBar?.showError()
+        menuBar?.showError(reason: ErrorText.message(for: error))
         model.pendingCapture.store(error)
     }
 
@@ -122,7 +126,7 @@ final class CaptureRuntime {
             didPromptForAccessibility = true  // once per launch; the message in the main window repeats the guidance
             _ = AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": true] as CFDictionary)
         }
-        menuBar?.showError()
+        menuBar?.showError(reason: ErrorText.message(for: error))
         model.pendingCapture.store(error)
         showMainWindow()
         model.presentPendingCaptureError()
