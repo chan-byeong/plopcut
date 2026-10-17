@@ -27,6 +27,7 @@ skills-lock.json
 docs/design/
 
 # Maintainer-only docs (kept locally; only contributor-facing docs are published)
+docs/architecture.md
 docs/design-decisions.md
 docs/component-decisions.md
 docs/release.md
