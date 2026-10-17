@@ -4,6 +4,15 @@ import PlopcutCore
 import Observation
 import SwiftUI
 
+/// What the theme changes on the running application; `NSApplication` in the app, a fake in tests.
+@MainActor
+protocol ThemedApplication: AnyObject {
+    var appearance: NSAppearance? { get set }
+    var windows: [NSWindow] { get }
+}
+
+extension NSApplication: ThemedApplication {}
+
 /// The values the settings screen edits. Each change is written to settings.json on its own (spec C-03: only the
 /// sent field changes) and rolled back on screen when the write fails.
 @MainActor
@@ -16,25 +25,49 @@ final class SettingsModel {
 
     private let store: SettingsStore?
     private let devOverride: ColorScheme?
+    private let application: () -> ThemedApplication?
+    @ObservationIgnored private var launchObserver: NSObjectProtocol?
 
+    /// `application` and `launch` are seams for tests; the app passes neither.
     init(store: SettingsStore?, appVersion: String = SettingsModel.bundleVersion(from: Bundle.main.infoDictionary ?? [:]),
-         devOverride: ColorScheme? = SettingsModel.environmentOverride) {
+         devOverride: ColorScheme? = SettingsModel.environmentOverride,
+         application: @escaping () -> ThemedApplication? = { NSApp }, launch: NotificationCenter = .default) {
         self.store = store
         self.appVersion = appVersion
         self.devOverride = devOverride
+        self.application = application
         var stored: AppSettings?
         var loadError: String?
         do { stored = try store?.read() } catch { loadError = ErrorText.message(for: error) }
         theme = stored?.theme ?? .system
         captureMode = stored?.captureConfirmationMode ?? .modal
         errorMessage = loadError
-        applyAppearance()
+        if application() != nil {
+            applyAppearance()
+        } else {
+            applyWhenLaunching(launch)
+        }
+    }
+
+    /// The model is made in `App.init`, before AppKit creates `NSApp` (PLO-95). The stored theme is applied as the app
+    /// starts launching, which is before SwiftUI builds the first window, so the window never shows the wrong scheme.
+    private func applyWhenLaunching(_ launch: NotificationCenter) {
+        launchObserver = launch.addObserver(
+            forName: NSApplication.willFinishLaunchingNotification, object: nil, queue: nil
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                if let observer = self.launchObserver { launch.removeObserver(observer) }
+                self.launchObserver = nil
+                self.applyAppearance()
+            }
+        }
     }
 
     /// The single place the theme reaches the windows. `preferredColorScheme` is not used: it pins a per-window
     /// appearance that `nil` does not release, which left windows light after switching back to `system`.
     func applyAppearance() {
-        guard let app = NSApp else { return }
+        guard let app = application() else { return }
         app.appearance = switch colorScheme {
         case .light: NSAppearance(named: .aqua)
         case .dark: NSAppearance(named: .darkAqua)

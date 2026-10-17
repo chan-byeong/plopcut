@@ -82,8 +82,49 @@ import Testing
         #expect(model.colorScheme == .light)
     }
 
+    // PLO-95: the model is made in `App.init`, before AppKit creates `NSApp`, so the stored theme waits for launch.
+    @Test func aStoredThemeIsAppliedWhenTheAppFinishesLaunching() throws {
+        let (store, _) = makeStore()
+        _ = try store.update(SettingsUpdate(theme: .light))
+        let app = FakeApplication()
+        var current: FakeApplication?
+        let launch = NotificationCenter()
+        let model = SettingsModel(store: store, appVersion: "1", devOverride: nil, application: { current }, launch: launch)
+        current = app
+        launch.post(name: NSApplication.willFinishLaunchingNotification, object: nil)
+        withExtendedLifetime(model) {}
+        #expect(app.appearance?.name == .aqua)
+    }
+
+    @Test func theDevOverrideIsAppliedWhenTheAppFinishesLaunching() {
+        let (store, _) = makeStore()
+        let app = FakeApplication()
+        var current: FakeApplication?
+        let launch = NotificationCenter()
+        let model = SettingsModel(store: store, appVersion: "1", devOverride: .dark, application: { current }, launch: launch)
+        current = app
+        launch.post(name: NSApplication.willFinishLaunchingNotification, object: nil)
+        withExtendedLifetime(model) {}
+        #expect(app.appearance?.name == .darkAqua)
+    }
+
+    @Test func anAppThatAlreadyExistsGetsTheThemeAtOnce() throws {
+        let (store, _) = makeStore()
+        _ = try store.update(SettingsUpdate(theme: .dark))
+        let app = FakeApplication()
+        _ = SettingsModel(store: store, appVersion: "1", devOverride: nil, application: { app }, launch: NotificationCenter())
+        #expect(app.appearance?.name == .darkAqua)
+    }
+
     @Test func versionFallsBackWhenBundleHasNone() {
         #expect(SettingsModel.bundleVersion(from: [:]) == "dev")
         #expect(SettingsModel.bundleVersion(from: ["CFBundleShortVersionString": "0.1.0"]) == "0.1.0")
     }
+}
+
+/// Stands in for `NSApp`, so the tests do not change the appearance of the shared application other suites use.
+@MainActor
+private final class FakeApplication: ThemedApplication {
+    var appearance: NSAppearance?
+    var windows: [NSWindow] = []
 }
