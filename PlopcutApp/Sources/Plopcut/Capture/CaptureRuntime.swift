@@ -188,6 +188,7 @@ final class CaptureRuntime {
 
     private func saved(_ drop: Drop) {
         popup.close()
+        menuBar?.showSaved()  // T-03: a popup save shows the same success feedback as an instant save (PLO-98)
         if let current = try? settings.read() {
             let merged = Tags.mergeRecent(new: drop.tags, existing: current.recentTags)
             // Recent tags are a convenience; a failed write must not undo a successful save.
