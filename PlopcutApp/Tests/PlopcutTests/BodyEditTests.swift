@@ -176,4 +176,136 @@ import Testing
         #expect(await rig.recorder.calls.map(\.text) == [nil, "second"])
         #expect(rig.editor.state == .saved && rig.editor.draft.note == "first" && !rig.editor.isEditingBody)
     }
+
+    // MARK: Draft safety (PLO-104 review)
+
+    /// Starts Done on "second" with the write held inside the store.
+    private func heldDone(_ rig: DropEditorTests.Rig) async -> Task<Bool, Never> {
+        rig.editor.beginBodyEdit(DropEditorTests.drop())
+        rig.editor.bodyText = "second"
+        await rig.recorder.setHold(true)
+        let done = Task { await rig.editor.finishBodyEdit() }
+        await rigs.settle()
+        return done
+    }
+
+    // E-14: the editor takes no typing while its save is pending, so nothing typed after Done is dropped unseen.
+    @Test func typingWhileTheSaveIsPendingIsRefused() async throws {
+        let rig = rigs.makeRig()
+        let done = await heldDone(rig)
+        #expect(rig.editor.bodyEdit?.state == .saving && !rig.editor.isBodyEditable)
+        rig.editor.bodyText = "second and more"
+        #expect(rig.editor.bodyText == "second")
+        await rig.recorder.release()
+        #expect(await done.value)
+        #expect(await rig.recorder.calls.map(\.text) == ["second"])
+    }
+
+    // E-15: a move asked for while the save is pending waits for it and then goes ahead.
+    @Test func leavingDuringAPendingSaveMovesAfterItSucceeds() async throws {
+        let rig = rigs.makeRig()
+        let done = await heldDone(rig)
+        var moved = 0
+        rig.editor.requestLeave { moved += 1 }
+        #expect(moved == 0 && rig.editor.isEditingBody && !rig.editor.isConfirmingDiscard)
+        await rig.recorder.release()
+        #expect(await done.value)
+        #expect(moved == 1 && !rig.editor.isEditingBody)
+    }
+
+    // E-15: when that save fails, the editor stays open with the draft and the error, and the held move is dropped.
+    @Test func leavingDuringAPendingSaveThatFailsKeepsTheDraft() async throws {
+        let rig = rigs.makeRig()
+        let done = await heldDone(rig)
+        await rig.recorder.setFailure(PlopcutError("storage_unwritable"))
+        var moved = 0
+        rig.editor.requestLeave { moved += 1 }
+        await rig.recorder.release()
+        #expect(await done.value == false)
+        #expect(moved == 0)
+        #expect(rig.editor.isEditingBody && rig.editor.bodyText == "second")
+        #expect(rig.editor.bodyEdit?.state == .failed("storage_unwritable"))
+        #expect(rig.saved.failures.isEmpty, "the error shows in the open editor, not as a background alert")
+    }
+
+    // E-16: quitting with a changed draft asks; Cancel keeps the app and the draft, nothing is written.
+    @Test func quittingWithAChangedDraftAsksAndCancelKeepsIt() async throws {
+        let rig = rigs.makeRig()
+        rig.editor.beginBodyEdit(DropEditorTests.drop())
+        rig.editor.bodyText = "draft"
+        #expect(rig.editor.needsWorkBeforeQuit)
+        var asked = 0
+        #expect(await rig.editor.prepareToQuit { asked += 1; return .cancel } == .cancelled)
+        #expect(asked == 1 && rig.editor.bodyText == "draft")
+        #expect(await rig.recorder.calls.isEmpty)
+    }
+
+    // E-16: Don't Save drops the draft without writing and the quit goes on.
+    @Test func quittingWithAChangedDraftCanDiscardIt() async throws {
+        let rig = rigs.makeRig()
+        rig.editor.beginBodyEdit(DropEditorTests.drop())
+        rig.editor.bodyText = "draft"
+        #expect(await rig.editor.prepareToQuit { .discard } == .ready)
+        #expect(!rig.editor.isEditingBody)
+        #expect(await rig.recorder.calls.isEmpty)
+    }
+
+    // E-16: Save writes through the normal path; the quit goes on only after it succeeds.
+    @Test func quittingWithAChangedDraftCanSaveIt() async throws {
+        let rig = rigs.makeRig()
+        rig.editor.beginBodyEdit(DropEditorTests.drop())
+        rig.editor.bodyText = "draft"
+        #expect(await rig.editor.prepareToQuit { .save } == .ready)
+        #expect(await rig.recorder.calls.map(\.text) == ["draft"])
+        #expect(!rig.editor.isEditingBody)
+    }
+
+    // E-16: a failed save keeps the app open with the editor and its error.
+    @Test func quittingWithASaveThatFailsKeepsTheEditor() async throws {
+        let rig = rigs.makeRig()
+        rig.editor.beginBodyEdit(DropEditorTests.drop())
+        rig.editor.bodyText = "draft"
+        await rig.recorder.setFailure(PlopcutError("storage_unwritable"))
+        #expect(await rig.editor.prepareToQuit { .save } == .cancelled)
+        #expect(rig.editor.isEditingBody && rig.editor.bodyText == "draft")
+        #expect(rig.editor.bodyEdit?.state == .failed("storage_unwritable"))
+    }
+
+    // E-16: an open editor without a change asks nothing.
+    @Test func quittingWithoutAChangedDraftAsksNothing() async throws {
+        let rig = rigs.makeRig()
+        rig.editor.beginBodyEdit(DropEditorTests.drop())
+        #expect(!rig.editor.needsWorkBeforeQuit)
+        var asked = 0
+        #expect(await rig.editor.prepareToQuit { asked += 1; return .cancel } == .ready)
+        #expect(asked == 0)
+    }
+
+    // E-16: a content save already pending at quit is waited for like other edits.
+    @Test func quittingWaitsForAPendingContentSave() async throws {
+        let rig = rigs.makeRig()
+        let done = await heldDone(rig)
+        #expect(rig.editor.needsWorkBeforeQuit)
+        var asked = 0
+        let quit = Task { await rig.editor.prepareToQuit { asked += 1; return .cancel } }
+        await rigs.settle()
+        await rig.recorder.release()
+        #expect(await quit.value == .ready)
+        #expect(await done.value)
+        #expect(asked == 0 && !rig.editor.isEditingBody)
+    }
+
+    // E-16: when that pending save fails, the quit asks about the draft it kept.
+    @Test func quittingAfterAPendingContentSaveFailsAsks() async throws {
+        let rig = rigs.makeRig()
+        let done = await heldDone(rig)
+        await rig.recorder.setFailure(PlopcutError("storage_unwritable"))
+        var asked = 0
+        let quit = Task { await rig.editor.prepareToQuit { asked += 1; return .cancel } }
+        await rigs.settle()
+        await rig.recorder.release()
+        #expect(await quit.value == .cancelled)
+        #expect(await done.value == false)
+        #expect(asked == 1 && rig.editor.bodyText == "second")
+    }
 }

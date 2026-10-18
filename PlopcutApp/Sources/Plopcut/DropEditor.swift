@@ -92,6 +92,10 @@ final class DropEditor {
     /// The move (cancel, another drop, another Collection) waiting for "Discard changes?" (E-10).
     private var pendingLeave: (@MainActor () -> Void)?
     private(set) var isConfirmingDiscard = false
+    /// The move asked for while Done was writing; it runs once the write succeeds (E-15).
+    private var moveAfterSave: (@MainActor () -> Void)?
+    /// The content write of Done while it runs.
+    private var bodySave: Task<Bool, Never>?
 
     private let sleep: @Sendable (Duration) async throws -> Void
     private let save: @Sendable (String, DropUpdate) async throws -> Drop
@@ -120,6 +124,24 @@ final class DropEditor {
         if queued > 0 || (titleEditing && titleText != draft.title) { return true }
         if let id = dropID, slot(id)?.needsWork == true { return true }
         return slots.values.contains { $0.needsWork }
+    }
+
+    /// True when quitting must wait: unsaved autosave edits, a content save in flight, or a changed content draft.
+    var needsWorkBeforeQuit: Bool { hasUnsavedEdits || bodyChanged }
+
+    /// Gets the editor ready to quit (E-16). A content save already running is waited for. A changed content draft
+    /// is never saved on its own: `ask` decides, Save goes through Done, and a failed save keeps the app open with
+    /// the editor and its error. Then every autosave is drained.
+    func prepareToQuit(ask: @MainActor () async -> BodyDraftQuitChoice) async -> QuitPreparation {
+        if let bodySave { _ = await bodySave.value }
+        if bodyChanged {
+            switch await ask() {
+            case .cancel: return .cancelled
+            case .discard: closeBodyEdit()
+            case .save: if await finishBodyEdit() == false { return .cancelled }
+            }
+        }
+        return await drain() ? .ready : .failed
     }
 
     // MARK: Slots
@@ -260,11 +282,14 @@ final class DropEditor {
     var isEditingBody: Bool { bodyEdit != nil }
     var bodyChanged: Bool { bodyEdit?.isChanged ?? false }
 
-    /// What the content editor shows. Setting it is ignored when no editor is open.
+    /// False while Done is writing: the text sent must be the text kept, so typing waits for the result (E-14).
+    var isBodyEditable: Bool { bodyEdit != nil && bodyEdit?.state != .saving }
+
+    /// What the content editor shows. Setting it is ignored when no editor is open or while its save is pending.
     var bodyText: String {
         get { bodyEdit?.text ?? "" }
         set {
-            guard var edit = bodyEdit, edit.text != newValue else { return }
+            guard isBodyEditable, var edit = bodyEdit, edit.text != newValue else { return }
             edit.text = newValue
             bodyEdit = edit
         }
@@ -295,6 +320,15 @@ final class DropEditor {
         let id = edit.dropID, text = edit.text
         edit.state = .saving
         bodyEdit = edit
+        let task = Task { await self.writeBody(text, of: id) }
+        bodySave = task
+        return await task.value
+    }
+
+    /// The content write of Done. A move asked for meanwhile runs after a success and is dropped after a failure,
+    /// which leaves the editor open with the typed text and the error (E-15).
+    private func writeBody(_ text: String, of id: String) async -> Bool {
+        defer { bodySave = nil; moveAfterSave = nil }
         do {
             _ = try await queueChange(for: id) { [weak self] _ in
                 if self?.bodyEdit?.dropID == id { self?.bodyEdit = nil }
@@ -306,11 +340,14 @@ final class DropEditor {
                 latest.state = .failed(code)
                 bodyEdit = latest
             } else {
-                // The user left while the write ran; the failure must still be seen.
+                // The drop went away (moved to the Trash) while the write ran; the failure must still be seen.
                 onBackgroundFailure(code)
             }
             return false
         }
+        let move = moveAfterSave
+        moveAfterSave = nil
+        move?()
         return true
     }
 
@@ -319,8 +356,14 @@ final class DropEditor {
 
     /// Runs `proceed` once the content editor may close: at once when nothing typed would be lost, otherwise after
     /// the user confirms "Discard changes?". Until then the move is held, and Keep Editing drops it (E-10).
+    /// While Done is writing the move is held without asking and follows the write's result (E-15).
     func requestLeave(_ proceed: @escaping @MainActor () -> Void) {
-        guard let edit = bodyEdit, edit.isChanged, edit.state != .saving else {
+        if bodyEdit?.state == .saving {
+            // Closing now would lose the text if the write fails; the latest move waits for the result (E-15).
+            moveAfterSave = proceed
+            return
+        }
+        guard let edit = bodyEdit, edit.isChanged else {
             closeBodyEdit()
             proceed()
             return
@@ -345,6 +388,7 @@ final class DropEditor {
     private func closeBodyEdit() {
         bodyEdit = nil
         pendingLeave = nil
+        moveAfterSave = nil
         isConfirmingDiscard = false
     }
 

@@ -41,9 +41,11 @@ struct PlopcutApp: App {
                 .task {
                     CompositionMonitor.shared.install()
                     _ = SourceAppIcons.shared  // starts building the app index before the list needs it
-                    delegate.drain = { [model] in await model.editor.drain() }
+                    delegate.prepareToQuit = { [model] in
+                        await model.editor.prepareToQuit(ask: BodyDraftQuitAlert.ask)
+                    }
                     delegate.showSaveFailure = { [model] in model.alertMessage = L10n.t("saveFailed") }
-                    delegate.hasUnsavedEdits = { [model] in model.editor.hasUnsavedEdits }
+                    delegate.needsWorkBeforeQuit = { [model] in model.editor.needsWorkBeforeQuit }
                     capture.start()
                     model.presentPendingCaptureError()
                     await model.reload()
@@ -64,10 +66,11 @@ struct PlopcutApp: App {
 
 /// Holds quitting until edits typed in the last moments have been written (the autosave debounce is 600 ms).
 /// If a write fails the first quit is cancelled and the user is told; asking to quit again quits anyway.
+/// A changed content draft is never saved on its own: the user picks Save, Don't Save or Cancel first (E-16).
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    var drain: (() async -> Bool)?
-    var hasUnsavedEdits: (() -> Bool)?
+    var prepareToQuit: (() async -> QuitPreparation)?
+    var needsWorkBeforeQuit: (() -> Bool)?
     var showSaveFailure: (() -> Void)?
     /// When the failure warning was shown. Asking to quit again soon after quits anyway; an old warning does not count.
     private var warnedAt: Date?
@@ -77,11 +80,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        guard let drain, hasUnsavedEdits?() == true else { return .terminateNow }
+        guard let prepareToQuit, needsWorkBeforeQuit?() == true else { return .terminateNow }
         Task {
-            let saved = await drain()
+            let result = await prepareToQuit()
+            if result == .cancelled {
+                sender.reply(toApplicationShouldTerminate: false)
+                return
+            }
             let recentlyWarned = warnedAt.map { Date().timeIntervalSince($0) < Self.warningWindow } ?? false
-            if saved || recentlyWarned {
+            if result == .ready || recentlyWarned {
                 sender.reply(toApplicationShouldTerminate: true)
             } else {
                 warnedAt = Date()

@@ -7,6 +7,8 @@ import SwiftUI
 struct BodyTextEditor: NSViewRepresentable {
     @Binding var text: String
     let accessibilityLabel: String
+    /// False while Done is writing (E-14): the view keeps showing the text but takes no typing.
+    var isEditable = true
     var onCancel: @MainActor () -> Void = {}
     var onDone: @MainActor () -> Void = {}
 
@@ -37,6 +39,7 @@ struct BodyTextEditor: NSViewRepresentable {
         textView.isHorizontallyResizable = false
         textView.autoresizingMask = [.width]
         textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: .greatestFiniteMagnitude)
+        textView.isEditable = isEditable
         textView.string = text
         textView.setAccessibilityLabel(accessibilityLabel)
         textView.onEdit = { [weak coordinator = context.coordinator] in coordinator?.publish($0) }
@@ -62,6 +65,7 @@ struct BodyTextEditor: NSViewRepresentable {
         context.coordinator.parent = self
         guard let textView = scrollView.documentView as? BodyTextView else { return }
         if textView.accessibilityLabel() != accessibilityLabel { textView.setAccessibilityLabel(accessibilityLabel) }
+        if textView.isEditable != isEditable { textView.isEditable = isEditable }
         // The text view owns the text while it is open; only a value set from outside outside a composition is written.
         if !textView.hasMarkedText(), textView.string != text {
             textView.string = text

@@ -75,6 +75,7 @@ struct DropDetailView: View {
         VStack(alignment: .leading, spacing: Spacing.s) {
             BodyTextEditor(
                 text: Bindable(editor).bodyText, accessibilityLabel: L10n.t("editBodyField"),
+                isEditable: editor.isBodyEditable,
                 onCancel: { editor.cancelBodyEdit() },
                 onDone: { Task { await editor.finishBodyEdit() } })
                 .inputSurface(focused: true)
