@@ -35,6 +35,9 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 | S-18 | 읽는 중 `content.md`/이미지/`note.md` 하나가 실패해도 Drop은 남기고 해당 경고만 추가. | `read_drop_folder` | 단위 | ☑ |
 | S-19 | `drops/`가 없으면 빈 목록(오류 아님). 저장 시에는 `drops/`를 만든다. | `scan_drops_from_root` | 단위 | ☑ |
 | S-20 | 이미지 Drop은 `imagePath`가 없어도 `image.png`를 기본으로 본다. | `read_drop_folder` | 픽스처: `legacy-minimal-image` | ☑ |
+| S-21 | `drop.json`에 `pinnedAt`(시각 문자열 \| null)을 항상 쓴다. 키가 없는 예전 `drop.json`은 고정 안 됨으로 읽는다(PLO-102). | spec 1.2 | 단위·픽스처: `image-drop`(고정), `legacy-minimal-text`(키 없음) | ☐ |
+| S-22 | 고정·고정 해제는 `pinnedAt`만 바꾸고 `updatedAt`과 다른 파일은 그대로 둔다. 이미 고정한 Drop을 다시 고정하면 처음 시각을 유지한다. | spec 1.2 | 단위 | ☐ |
+| S-23 | 텍스트·이미지 Drop을 처음부터 고정한 상태로 저장할 수 있다(`pinnedAt` = `createdAt`). | spec 1.2 | 단위 | ☐ |
 
 ## C. 설정
 
@@ -126,6 +129,11 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 | L-13 | 출처 열기: URL이 비어 있으면 `source_url_missing`. 버튼은 URL이 없을 때 비활성. | `commands.rs` `open_source_url` | 단위·수동 | ☑ |
 | L-14 | Markdown 내보내기: 취소하면 파일을 쓰지 않는다. 형식은 spec 7장. | `markdown.rs`, 테스트: `markdown_generation_includes_drop_fields` | 단위 | ☑ |
 | L-15 | 창 크기 때문에 줄어든 표시 너비를 `paneWidths`에 저장하지 않는다. 구분선 조절이 끝났을 때만 저장. | `MainWindow.tsx` | 수동 | ☑ |
+| L-16 | 목록 맨 위 `고정됨` 묶음: 현재 검색·Collection·필터 결과 안의 고정한 Drop만, `pinnedAt` 최근순(같으면 `id` 내림차순). 날짜 그룹에 다시 나오지 않는다(PLO-102). | spec 1.6 | 단위(`LibraryTests`) | ☐ |
+| L-17 | 사이드바 보관함의 `고정됨` Collection: 개수는 고정한 Drop 수, 고르면 태그 필터를 지우고 유형은 전체. 묶음 제목 없이 고정 시각순. | spec 2.4, 2.5 | 단위(`LibraryModelTests`) + 수동 | ☐ |
+| L-18 | 동작 버튼, 우클릭 메뉴 맨 위 항목, `Shift+Cmd+P`로 고정·고정 해제. 고정한 Drop에서는 문구가 `고정 해제`이고 동작 버튼이 눌린 상태. 고정 후 선택 유지. | spec 2.5, 2.6 | 단위(`LibraryModelTests`) + 수동 | ☐ |
+| L-19 | 고정한 행에 파란 핀 아이콘, VoiceOver는 `고정됨`을 읽는다. | spec 2.5 | 단위(접근성 라벨) + 수동(VoiceOver) | ☐ |
+| L-20 | 동작 버튼은 아이콘만 있는 38×26 pt, 순서 고정 · 출처 열기 · Markdown 내보내기 \| 휴지통(빨강, 구분선 뒤). 툴팁 `이름 (단축키)`, 버튼마다 접근성 이름. 더 보기 버튼 없음. 우클릭 메뉴 항목에 단축키 표시. | spec 2.6 | 단위(툴팁 문구) + 수동(시안 MainFeatures, FeatureDetails 3번) | ☐ |
 
 ## E. 편집
 
