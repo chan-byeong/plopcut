@@ -10,7 +10,7 @@ PLO-101에서 추가한 키(본문 렌더링과 형식 메뉴): `formatMenu`, `f
 
 PLO-105에서 추가한 키(Save Popup 제목과 저장 후 고정): `titleField`, `autoTitle`, `autoTitleHelp`, `titleHintWindow`, `titleHintApp`, `titleHintFirstLine`, `titleHintDefault`, `pinAfterSave`.
 
-PLO-104에서 추가한 키(본문 편집): `editBody`, `editingBody`, `bodyChanged`, `done`, `editBodyHint`, `editBodyShortcuts`, `editBodyField`, `emptyBody`, `discardChangesTitle`, `discardChangesBody`, `discardChanges`, `keepEditing`.
+PLO-104에서 추가한 키(본문 편집): `editBody`, `editingBody`, `bodyChanged`, `done`, `editBodyHint`, `editBodyShortcuts`, `editBodyField`, `emptyBody`, `discardChangesTitle`, `discardChangesBody`, `discardChanges`, `keepEditing`, `quitBodyDraftTitle`, `quitBodyDraftBody`, `dontSave`(종료할 때 본문 초안 저장 여부, 리뷰 수정).
 
 | 키 | en | ko |
 | --- | --- | --- |
@@ -68,6 +68,9 @@ PLO-104에서 추가한 키(본문 편집): `editBody`, `editingBody`, `bodyChan
 | `discardChangesBody` | The changes to this drop's content will be lost. | 이 드롭 본문에서 고친 내용이 사라집니다. |
 | `discardChanges` | Discard | 버리기 |
 | `keepEditing` | Keep Editing | 계속 편집 |
+| `quitBodyDraftTitle` | Save the changes to this drop's content before quitting? | 종료하기 전에 이 드롭 본문의 변경 사항을 저장할까요? |
+| `quitBodyDraftBody` | If you don't save, the changes will be lost. | 저장하지 않으면 고친 내용이 사라집니다. |
+| `dontSave` | Don't Save | 저장 안 함 |
 | `openFilters` | Open filters | 필터 열기 |
 | `clearFilters` | Clear filters | 필터 지우기 |
 | `activeFilters` | Active filters | 적용된 필터 |
