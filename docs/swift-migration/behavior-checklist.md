@@ -201,9 +201,9 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 
 | ID | 동작 | 근거 | 확인 방법 | ☐ |
 | --- | --- | --- | --- | --- |
-| R-01 | `drop.json`에 `format`·`codeLanguage`를 항상 쓴다(없으면 `null`). 키가 없거나 `format`이 모르는 값이면 자동 감지로 읽고 경고를 내지 않는다. `format`이 `code`가 아니면 `codeLanguage`는 무시한다. | 스펙 1.2 | 단위 + 픽스처(`storage-format`) | ☐ |
-| R-02 | 형식을 바꾸거나 지워도 `updatedAt`과 `content.md`는 그대로다. 제목·노트·태그·본문 수정은 여전히 `updatedAt`을 바꾼다. | 스펙 1.2 | 단위 | ☐ |
-| R-03 | 자동 감지: Terminal·iTerm·Xcode 출처는 코드(Shell/Swift), 전체가 JSON 객체·배열이면 코드(JSON), Markdown 신호가 뚜렷하면 Markdown, 나머지와 `*`·`#`이 섞인 평문은 일반 텍스트. 사용자가 고른 형식이 감지보다 먼저다. | 스펙 2.6 | 단위(`FormatDetectionTests`) | ☐ |
+| R-01 | `drop.json`에 `format`·`codeLanguage`를 항상 쓴다(없으면 `null`). 키가 없거나 `format`이 모르는 값이면 자동 감지로 읽고 경고를 내지 않는다. `format`이 `code`가 아니면 `codeLanguage`는 무시한다. | 스펙 1.2 | 단위 + 픽스처(`storage-format`) | ☑ |
+| R-02 | 형식을 바꾸거나 지워도 `updatedAt`과 `content.md`는 그대로다. 제목·노트·태그·본문 수정은 여전히 `updatedAt`을 바꾼다. | 스펙 1.2 | 단위 | ☑ |
+| R-03 | 자동 감지: Terminal·iTerm·Xcode 출처는 코드(Shell/Swift), 전체가 JSON 객체·배열이면 코드(JSON), Markdown 신호가 뚜렷하면 Markdown, 나머지와 `*`·`#`이 섞인 평문은 일반 텍스트. 사용자가 고른 형식이 감지보다 먼저다. | 스펙 2.6 | 단위(`FormatDetectionTests`) | ☑ |
 | R-04 | Markdown의 제목, 문단, 굵게·기울임, 인라인 코드, 중첩 목록, 인용, 구분선, 링크, 코드 블록을 렌더링하고, 표·이미지·HTML은 원문 텍스트로 보여 준다. 이미지는 불러오지 않는다. | 스펙 2.6 | 단위(렌더 모델) + 수동 | ☐ |
 | R-05 | 코드 블록에 언어 이름, `코드 복사` 버튼(코드만 복사), 문법 하이라이팅(라이트 `github`, 다크 `github-dark`)이 있고 두 외형 모두 읽을 수 있다. | 스펙 2.6 | 단위(복사·하이라이트 색) + 수동(라이트·다크) | ☐ |
 | R-06 | 렌더링한 본문을 선택하고 복사할 수 있다. | 스펙 2.6 | 수동 | ☐ |
@@ -598,3 +598,13 @@ S·C 항목을 픽스처 **복사본**으로 다시 확인하고 항목마다 Sw
 - 앱: `SidebarSelection.pinned`, `LibraryModel.togglePin`, `PinCommand`(`⇧⌘P`), 우클릭 메뉴 맨 위 고정/고정 해제와 단축키 표시, 동작 버튼 `DropAction`. 단위: `PinModelTests`, `PinPresentationTests`(툴팁 `이름 (단축키)`, 행 접근성 `고정됨`).
 - 실제 앱(픽스처 복사본, 라이트, 1120×720): 사이드바 `고정됨 1`, 목록 맨 위 `고정됨` 묶음과 파란 핀, 첫 행 선택, 동작 버튼 38×26 pt(스크린샷에서 측정), 고정 버튼 눌린 상태, 휴지통 빨강·구분선 뒤를 확인했다.
 - 수동 확인이 남음: 고정됨 Collection 클릭(묶음 제목 없음), 동작 버튼·우클릭 메뉴·`⇧⌘P`로 고정·고정 해제 클릭 흐름, 툴팁 표시, VoiceOver 낭독, 다크 모드, 시안(MainFeatures, FeatureDetails 3번)과 나란히 비교. 그래서 S-21~S-23, L-21은 단위로 ☑, L-22~L-25는 ☐로 둔다(PLO-103이 L-16~L-20을 먼저 써서 번호를 옮겼다).
+
+## PLO-101: 본문 렌더링과 형식 메뉴
+
+- 저장: `drop.json`에 `format`·`codeLanguage`를 더했다(R-01, R-02). 단위: `DropFormatStorageTests`(왕복, 지우기, `updatedAt`·`content.md` 유지, 예전 파일, 모르는 값), 픽스처 `storage-format`. 고정(`pinnedAt`, PLO-102)과 같은 `drop.json`에 함께 쓴다.
+- 감지: `FormatDetection`(PlopcutCore). 단위: `FormatDetectionTests`(R-03).
+- 렌더링: `BodyRenderer`(swift-markdown 0.9.0)가 Sendable 블록으로 바꾸고, `RenderedBodyView`가 그린다. 하이라이팅은 HighlighterSwift 3.1.0, 테마 `github`/`github-dark`. 단위: `BodyRendererTests`(R-04, R-07), `CodeHighlighterTests`, `FormatMenuTests`(이름, 체크, 코드 복사), `DropFormatModelTests`(형식 저장·다시 읽기·지우기·실패, 링크 스킴), `SavePopupModelTests.previewUsesTheDetectedFormat`.
+- 앱 묶음: `scripts/make-app.sh`가 의존성의 SwiftPM 리소스 묶음(`Highlighter_Highlighter.bundle`)을 `Contents/Resources`에 복사한다. 없으면 하이라이터가 시작할 때 앱이 멈춘다.
+- 실행 확인(2026-10-18, 다크, `storage-format` 복사본): 형식 버튼 `Python ▾`, 코드 블록의 언어 이름·복사 버튼·`github-dark` 색이 보였다.
+
+수동 확인이 남음: 라이트 모드 색, Markdown 요소 모양과 시안(MainFeatures, FeatureDetails 2번) 비교, 형식 메뉴 선택과 재실행 후 유지, 텍스트 선택·복사, 링크가 기본 브라우저로 열리는지, Save Popup 미리보기와 배지, VoiceOver(R-06, R-09, R-10).
