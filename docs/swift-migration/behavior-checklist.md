@@ -126,8 +126,8 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 | L-13 | 출처 열기: URL이 비어 있으면 `source_url_missing`. 버튼은 URL이 없을 때 비활성. | `commands.rs` `open_source_url` | 단위·수동 | ☑ |
 | L-14 | Markdown 내보내기: 취소하면 파일을 쓰지 않는다. 형식은 spec 7장. | `markdown.rs`, 테스트: `markdown_generation_includes_drop_fields` | 단위 | ☑ |
 | L-15 | 창 크기 때문에 줄어든 표시 너비를 `paneWidths`에 저장하지 않는다. 구분선 조절이 끝났을 때만 저장. | `MainWindow.tsx` | 수동 | ☑ |
-| L-16 | 출처 키: http(s) URL의 호스트를 소문자로, 앞의 `www.` 하나만 떼고 하위 도메인은 유지. http가 아닌 URL과 URL 없는 Drop은 앱 이름, 둘 다 없으면 출처 없음. | 스펙 1.6(PLO-103) | 단위(`SourceKeyTests`) | ☐ |
-| L-17 | 출처 필터: 고른 출처끼리 OR, 검색·Collection·기간과 AND. 출처 필터가 걸리면 출처 없는 Drop은 빠지고, 걸리지 않으면 보인다. 앱 필터는 없다. | 스펙 1.6, 2.5(PLO-103) | 단위(`LibraryTests`) | ☐ |
+| L-16 | 출처 키: http(s) URL의 호스트를 소문자로, 앞의 `www.` 하나만 떼고 하위 도메인은 유지. http가 아닌 URL과 URL 없는 Drop은 앱 이름, 둘 다 없으면 출처 없음. | 스펙 1.6(PLO-103) | 단위(`SourceKeyTests`) | ☑ |
+| L-17 | 출처 필터: 고른 출처끼리 OR, 검색·Collection·기간과 AND. 출처 필터가 걸리면 출처 없는 Drop은 빠지고, 걸리지 않으면 보인다. 앱 필터는 없다. | 스펙 1.6, 2.5(PLO-103) | 단위(`LibraryTests`) | ☑ |
 | L-18 | 필터 팝오버: 출처 검색, 웹사이트·앱 묶음, 출처마다 체크박스와 개수(출처 필터를 뺀 조건 기준), 여러 개 선택, 기간 분할 컨트롤(전체/오늘/7일/30일). 문구 끝에 말줄임 없음. | 스펙 2.5(PLO-103) | 단위(`LibraryModelTests`) + 수동 | ☐ |
 | L-19 | 고른 출처마다 `출처: {source}` 칩 하나. 칩을 누르면 그 출처만 해제. 필터 지우기는 사이드바 선택을 유지. | 스펙 2.5(PLO-103) | 단위(`LibraryModelTests`) + 수동 | ☐ |
 | L-20 | `이 출처의 드롭 보기`(인스펙터 출처 칸, 우클릭 메뉴): Collection을 라이브러리로, 출처 필터를 그 출처 하나로. 기간은 유지. 출처 없는 Drop에서는 비활성. | 스펙 2.5, 2.7(PLO-103) | 단위(`LibraryModelTests`) + 수동 | ☐ |
