@@ -37,12 +37,28 @@ final class LibraryModel {
     private(set) var isLoading = false
     private(set) var loadError: String?
 
-    var collection: SidebarSelection = .all { didSet { if collection != oldValue { collectionChanged() } } }
+    /// The sidebar row. Switching away from unsaved content edits waits for "Discard changes?" (spec 2.6, E-10).
+    var collection: SidebarSelection {
+        get { currentCollection }
+        set {
+            guard newValue != currentCollection else { return }
+            editor.requestLeave { [weak self] in self?.currentCollection = newValue }
+        }
+    }
+    private var currentCollection: SidebarSelection = .all { didSet { if currentCollection != oldValue { collectionChanged() } } }
     var search = "" { didSet { reselect() } }
     /// The selected sources; empty means no source filter (spec 1.6, PLO-103).
     var sources: Set<SourceKey> = [] { didSet { if sources != oldValue { reselect() } } }
     var dateRange: DateRange = .all { didSet { reselect() } }
-    var selectedID: String? { didSet { editor.show(selectedDrop) } }
+    /// The selected drop. Picking another one away from unsaved content edits waits for "Discard changes?" (E-10).
+    var selectedID: String? {
+        get { currentSelection }
+        set {
+            guard newValue != currentSelection else { return }
+            editor.requestLeave { [weak self] in self?.currentSelection = newValue }
+        }
+    }
+    private var currentSelection: String? { didSet { editor.show(selectedDrop) } }
 
     var sidebarVisible = true
     /// The user's choice for the inspector beside the body. Narrow windows show it as an overlay instead (spec 2.2).
@@ -210,7 +226,8 @@ final class LibraryModel {
             loadError = (error as? PlopcutError)?.code ?? error.localizedDescription
         }
         reselect()
-        if let id, drops.contains(where: { $0.id == id }) {
+        // An open content editor keeps its drop selected; the new drop is in the list for later (spec 2.6).
+        if let id, !editor.isEditingBody, drops.contains(where: { $0.id == id }) {
             if !filtered.contains(where: { $0.id == id }) {
                 search = ""
                 clearFilters()
@@ -267,6 +284,26 @@ final class LibraryModel {
         case .success(let saved): apply(saved)
         case .failure(let error): showAlert(forCode: (error as? PlopcutError)?.code ?? "")
         }
+    }
+
+    // MARK: Content editing (spec 2.6 "본문 편집")
+
+    /// Whether Edit (button, context menu, Cmd+E) can start on the selected drop: a text drop, no editor open yet.
+    var canEditBody: Bool {
+        collection != .settings && !editor.isEditingBody && DropEditor.canEditBody(selectedDrop)
+    }
+
+    /// Opens the content editor on the selected drop. Returns false for an image drop or nothing selected.
+    @discardableResult
+    func beginBodyEdit() -> Bool {
+        guard collection != .settings, let drop = selectedDrop else { return false }
+        return editor.beginBodyEdit(drop)
+    }
+
+    /// Edit from the list's context menu: selects that drop first (which may ask to discard another edit).
+    func beginBodyEdit(id: String) {
+        selectedID = id
+        if selectedID == id { beginBodyEdit() }
     }
 
     /// Opens a link from a rendered body in the default browser. Only web and mail links open (spec 2.6, R-07).
@@ -362,8 +399,10 @@ final class LibraryModel {
     /// search stay. A drop without source changes nothing (spec 2.5).
     func showDropsFromSource(of drop: Drop) {
         guard let key = SourceKey(drop.source) else { return }
-        collection = .all
-        sources = [key]
+        editor.requestLeave { [weak self] in
+            self?.currentCollection = .all
+            self?.sources = [key]
+        }
     }
 
     /// Selecting a type row clears the tag filter and vice versa because `collection` holds only one of them.
@@ -393,7 +432,9 @@ final class LibraryModel {
 
     private func reselect() {
         refilter()
+        // While the content editor is open its drop stays selected, even if the list no longer shows it (spec 2.6).
+        if editor.isEditingBody { return }
         // "The first item" is the first row shown, so a pinned drop comes before the date groups (spec 1.6).
-        selectedID = LibraryFilter.resolveSelection(selectedID, in: sections.flatMap(\.drops))
+        currentSelection = LibraryFilter.resolveSelection(currentSelection, in: sections.flatMap(\.drops))
     }
 }
