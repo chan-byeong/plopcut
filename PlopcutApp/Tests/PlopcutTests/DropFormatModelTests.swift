@@ -55,14 +55,16 @@ import Testing
         #expect(relaunched.drops.first { $0.id == Self.textID }?.format == nil)
     }
 
-    @Test func aFailedFormatChangeKeepsTheOldFormatAndShowsAnError() async throws {
+    // Spec 2.6: a failed save keeps the previous format and shows the error as a status message, not an alert.
+    @Test func aFailedFormatChangeKeepsTheOldFormatAndShowsAStatusMessage() async throws {
         let root = try copyStorage()
         defer { try? FileManager.default.removeItem(at: root) }
         let model = await loaded(root)
         try FileManager.default.removeItem(at: root.appendingPathComponent("drops/\(Self.textID)"))
         await model.setFormat(.set(.plain, codeLanguage: nil), for: Self.textID)
         #expect(model.drops.first { $0.id == Self.textID }?.format == nil)
-        #expect(model.alertMessage != nil)
+        #expect(model.alertMessage == nil)
+        #expect(model.notice == L10n.t("dropNotFound"))
     }
 
     @Test(arguments: ["https://example.com/a", "http://example.com", "mailto:a@example.com"])

@@ -25,7 +25,12 @@ enum L10n {
 /// log text (paths, OS wording) and would mix languages into the UI, so it is deliberately never shown.
 enum ErrorText {
     static func message(for error: Error) -> String {
-        message(forCode: (error as? PlopcutError)?.code ?? "")
+        message(forCode: code(for: error))
+    }
+
+    /// The code shown and logged for a failure; an error without one is the generic `defaultError`.
+    static func code(for error: Error) -> String {
+        (error as? PlopcutError)?.code ?? "defaultError"
     }
 
     static func message(forCode code: String) -> String {
