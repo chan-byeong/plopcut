@@ -168,6 +168,12 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 | I-04 | 팝업 `Cmd+Enter` 저장(저장 중이면 무시), Escape 취소. 레거시는 `Cmd+Enter`에서 입력기 조합 여부를 검사하지 않는다(조합 중에도 동작). 웹 textarea처럼 조합 중인 글자도 노트 값에 들어 있으므로 Swift 노트도 화면에 보이는 글자(조합 중 글자 포함)를 저장한다(STA-66). | `SavePopover.tsx`, 단위: `SavePopupWindowTests.NoteEditor.savingClosesAnOpenCompositionAndKeepsItsCharacters` | 수동 | ☑ |
 | I-05 | 포커스 링은 컨트롤 모양을 따르는 둥근 링이고 레이아웃을 밀지 않는다. 컨테이너에는 링이 없다. 목록 행은 안쪽 링. | STA-38 CSS(실제 앱 미검증) | 수동 | ☑ |
 | I-06 | 제목 인라인 이름 변경: Return 확정, Escape 되돌림, 둘 다 포커스를 목록에 돌린다. | STA-38(실제 앱 미검증) | 수동 | ☑ |
+| I-07 | Save Popup 맨 위 제목 입력란에 저장할 유형의 자동 제목(윈도우 제목 → 앱 이름 → 본문 첫 줄 → 기본 제목)을 미리 채운다. 입력란을 건드리지 않고 저장하면 PLO-105 이전과 같은 제목이다. | 스펙 1.4, 3.5(PLO-105) | 단위(`SavePopupModelTests`) + 수동 | ☑ |
+| I-08 | 고치기 전에는 `mixed` Draft의 유형을 바꾸면 제목이 그 유형의 자동 제목으로 바뀌고, 고친 뒤에는 그대로다. `자동` 버튼은 입력값이 자동 제목과 다를 때만 활성이고 누르면 자동 제목으로 되돌린다. | 스펙 3.5(PLO-105) | 단위(`SavePopupModelTests`) + 수동 | ☐ |
+| I-09 | 입력란을 비우고(공백뿐 포함) 저장하면 명시한 제목 없이 보내 저장소가 자동 제목을 쓴다. 그 밖에는 앞뒤 공백을 지운 값을 명시한 제목으로 저장한다(80자 제한). 입력란 아래 문구가 자동 제목의 출처(윈도우 제목/앱 이름/본문 첫 줄/없음)와 비우면 자동 제목을 쓴다는 점을 알리고, 끝에 말줄임이 없다. | 스펙 1.4, 3.5(PLO-105) | 단위(`SavePopupModelTests`, `LocalizationTests`) + 수동 | ☑ |
+| I-10 | 제목 입력란에 포커스가 있어도 `Cmd+Enter`는 저장, Escape는 취소다. | 스펙 3.5(PLO-105) | 단위(`SavePopupWindowTests`) + 수동 | ☑ |
+| I-11 | `저장 후 고정` 체크박스: 기본 꺼짐, 팝업을 열 때마다 꺼짐. 켜고 저장하면 고정한 상태로 저장되어 Library `고정됨` 묶음에 나타난다. | 스펙 3.5(PLO-105) | 단위(`SavePopupModelTests`) + 수동 | ☑ |
+| I-12 | 제목 입력란과 체크박스가 들어가도 Save Popup이 내용을 자르지 않는다. 경고·태그가 없는 Draft의 최소 높이는 스펙 2.1의 값이다. | 스펙 2.1, 3.5(PLO-105) | 단위(`SavePopupWindowTests.Layout`) + 수동(시안 SavePopupTitle) | ☑ |
 
 ## T. 메뉴 막대
 
@@ -615,6 +621,14 @@ S·C 항목을 픽스처 **복사본**으로 다시 확인하고 항목마다 Sw
 - 실행 확인(2026-10-18, 다크, `storage-format` 복사본): 형식 버튼 `Python ▾`, 코드 블록의 언어 이름·복사 버튼·`github-dark` 색이 보였다.
 
 수동 확인이 남음: 라이트 모드 색, Markdown 요소 모양과 시안(MainFeatures, FeatureDetails 2번) 비교, 형식 메뉴 선택과 재실행 후 유지, 텍스트 선택·복사, 링크가 기본 브라우저로 열리는지, Save Popup 미리보기와 배지, VoiceOver(R-06, R-09, R-10).
+
+## PLO-105: Save Popup 제목과 저장 후 고정
+
+- 모델: `SavePopupModel.title`(고치기 전에는 `autoTitle`을 따라감), `autoTitle`(텍스트는 Draft 제목, 이미지는 `imageTitle`. 캡처가 1.4 순서로 이미 계산한 값), `canRestoreAutoTitle`, `restoreAutoTitle()`, `titleHint`, `pinAfterSave`. `SaveRequest.title`은 비면 `nil`, `SaveRequest.pinned`가 `saveText`/`saveImage(pinned:)`로 간다. 단위: `SavePopupTitleTests`(I-07~I-09, I-11), `SavePopupWindowTests.TitleKeys`(I-10), `SavePopupWindowTests.Layout.theTitleAndPinRowsFitTheCompactSize`(I-12).
+- 최소 높이: 최근 태그 3개인 텍스트 Draft의 자연 높이를 재어 487(창 519)로 정했다. 한국어·영어 모두 같다. `mixed`는 유형 선택 때문에 헤더가 조금 높아 그만큼 커진다.
+- 실행 확인(2026-10-18, 라이트, 픽스처 복사본, 메뉴 막대 `클립보드 저장`): 제목 `Orca`(윈도우 제목)와 안내 문구가 미리 채워지고 `자동`은 비활성. 제목을 고치면 `자동`이 활성. 제목 입력란에 포커스를 둔 채 `저장 후 고정`을 켜고 `Cmd+Enter`로 저장하자 `Release checklist` 제목, `pinnedAt` = `createdAt`으로 저장되어 Library `고정됨` 묶음 맨 위에 선택되어 보였다. 다음 팝업에서 체크박스는 꺼져 있었고, 제목을 비우고 저장하자 자동 제목 `Orca`·고정 안 됨으로 저장됐다. 제목 입력란에서 Escape로 취소했다. 시안(SavePopupTitle)과 순서·문구가 같고, 다른 점은 `자동` 버튼이 입력란 안이 아니라 옆의 기본 버튼이고 제목 글꼴이 기본 크기다.
+
+수동 확인이 남음: 선택 텍스트 캡처(`Shift+Cmd+C`) 흐름, `mixed` Draft에서 유형을 바꿀 때 제목이 따라가는지, 다크 모드, 영어, VoiceOver(제목 입력란 이름 `드롭 제목`, `자동` 버튼 힌트). 노트에서 `Shift+Tab`으로 제목 입력란에 가는지는 확인하지 못했다(스펙에는 클릭만 적음).
 
 ## PLO-104: Drop 본문 편집
 
