@@ -43,8 +43,15 @@ final class LibraryModel {
         set {
             guard newValue != currentCollection else { return }
             editor.requestLeave { [weak self] in self?.currentCollection = newValue }
+            if currentCollection != newValue { echo(\.shownCollection, newValue) }
         }
     }
+    /// What the sidebar shows as selected. Equal to `collection` except for one turn after a held switch.
+    var sidebarSelection: SidebarSelection {
+        get { shownCollection ?? collection }
+        set { collection = newValue }
+    }
+    private var shownCollection: SidebarSelection?
     private var currentCollection: SidebarSelection = .all { didSet { if currentCollection != oldValue { collectionChanged() } } }
     var search = "" { didSet { reselect() } }
     /// The selected sources; empty means no source filter (spec 1.6, PLO-103).
@@ -56,7 +63,21 @@ final class LibraryModel {
         set {
             guard newValue != currentSelection else { return }
             editor.requestLeave { [weak self] in self?.currentSelection = newValue }
+            if currentSelection != newValue { echo(\.shownSelection, newValue) }
         }
+    }
+    /// What the list shows as selected. Equal to `selectedID` except for one turn after a held move.
+    var listSelection: String? {
+        get { shownSelection ?? currentSelection }
+        set { selectedID = newValue }
+    }
+    private var shownSelection: String??
+
+    /// A held move leaves the clicked row highlighted, because the bound value never changed. Showing the clicked value
+    /// for one turn and then the kept one gives the list a real change to follow back (E-10).
+    private func echo<Value>(_ shown: ReferenceWritableKeyPath<LibraryModel, Value?>, _ value: Value) {
+        self[keyPath: shown] = value
+        Task { @MainActor [weak self] in self?[keyPath: shown] = nil }
     }
     private var currentSelection: String? { didSet { editor.show(selectedDrop) } }
 

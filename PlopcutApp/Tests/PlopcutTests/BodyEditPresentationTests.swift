@@ -22,7 +22,6 @@ import Testing
     @Test func editShortcutsDoNotClash() {
         #expect(EditBodyCommand.shortcut.key == "e" && EditBodyCommand.shortcut.modifiers == .command)
         #expect(BodyEditorShortcuts.done.key == .return && BodyEditorShortcuts.done.modifiers == .command)
-        #expect(BodyEditorShortcuts.cancel == .cancelAction)
         let others = [PinCommand.shortcut, RefreshCommand.shortcut, KeyboardShortcut(.delete, modifiers: .command),
                       KeyboardShortcut("f", modifiers: .command)]
         for shortcut in [EditBodyCommand.shortcut, BodyEditorShortcuts.done] { #expect(!others.contains(shortcut)) }

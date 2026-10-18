@@ -103,6 +103,8 @@ struct MainWindow: View {
                         // Escape closes the overlay without needing keyboard focus inside it.
                         Button("") { model.inspectorOverlayOpen = false }
                             .keyboardShortcut(.cancelAction).opacity(0).accessibilityHidden(true)
+                            // While the content editor is open, Escape belongs to it (Cancel, spec 2.6).
+                            .disabled(model.editor.isEditingBody)
                     }
                     .transition(InspectorOverlayMotion.slides(reduceMotion: reduceMotion) ? .move(edge: .trailing) : .identity)
             }
@@ -124,6 +126,14 @@ struct MainWindow: View {
             }
             Button(L10n.t("cancel"), role: .cancel) { model.pendingDeleteID = nil }
         } message: { Text(L10n.t("confirmTrashBody")) }
+        .confirmationDialog(
+            L10n.t("discardChangesTitle"),
+            isPresented: Binding(get: { model.editor.isConfirmingDiscard }, set: { if !$0 { model.editor.keepEditing() } }),
+            titleVisibility: .visible
+        ) {
+            Button(L10n.t("discardChanges"), role: .destructive) { model.editor.confirmDiscard() }
+            Button(L10n.t("keepEditing"), role: .cancel) { model.editor.keepEditing() }
+        } message: { Text(L10n.t("discardChangesBody")) }
         .alert(model.alertMessage ?? "", isPresented: Binding(get: { model.alertMessage != nil }, set: { if !$0 { model.alertMessage = nil } })) {
             if let recovery = model.alertRecovery {
                 Button(L10n.t(recovery.titleKey)) { model.performRecovery() }

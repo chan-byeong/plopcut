@@ -68,6 +68,21 @@ import Testing
         #expect(onDisk != "unsaved")
     }
 
+    // E-10: the list and the sidebar get the kept value back after a held move, so the clicked row does not stay lit.
+    @Test func aHeldMoveHandsTheKeptValueBackToTheLists() async throws {
+        let (model, root) = try await loaded()
+        defer { try? FileManager.default.removeItem(at: root) }
+        model.selectedID = Self.textID
+        model.beginBodyEdit()
+        model.editor.bodyText = "unsaved"
+        model.listSelection = Self.otherTextID
+        model.sidebarSelection = .image
+        #expect(model.listSelection == Self.otherTextID && model.sidebarSelection == .image)
+        for _ in 0..<10 { await Task.yield() }
+        #expect(model.listSelection == Self.textID && model.sidebarSelection == .all)
+        #expect(model.editor.isConfirmingDiscard)
+    }
+
     // E-10: without changes the selection moves at once and the editor closes.
     @Test func selectingAnotherDropWithoutChangesMovesAtOnce() async throws {
         let (model, root) = try await loaded()

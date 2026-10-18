@@ -13,8 +13,8 @@ struct EditBodyCommand: View {
     }
 }
 
-/// The content editor's own keys: Cmd+Return for Done, Escape for Cancel (spec 2.6).
+/// Done is Cmd+Return anywhere in the window while the editor is open. Escape cancels from the editor itself
+/// (`BodyTextView.cancelOperation`), so Escape in the title or note field keeps its own meaning (spec 2.6).
 enum BodyEditorShortcuts {
     static let done = KeyboardShortcut(.return, modifiers: .command)
-    static let cancel = KeyboardShortcut.cancelAction
 }
