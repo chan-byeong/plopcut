@@ -46,7 +46,7 @@ struct LibraryListView: View {
     }
 
     @ViewBuilder private var content: some View {
-        let groups = model.groups
+        let sections = model.sections
         if model.isLoading && model.drops.isEmpty {
             ProgressView(L10n.t("loadingDrops")).frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let error = model.loadError {
@@ -62,12 +62,16 @@ struct LibraryListView: View {
                     Text(L10n.t("noDropsClipboardHint"))
                 }
             }
-        } else if groups.isEmpty {
+        } else if sections.isEmpty {
             ContentUnavailableView(L10n.t("noMatches"), systemImage: "magnifyingglass")
         } else {
             List(selection: $model.selectedID) {
-                ForEach(groups, id: \.group) { entry in
-                    Section(Formatting.groupTitle(entry.group)) {
+                ForEach(sections, id: \.section) { entry in
+                    if model.showsSectionHeaders {
+                        Section(Self.title(entry.section)) {
+                            ForEach(entry.drops) { drop in DropRow(drop: drop).tag(drop.id) }
+                        }
+                    } else {
                         ForEach(entry.drops) { drop in DropRow(drop: drop).tag(drop.id) }
                     }
                 }
@@ -78,6 +82,9 @@ struct LibraryListView: View {
             .focusedValue(\.trashSelectedDrop, model.selectedID == nil ? nil : { if let id = model.selectedID { model.pendingDeleteID = id } })
             .contextMenu(forSelectionType: String.self) { ids in
                 if let drop = model.drops.first(where: { ids.contains($0.id) }) {
+                    let pin = DropAction.pin(pinned: drop.isPinned)
+                    Button(pin.title) { Task { await model.togglePin(id: drop.id) } }
+                        .keyboardShortcut(PinCommand.shortcut)
                     if let url = drop.source.url.flatMap(URL.init(string:)), drop.source.url?.isEmpty == false {
                         Button(L10n.t("openSource")) { NSWorkspace.shared.open(url) }
                     }
@@ -92,8 +99,18 @@ struct LibraryListView: View {
                     Button(L10n.t("exportMarkdown")) { Task { await model.exportWithPanel(id: drop.id) } }
                     Divider()
                     Button(L10n.t("moveTrash"), role: .destructive) { model.pendingDeleteID = drop.id }
+                        .keyboardShortcut(.delete, modifiers: .command)
                 }
             }
+        }
+    }
+}
+
+extension LibraryListView {
+    static func title(_ section: ListSection) -> String {
+        switch section {
+        case .pinned: L10n.t("pinned")
+        case .date(let group): Formatting.groupTitle(group)
         }
     }
 }
@@ -215,6 +232,8 @@ struct DropRow: View {
                 HStack {
                     Text(drop.title).fontWeight(.semibold).lineLimit(1)
                     Spacer(minLength: Spacing.xs)
+                    // The row's accessibility label already ends with "Pinned", so the icon itself is decoration.
+                    if drop.isPinned { Image(systemName: "pin.fill").font(.caption).foregroundStyle(Color.accentColor) }
                     Text(Formatting.time(drop.createdAt)).font(.caption).foregroundStyle(.secondary)
                 }
                 Text(Formatting.preview(drop)).font(.callout).foregroundStyle(.secondary).lineLimit(1)

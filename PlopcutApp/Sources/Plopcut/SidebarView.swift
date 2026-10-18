@@ -9,6 +9,7 @@ struct SidebarView: View {
                 row(L10n.t("library"), "tray.full", .all)
                 row(L10n.t("text"), "textformat", .text)
                 row(L10n.t("images"), "photo", .image)
+                row(L10n.t("pinned"), "pin", .pinned)
             }
             Section(L10n.t("tags")) {
                 if model.allTags.isEmpty {

@@ -6,7 +6,7 @@ import UniformTypeIdentifiers
 
 /// What the sidebar has selected. Exactly one row is selected at a time (spec 2.4).
 enum SidebarSelection: Hashable {
-    case all, text, image, tag(String), settings
+    case all, text, image, pinned, tag(String), settings
 }
 
 /// A row of the filter popover's source list (spec 2.5, PLO-103).
@@ -26,9 +26,11 @@ final class LibraryModel {
     private(set) var drops: [Drop] = []
     /// Derived from `drops` and the filter inputs when they change, not on every view update (5,000-drop library, STA-80).
     private(set) var filtered: [Drop] = []
-    private(set) var groups: [(group: DateGroup, drops: [Drop])] = []
+    /// The Pinned section first, then the date groups (spec 1.6).
+    private(set) var sections: [(section: ListSection, drops: [Drop])] = []
     private(set) var allTags: [String] = []
     private var typeCounts: (text: Int, image: Int) = (0, 0)
+    private var pinnedCount = 0
     private var tagCounts: [String: Int] = [:]
     private var searchIndex = SearchIndex()
     private(set) var warnings: [ScanWarning] = []
@@ -119,10 +121,15 @@ final class LibraryModel {
         case .text: type = .text
         case .image: type = .image
         case .tag(let name): tag = name
-        case .all, .settings: break
+        case .all, .pinned, .settings: break
         }
-        return LibraryFilter(search: search, type: type, tag: tag, sources: sources, dateRange: dateRange)
+        var filter = LibraryFilter(search: search, type: type, tag: tag, sources: sources, dateRange: dateRange)
+        filter.pinnedOnly = collection == .pinned
+        return filter
     }
+
+    /// The Pinned collection lists drops by pin time without the "Pinned" header (spec 2.5).
+    var showsSectionHeaders: Bool { collection != .pinned }
 
     var selectedDrop: Drop? { drops.first { $0.id == selectedID } }
     var hasRefiningFilters: Bool { !sources.isEmpty || dateRange != .all }
@@ -162,6 +169,7 @@ final class LibraryModel {
         case .all: drops.count
         case .text: typeCounts.text
         case .image: typeCounts.image
+        case .pinned: pinnedCount
         case .tag(let name): tagCounts[name] ?? 0
         case .settings: 0
         }
@@ -172,6 +180,7 @@ final class LibraryModel {
         case .all, .settings: L10n.t("library")
         case .text: L10n.t("textDrops")
         case .image: L10n.t("imageDrops")
+        case .pinned: L10n.t("pinned")
         case .tag(let name): name
         }
     }
@@ -245,6 +254,23 @@ final class LibraryModel {
         drops[index] = saved
         searchIndex.insert(saved)
         dropsChanged(rebuildIndex: false)
+    }
+
+    /// Pins or unpins the drop (spec 2.5, 2.6). The selection stays on it while it is still listed; unpinning in the
+    /// Pinned collection removes it from the list, so the selection then follows spec 1.6.
+    func togglePin(id: String) async {
+        guard let drop = drops.first(where: { $0.id == id }) else { return }
+        let (root, pinned) = (storageRoot, !drop.isPinned)
+        let result: Result<Drop, Error> = await Task.detached {
+            Result { try DropStore(root: try root()).update(id: id, DropUpdate(pinned: pinned)) }
+        }.value
+        switch result {
+        case .success(let saved):
+            apply(saved)
+            reselect()
+        case .failure(let error):
+            showAlert(forCode: (error as? PlopcutError)?.code ?? "")
+        }
     }
 
     /// Moves the drop's folder to the Trash (spec 2.6). The drop stays in the list when the move fails.
@@ -324,12 +350,14 @@ final class LibraryModel {
     private func dropsChanged(rebuildIndex: Bool) {
         if rebuildIndex { searchIndex = SearchIndex(drops) }
         var tags: [String: Int] = [:]
-        var text = 0, image = 0
+        var text = 0, image = 0, pinned = 0
         for drop in drops {
             if drop.type == .text { text += 1 } else if drop.type == .image { image += 1 }
+            if drop.isPinned { pinned += 1 }
             for tag in drop.tags { tags[tag, default: 0] += 1 }
         }
         typeCounts = (text, image)
+        pinnedCount = pinned
         tagCounts = tags
         allTags = tags.keys.sorted()
         refilter()
@@ -337,11 +365,12 @@ final class LibraryModel {
 
     private func refilter() {
         filtered = filter.apply(drops, index: searchIndex)
-        groups = DateGroup.group(filtered)
+        sections = ListSection.make(filtered)
     }
 
     private func reselect() {
         refilter()
-        selectedID = LibraryFilter.resolveSelection(selectedID, in: filtered)
+        // "The first item" is the first row shown, so a pinned drop comes before the date groups (spec 1.6).
+        selectedID = LibraryFilter.resolveSelection(selectedID, in: sections.flatMap(\.drops))
     }
 }

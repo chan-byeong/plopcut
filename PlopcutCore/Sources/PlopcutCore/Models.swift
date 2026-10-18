@@ -52,16 +52,21 @@ public struct Drop: Equatable, Identifiable, Sendable {
     public var tags: [String]
     public var createdAt: String
     public var updatedAt: String
+    /// When the drop was pinned; `nil` when it is not pinned (spec 1.2, PLO-102).
+    public var pinnedAt: String?
 
     public init(
         id: String, type: DropType, title: String, text: String? = nil, imagePath: String? = nil,
         imageURL: URL? = nil, source: DropSource = DropSource(), note: String? = nil, tags: [String] = [],
-        createdAt: String, updatedAt: String
+        createdAt: String, updatedAt: String, pinnedAt: String? = nil
     ) {
         self.id = id; self.type = type; self.title = title; self.text = text
         self.imagePath = imagePath; self.imageURL = imageURL; self.source = source
         self.note = note; self.tags = tags; self.createdAt = createdAt; self.updatedAt = updatedAt
+        self.pinnedAt = pinnedAt
     }
+
+    public var isPinned: Bool { pinnedAt != nil }
 }
 
 public struct DropScan: Equatable, Sendable {
@@ -79,15 +84,19 @@ struct DropMetadata: Codable {
     var tags: [String]
     var createdAt: String
     var updatedAt: String
+    /// Added in PLO-102; a file without the key reads as not pinned.
+    var pinnedAt: String?
 
     private enum CodingKeys: String, CodingKey {
         case id, type, title, text, imagePath, source, note, tags, createdAt, updatedAt
+        case pinnedAt
     }
 
     init(id: String, type: DropType, title: String, imagePath: String?, source: DropSource,
-         tags: [String], createdAt: String, updatedAt: String) {
+         tags: [String], createdAt: String, updatedAt: String, pinnedAt: String? = nil) {
         self.id = id; self.type = type; self.title = title; self.imagePath = imagePath
         self.source = source; self.tags = tags; self.createdAt = createdAt; self.updatedAt = updatedAt
+        self.pinnedAt = pinnedAt
     }
 
     init(from decoder: Decoder) throws {
@@ -100,6 +109,7 @@ struct DropMetadata: Codable {
         tags = Tags.normalize(try c.decodeIfPresent([String].self, forKey: .tags) ?? [])
         createdAt = try c.decode(String.self, forKey: .createdAt)
         updatedAt = try c.decode(String.self, forKey: .updatedAt)
+        pinnedAt = try c.decodeIfPresent(String.self, forKey: .pinnedAt)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -114,5 +124,6 @@ struct DropMetadata: Codable {
         try c.encode(tags, forKey: .tags)
         try c.encode(createdAt, forKey: .createdAt)
         try c.encode(updatedAt, forKey: .updatedAt)
+        try c.encode(pinnedAt, forKey: .pinnedAt)
     }
 }

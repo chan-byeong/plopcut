@@ -35,6 +35,9 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 | S-18 | 읽는 중 `content.md`/이미지/`note.md` 하나가 실패해도 Drop은 남기고 해당 경고만 추가. | `read_drop_folder` | 단위 | ☑ |
 | S-19 | `drops/`가 없으면 빈 목록(오류 아님). 저장 시에는 `drops/`를 만든다. | `scan_drops_from_root` | 단위 | ☑ |
 | S-20 | 이미지 Drop은 `imagePath`가 없어도 `image.png`를 기본으로 본다. | `read_drop_folder` | 픽스처: `legacy-minimal-image` | ☑ |
+| S-21 | `drop.json`에 `pinnedAt`(시각 문자열 \| null)을 항상 쓴다. 키가 없는 예전 `drop.json`은 고정 안 됨으로 읽는다(PLO-102). | spec 1.2 | 단위·픽스처: `image-drop`(고정), `legacy-minimal-text`(키 없음) | ☑ |
+| S-22 | 고정·고정 해제는 `pinnedAt`만 바꾸고 `updatedAt`과 다른 파일은 그대로 둔다. 이미 고정한 Drop을 다시 고정하면 처음 시각을 유지한다. | spec 1.2 | 단위 | ☑ |
+| S-23 | 텍스트·이미지 Drop을 처음부터 고정한 상태로 저장할 수 있다(`pinnedAt` = `createdAt`). | spec 1.2 | 단위 | ☑ |
 
 ## C. 설정
 
@@ -131,6 +134,11 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 | L-18 | 필터 팝오버: 출처 검색, 웹사이트·앱 묶음, 출처마다 체크박스와 개수(출처 필터를 뺀 조건 기준), 여러 개 선택, 기간 분할 컨트롤(전체/오늘/7일/30일). 문구 끝에 말줄임 없음. | 스펙 2.5(PLO-103) | 단위(`LibraryModelTests`) + 수동 | ☐ |
 | L-19 | 고른 출처마다 `출처: {source}` 칩 하나. 칩을 누르면 그 출처만 해제. 필터 지우기는 사이드바 선택을 유지. | 스펙 2.5(PLO-103) | 단위(`LibraryModelTests`) + 수동 | ☐ |
 | L-20 | `이 출처의 드롭 보기`(인스펙터 출처 칸, 우클릭 메뉴): Collection을 라이브러리로, 출처 필터를 그 출처 하나로. 기간은 유지. 출처 없는 Drop에서는 비활성. | 스펙 2.5, 2.7(PLO-103) | 단위(`LibraryModelTests`) + 수동 | ☐ |
+| L-21 | 목록 맨 위 `고정됨` 묶음: 현재 검색·Collection·필터 결과 안의 고정한 Drop만, `pinnedAt` 최근순(같으면 `id` 내림차순). 날짜 그룹에 다시 나오지 않는다(PLO-102). | spec 1.6 | 단위(`LibraryTests`) | ☑ |
+| L-22 | 사이드바 보관함의 `고정됨` Collection: 개수는 고정한 Drop 수, 고르면 태그 필터를 지우고 유형은 전체. 묶음 제목 없이 고정 시각순. | spec 2.4, 2.5 | 단위(`LibraryModelTests`) + 수동 | ☐ |
+| L-23 | 동작 버튼, 우클릭 메뉴 맨 위 항목, `Shift+Cmd+P`로 고정·고정 해제. 고정한 Drop에서는 문구가 `고정 해제`이고 동작 버튼이 눌린 상태. 고정 후 선택 유지. | spec 2.5, 2.6 | 단위(`LibraryModelTests`) + 수동 | ☐ |
+| L-24 | 고정한 행에 파란 핀 아이콘, VoiceOver는 `고정됨`을 읽는다. | spec 2.5 | 단위(접근성 라벨) + 수동(VoiceOver) | ☐ |
+| L-25 | 동작 버튼은 아이콘만 있는 38×26 pt, 순서 고정 · 출처 열기 · Markdown 내보내기 \| 휴지통(빨강, 구분선 뒤). 툴팁 `이름 (단축키)`, 버튼마다 접근성 이름. 더 보기 버튼 없음. 우클릭 메뉴 항목에 단축키 표시. | spec 2.6 | 단위(툴팁 문구) + 수동(시안 MainFeatures, FeatureDetails 3번) | ☐ |
 
 ## E. 편집
 
@@ -565,3 +573,11 @@ S·C 항목을 픽스처 **복사본**으로 다시 확인하고 항목마다 Sw
 - Save Popup: `.nonactivatingPanel`로 만들고 `NSApp.activate`를 뺐다. 팝업이 키보드를 받지만 plopcut은 활성화되지 않아 메인 창이 앞으로 오지 않고, 저장·취소 뒤 사용자가 쓰던 앱에 포커스가 남는다. 단위: `SavePopupWindowTests.Layout.thePopupDoesNotActivateTheApp`.
 - Save Popup 키: plopcut이 비활성이면 AppKit이 단축키(key equivalent)를 앱에 주지 않아 `Cmd+Enter`, Escape, 편집 메뉴(`Cmd+V` 등)가 듣지 않았다. `SavePopupPanel.sendEvent`가 처리되지 않은 명령 키와 Escape를 창의 단추 단축키로, 그다음 편집 명령(잘라내기, 복사, 붙여넣기, 전체 선택, 실행 취소, 실행 복귀)으로 보낸다. 한국어 자판처럼 라틴 문자가 없는 자판은 키 위치로 판단한다. 단위: `SavePopupWindowTests.KeyRouting`, `NoteEditor.editShortcutsReachTheNoteWithoutTheEditMenu`.
 - 실패(P-13, T-04): 선택 텍스트 캡처 실패도 메뉴 막대 실패 표시와 오류 보관만 한다. `permission_missing`만 예외로 메인 창을 연다(소유자 결정).
+
+## PLO-102: Drop 고정과 아이콘 동작 버튼
+
+- 저장 형식: `drop.json`에 `pinnedAt`을 항상 쓴다. 픽스처 `image-drop`은 고정, `example-app`은 `null`, 나머지는 키 없음. 단위: `PinTests.DropStorePinTests`(왕복, `updatedAt` 유지, 다시 고정해도 처음 시각, 고정한 상태로 저장, 예전 폴더), `CompatibilityTests`(계약 키).
+- 목록: `ListSection.make`가 `고정됨` 묶음을 날짜 그룹 앞에 둔다. 단위: `PinTests.ListSectionTests`. 선택 대체 규칙의 "첫 항목"은 화면의 첫 행(고정됨 포함).
+- 앱: `SidebarSelection.pinned`, `LibraryModel.togglePin`, `PinCommand`(`⇧⌘P`), 우클릭 메뉴 맨 위 고정/고정 해제와 단축키 표시, 동작 버튼 `DropAction`. 단위: `PinModelTests`, `PinPresentationTests`(툴팁 `이름 (단축키)`, 행 접근성 `고정됨`).
+- 실제 앱(픽스처 복사본, 라이트, 1120×720): 사이드바 `고정됨 1`, 목록 맨 위 `고정됨` 묶음과 파란 핀, 첫 행 선택, 동작 버튼 38×26 pt(스크린샷에서 측정), 고정 버튼 눌린 상태, 휴지통 빨강·구분선 뒤를 확인했다.
+- 수동 확인이 남음: 고정됨 Collection 클릭(묶음 제목 없음), 동작 버튼·우클릭 메뉴·`⇧⌘P`로 고정·고정 해제 클릭 흐름, 툴팁 표시, VoiceOver 낭독, 다크 모드, 시안(MainFeatures, FeatureDetails 3번)과 나란히 비교. 그래서 S-21~S-23, L-21은 단위로 ☑, L-22~L-25는 ☐로 둔다(PLO-103이 L-16~L-20을 먼저 써서 번호를 옮겼다).
