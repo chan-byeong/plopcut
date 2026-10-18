@@ -18,7 +18,7 @@ import Testing
         let model = try await loadedModel()
         #expect(model.drops.count == 6)
         #expect(model.warnings.count == 1)
-        #expect(model.selectedID == model.filtered.first?.id)
+        #expect(model.selectedID == model.sections.first?.drops.first?.id)
     }
 
     @Test func sidebarSelectionIsSingleAndFiltersCombine() async throws {
@@ -28,7 +28,7 @@ import Testing
         model.collection = .tag("swift")
         #expect(model.filtered.allSatisfy { $0.tags.contains("swift") })
         #expect(model.filter.type == .all)
-        model.app = "Example App"
+        model.sources = [.app("Example App")]
         #expect(model.hasRefiningFilters)
         model.clearFilters()
         #expect(model.collection == .tag("swift") && !model.hasRefiningFilters)
@@ -47,6 +47,125 @@ import Testing
         let model = LibraryModel(storageRoot: { FileManager.default.temporaryDirectory.appendingPathComponent("nope-\(UUID())") })
         await model.reload()
         #expect(model.drops.isEmpty && model.loadError == nil)
+    }
+}
+
+/// Source filter (PLO-103, checklist L-18 to L-20) on a temporary library, never the user's folder.
+@MainActor
+@Suite struct SourceFilterModelTests {
+    private let github = DropSource(appName: "Google Chrome", url: "https://www.github.com/plopcut")
+    private let apple = DropSource(appName: "Google Chrome", url: "https://developer.apple.com/swift")
+    private let terminal = DropSource(appName: "Terminal")
+
+    private struct Library {
+        let model: LibraryModel
+        let ids: [String: String]
+        @MainActor func drop(_ name: String) -> Drop { model.drops.first { $0.id == ids[name] }! }
+    }
+
+    /// gh1 and gh2 from github.com today (gh1 tagged), apple from developer.apple.com 40 days ago, term from Terminal
+    /// (tagged), loose without any source.
+    private func library() async throws -> Library {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("plopcut-source-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let store = DropStore(root: root)
+        let old = DropStore(root: root, clock: { Date().addingTimeInterval(-40 * 86_400) })
+        let ids = [
+            "gh1": try store.saveText("swift one", title: "gh1", source: github, tags: ["x"], note: nil).id,
+            "gh2": try store.saveText("two", title: "gh2", source: github, tags: [], note: nil).id,
+            "apple": try old.saveText("swift docs", title: "apple", source: apple, tags: [], note: nil).id,
+            "term": try store.saveText("make", title: "term", source: terminal, tags: ["x"], note: nil).id,
+            "loose": try store.saveText("swift loose", title: "loose", source: DropSource(), tags: [], note: nil).id,
+        ]
+        let model = LibraryModel(storageRoot: { root })
+        await model.reload()
+        return Library(model: model, ids: ids)
+    }
+
+    private func titles(_ model: LibraryModel) -> Set<String> { Set(model.filtered.map(\.title)) }
+
+    private func counts(_ list: [SourceCount]) -> [String] { list.map { "\($0.key.name) \($0.count)" } }
+
+    @Test func removingOneChipKeepsTheOtherSources() async throws {
+        let model = try await library().model
+        model.sources = [.website("github.com"), .app("Terminal")]
+        #expect(titles(model) == ["gh1", "gh2", "term"])
+        model.removeSource(.website("github.com"))
+        #expect(model.sources == [.app("Terminal")])
+        #expect(titles(model) == ["term"])
+        #expect(model.hasRefiningFilters)
+    }
+
+    @Test func clearingFiltersKeepsTheSidebarSelectionAndSearch() async throws {
+        let model = try await library().model
+        model.collection = .tag("x")
+        model.search = "swift"
+        model.sources = [.website("github.com")]
+        model.dateRange = .today
+        model.clearFilters()
+        #expect(model.collection == .tag("x") && model.search == "swift")
+        #expect(model.sources.isEmpty && model.dateRange == .all && !model.hasRefiningFilters)
+    }
+
+    @Test func showDropsFromSourceShowsTheLibraryFilteredToThatSourceOnly() async throws {
+        let library = try await library()
+        let model = library.model
+        model.collection = .tag("x")
+        model.sources = [.app("Terminal")]
+        model.dateRange = .last30Days
+        model.showDropsFromSource(of: library.drop("apple"))
+        #expect(model.collection == .all)
+        #expect(model.sources == [.website("developer.apple.com")])
+        // The period stays, so the 40-day-old drop is still hidden until the period is cleared.
+        #expect(model.dateRange == .last30Days && model.filtered.isEmpty)
+        model.dateRange = .all
+        #expect(titles(model) == ["apple"])
+        model.showDropsFromSource(of: library.drop("gh1"))
+        #expect(titles(model) == ["gh1", "gh2"])
+    }
+
+    @Test func showDropsFromSourceIgnoresADropWithoutSource() async throws {
+        let library = try await library()
+        let model = library.model
+        model.collection = .text
+        model.sources = [.app("Terminal")]
+        #expect(!LibraryModel.hasSource(library.drop("loose")))
+        #expect(LibraryModel.hasSource(library.drop("term")))
+        model.showDropsFromSource(of: library.drop("loose"))
+        #expect(model.collection == .text && model.sources == [.app("Terminal")])
+    }
+
+    @Test func popoverListsWebsitesAndAppsWithCounts() async throws {
+        let model = try await library().model
+        let groups = model.sourceGroups(matching: "")
+        #expect(counts(groups.websites) == ["github.com 2", "developer.apple.com 1"])
+        #expect(counts(groups.apps) == ["Terminal 1"])
+    }
+
+    @Test func popoverCountsIgnoreTheSourceFilterButFollowTheOtherConditions() async throws {
+        let model = try await library().model
+        model.sources = [.app("Terminal")]
+        #expect(counts(model.sourceGroups(matching: "").websites) == ["github.com 2", "developer.apple.com 1"])
+        model.search = "swift"
+        #expect(counts(model.sourceGroups(matching: "").websites) == ["developer.apple.com 1", "github.com 1"])
+        // A selected source stays listed with 0 so it can still be unchecked; unselected empty sources are hidden.
+        #expect(counts(model.sourceGroups(matching: "").apps) == ["Terminal 0"])
+        model.search = ""
+        model.sources = []
+        model.dateRange = .today
+        #expect(counts(model.sourceGroups(matching: "").websites) == ["github.com 2"])
+        model.collection = .tag("x")
+        #expect(counts(model.sourceGroups(matching: "").websites) == ["github.com 1"])
+        #expect(counts(model.sourceGroups(matching: "").apps) == ["Terminal 1"])
+    }
+
+    @Test func popoverSearchKeepsMatchingSourceNames() async throws {
+        let model = try await library().model
+        let groups = model.sourceGroups(matching: "  APPLE ")
+        #expect(counts(groups.websites) == ["developer.apple.com 1"] && groups.apps.isEmpty)
+        #expect(counts(model.sourceGroups(matching: "term").apps) == ["Terminal 1"])
+        let none = model.sourceGroups(matching: "nothing")
+        #expect(none.websites.isEmpty && none.apps.isEmpty)
     }
 }
 

@@ -59,13 +59,26 @@ struct DropDetailView: View {
         listFocused.wrappedValue = true
     }
 
+    /// Icon-only buttons: Pin · Open Source · Export Markdown | Move to Trash (spec 2.6). PLO-104 adds Edit after Pin.
     private func actions(for drop: Drop) -> some View {
-        HStack {
-            Button { openSource(drop) } label: { Label(L10n.t("openSource"), systemImage: "arrow.up.right.square") }
+        HStack(spacing: Spacing.xs) {
+            let pin = DropAction.pin(pinned: drop.isPinned)
+            Toggle(isOn: Binding(get: { drop.isPinned }, set: { _ in Task { await model.togglePin(id: drop.id) } })) {
+                DropActionIcon(action: pin)
+            }
+            .toggleStyle(.button)
+            .help(pin.tooltip).accessibilityLabel(pin.title)
+            actionButton(.openSource) { openSource(drop) }
                 .disabled(URL(string: drop.source.url ?? "") == nil || drop.source.url?.isEmpty != false)
-            Button { Task { await model.exportWithPanel(id: drop.id) } } label: { Label(L10n.t("exportMarkdown"), systemImage: "square.and.arrow.down") }
-            Button(role: .destructive) { model.pendingDeleteID = drop.id } label: { Label(L10n.t("moveTrash"), systemImage: "trash") }
+            actionButton(.exportMarkdown) { Task { await model.exportWithPanel(id: drop.id) } }
+            Divider().frame(height: DropActionIcon.buttonSize.height)
+            actionButton(.moveTrash, role: .destructive) { model.pendingDeleteID = drop.id }
         }
+    }
+
+    private func actionButton(_ action: DropAction, role: ButtonRole? = nil, perform: @escaping () -> Void) -> some View {
+        Button(role: role, action: perform) { DropActionIcon(action: action) }
+            .help(action.tooltip).accessibilityLabel(action.title)
     }
 
     @ViewBuilder private func body(of drop: Drop) -> some View {
@@ -104,6 +117,11 @@ struct InspectorView: View {
                     section(L10n.t("source")) {
                         Text(drop.source.appName ?? L10n.t("unknownApp"))
                         Text("\(L10n.t("savedAt")) \(Formatting.dateTime(drop.createdAt))").font(.caption).foregroundStyle(.secondary)
+                        Button { model.showDropsFromSource(of: drop) } label: {
+                            Label(L10n.t("showSourceDrops"), systemImage: "line.3.horizontal.decrease")
+                        }
+                        .controlSize(.small)
+                        .disabled(!LibraryModel.hasSource(drop))
                     }
                     DisclosureGroup(L10n.t("sourceDetails")) {
                         VStack(alignment: .leading, spacing: Spacing.s) {
@@ -179,5 +197,21 @@ struct InspectorView: View {
                 Text(value).textSelection(.enabled)
             }
         }
+    }
+}
+
+/// The label of an icon action button (spec 2.6). The native bordered bezel adds its own padding, so the label is
+/// smaller than the 38 x 26 pt button it ends up in. Move to Trash is drawn red.
+struct DropActionIcon: View {
+    static let buttonSize = CGSize(width: 38, height: 26)
+    /// Optical: the bordered bezel's padding at regular size, measured in the running app.
+    static let bezelInset = CGSize(width: 16, height: 2)
+    let action: DropAction
+
+    var body: some View {
+        Image(systemName: action.systemImage)
+            .foregroundStyle(action == .moveTrash ? AnyShapeStyle(.red) : AnyShapeStyle(.primary))
+            .frame(width: Self.buttonSize.width - Self.bezelInset.width, height: Self.buttonSize.height - Self.bezelInset.height)
+            .contentShape(Rectangle())
     }
 }

@@ -26,6 +26,7 @@ private func fixtureText(_ id: String, _ file: String) throws -> String {
 private let contractKeys: Set<String> = [
     "id", "type", "title", "text", "imagePath", "source", "note", "tags", "createdAt", "updatedAt",
     "format", "codeLanguage",
+    "pinnedAt",
 ]
 
 private enum ID {

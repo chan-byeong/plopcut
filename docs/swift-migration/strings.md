@@ -4,7 +4,7 @@ Linear: STA-39
 
 레거시 `src/i18n/i18n.tsx`에서 그대로 추출한 사용자 문구입니다. 키는 [스펙](spec.md)과 [체크리스트](behavior-checklist.md)가 참조하는 이름입니다. 시스템 언어가 `ko`로 시작하면 한국어, 아니면 영어를 씁니다. 두 언어의 키 집합은 같습니다(158개). `shortcutFormatHint`만 구현 용어(Tauri)를 말하므로 Swift 구현의 단축키 형식에 맞게 고쳐 씁니다(체크리스트 D-12). `{count}` 같은 자리 표시자는 치환합니다.
 
-Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA-72, 로고 접근성 라벨), `settingsFailure`·`deleteFailed`·`dropNotFound`·`exportFailed`(STA-78, 알려진 오류 코드의 문구), `dropCountOne`(영어 단수형), `dropTitle`(제목 입력란 접근성 라벨), `ok`(알림 단추), `unreadableDrops`(읽지 못한 드롭 경고, STA-80), `showLogInFinder`(Settings의 로그 파일 보기 단추, STA-80), `menuBarSaved`·`menuBarFailed`(메뉴 막대 저장 피드백의 접근성 이름·툴팁, PLO-93), `noDropsTitle`·`noDropsShortcutHint`·`noDropsClipboardHint`(빈 Library, 레거시 `noDrops`를 대체), `aboutVersion`(정보 섹션, 레거시 `appVersion`을 대체), `popupShortcutHint`(Save Popup 단축키 힌트, PLO-94).
+Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA-72, 로고 접근성 라벨), `settingsFailure`·`deleteFailed`·`dropNotFound`·`exportFailed`(STA-78, 알려진 오류 코드의 문구), `dropCountOne`(영어 단수형), `dropTitle`(제목 입력란 접근성 라벨), `ok`(알림 단추), `unreadableDrops`(읽지 못한 드롭 경고, STA-80), `showLogInFinder`(Settings의 로그 파일 보기 단추, STA-80), `menuBarSaved`·`menuBarFailed`(메뉴 막대 저장 피드백의 접근성 이름·툴팁, PLO-93), `noDropsTitle`·`noDropsShortcutHint`·`noDropsClipboardHint`(빈 Library, 레거시 `noDrops`를 대체), `aboutVersion`(정보 섹션, 레거시 `appVersion`을 대체), `popupShortcutHint`(Save Popup 단축키 힌트, PLO-94), `pin`·`unpin`·`pinned`(Drop 고정 동작, 고정됨 Collection·묶음 제목·행 접근성, PLO-102).
 
 PLO-101에서 추가한 키(본문 렌더링과 형식 메뉴): `formatMenu`, `formatMenuHelp`, `formatAutomatic`, `formatPlain`, `formatMarkdown`, `formatCode`, `codeBlock`, `copyCode`, `markdownList`, `markdownQuote`.
 
@@ -59,13 +59,21 @@ PLO-101에서 추가한 키(본문 렌더링과 형식 메뉴): `formatMenu`, `f
 | `dropCount` | {count} drops | {count}개의 드롭 |
 | `dropCountOne` | 1 drop | 1개의 드롭 |
 | `filterTag` | Filter by tag | 태그로 필터 |
-| `filterApp` | Filter by app | 앱으로 필터 |
 | `filterDate` | Filter by date | 날짜로 필터 |
 | `allTags` | All tags | 모든 태그 |
-| `allApps` | All apps | 모든 앱 |
 | `anyTime` | Any time | 전체 기간 |
 | `last7` | Last 7 days | 최근 7일 |
 | `last30` | Last 30 days | 최근 30일 |
+| `searchSources` | Search sources | 출처 검색 |
+| `sourceWebsites` | Websites | 웹사이트 |
+| `sourceApps` | Apps | 앱 |
+| `noMatchingSources` | No matching sources | 일치하는 출처가 없습니다 |
+| `sourceChip` | Source: {source} | 출처: {source} |
+| `showSourceDrops` | Show Drops from This Source | 이 출처의 드롭 보기 |
+| `period` | Period | 기간 |
+| `periodAll` | All | 전체 |
+| `period7` | 7 days | 7일 |
+| `period30` | 30 days | 30일 |
 | `today` | Today | 오늘 |
 | `yesterday` | Yesterday | 어제 |
 | `previous7` | Previous 7 Days | 지난 7일 |
@@ -202,6 +210,9 @@ PLO-101에서 추가한 키(본문 렌더링과 형식 메뉴): `formatMenu`, `f
 | `deleteFailed` | The drop could not be moved to the Trash. It is still in the Library. | 드롭을 휴지통으로 이동하지 못했습니다. 드롭은 라이브러리에 그대로 있습니다. |
 | `dropNotFound` | This drop no longer exists. Refresh the library. | 이 드롭이 더 이상 없습니다. 라이브러리를 새로고침하세요. |
 | `exportFailed` | The Markdown file could not be written. Choose another location. | Markdown 파일을 쓰지 못했습니다. 다른 위치를 선택하세요. |
+| `pin` | Pin | 고정 |
+| `unpin` | Unpin | 고정 해제 |
+| `pinned` | Pinned | 고정됨 |
 
 ## 문구 점검 기록 (STA-80)
 
@@ -216,3 +227,11 @@ PLO-101에서 추가한 키(본문 렌더링과 형식 메뉴): `formatMenu`, `f
 
 - 메뉴 항목, 플레이스홀더, 진행 상태 문구 끝의 `...`/`…`를 모두 지웠다: `saveClipboard`, `searchPlaceholder`, `loadingDrops`, `saving`, `noNote`, `tagPlaceholder`, `shortcutRecording`, `loadingPermissions`, `optionalNote`, `capturing`. `noDropsClipboardHint` 안의 메뉴 이름도 새 표기(`Save Clipboard`, `클립보드 저장`)로 맞췄다.
 - 문구에 `...`/`…`가 없는지는 `LocalizationTests.noPhraseUsesAnEllipsis`가 검사한다.
+
+## 출처 필터 (PLO-103)
+
+- 앱 필터를 출처 필터로 바꾸면서 쓰지 않게 된 `filterApp`, `allApps`를 지웠다.
+- 추가: `searchSources`(팝오버 출처 검색), `sourceWebsites`·`sourceApps`(출처 묶음 제목), `noMatchingSources`(검색 결과 없음),
+  `sourceChip`(출처 칩), `showSourceDrops`(인스펙터 버튼과 우클릭 메뉴), `period`(기간 제목과 분할 컨트롤 접근성 이름),
+  `periodAll`·`period7`·`period30`(분할 컨트롤의 짧은 문구, `오늘`은 `today`를 쓴다). 기간 칩은 예전처럼 `anyTime`/`last7`/`last30`을 쓴다.
+- 팝오버의 `출처` 제목은 인스펙터와 같은 `source` 키를 쓴다.

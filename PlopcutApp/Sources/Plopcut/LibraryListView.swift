@@ -23,14 +23,19 @@ struct LibraryListView: View {
         if model.hasRefiningFilters { chips.padding(.horizontal, Spacing.l).padding(.vertical, Spacing.s) }
     }
 
+    /// One chip per selected source, then the period; pressing a chip removes only its value (spec 2.5).
     private var chips: some View {
-        HStack {
-            if let app = model.app { RemovableChip(text: app, removeLabel: L10n.t("removeFilter")) { model.app = nil } }
+        FlowLayout(spacing: Spacing.s) {
+            ForEach(model.sources.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }, id: \.self) { key in
+                RemovableChip(text: L10n.t("sourceChip", ["source": key.name]), removeLabel: L10n.t("removeFilter")) {
+                    model.removeSource(key)
+                }
+            }
             if model.dateRange != .all {
                 RemovableChip(text: FilterPopover.title(model.dateRange), removeLabel: L10n.t("removeFilter")) { model.dateRange = .all }
             }
-            Spacer(minLength: 0)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var warningBanner: some View {
@@ -41,7 +46,7 @@ struct LibraryListView: View {
     }
 
     @ViewBuilder private var content: some View {
-        let groups = model.groups
+        let sections = model.sections
         if model.isLoading && model.drops.isEmpty {
             ProgressView(L10n.t("loadingDrops")).frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let error = model.loadError {
@@ -57,12 +62,16 @@ struct LibraryListView: View {
                     Text(L10n.t("noDropsClipboardHint"))
                 }
             }
-        } else if groups.isEmpty {
+        } else if sections.isEmpty {
             ContentUnavailableView(L10n.t("noMatches"), systemImage: "magnifyingglass")
         } else {
             List(selection: $model.selectedID) {
-                ForEach(groups, id: \.group) { entry in
-                    Section(Formatting.groupTitle(entry.group)) {
+                ForEach(sections, id: \.section) { entry in
+                    if model.showsSectionHeaders {
+                        Section(Self.title(entry.section)) {
+                            ForEach(entry.drops) { drop in DropRow(drop: drop).tag(drop.id) }
+                        }
+                    } else {
                         ForEach(entry.drops) { drop in DropRow(drop: drop).tag(drop.id) }
                     }
                 }
@@ -73,9 +82,14 @@ struct LibraryListView: View {
             .focusedValue(\.trashSelectedDrop, model.selectedID == nil ? nil : { if let id = model.selectedID { model.pendingDeleteID = id } })
             .contextMenu(forSelectionType: String.self) { ids in
                 if let drop = model.drops.first(where: { ids.contains($0.id) }) {
+                    let pin = DropAction.pin(pinned: drop.isPinned)
+                    Button(pin.title) { Task { await model.togglePin(id: drop.id) } }
+                        .keyboardShortcut(PinCommand.shortcut)
                     if let url = drop.source.url.flatMap(URL.init(string:)), drop.source.url?.isEmpty == false {
                         Button(L10n.t("openSource")) { NSWorkspace.shared.open(url) }
                     }
+                    Button(L10n.t("showSourceDrops")) { model.showDropsFromSource(of: drop) }
+                        .disabled(!LibraryModel.hasSource(drop))
                     if drop.type == .text, let text = drop.text {
                         Button(L10n.t("copyContent")) {
                             NSPasteboard.general.clearContents()
@@ -85,8 +99,18 @@ struct LibraryListView: View {
                     Button(L10n.t("exportMarkdown")) { Task { await model.exportWithPanel(id: drop.id) } }
                     Divider()
                     Button(L10n.t("moveTrash"), role: .destructive) { model.pendingDeleteID = drop.id }
+                        .keyboardShortcut(.delete, modifiers: .command)
                 }
             }
+        }
+    }
+}
+
+extension LibraryListView {
+    static func title(_ section: ListSection) -> String {
+        switch section {
+        case .pinned: L10n.t("pinned")
+        case .date(let group): Formatting.groupTitle(group)
         }
     }
 }
@@ -103,17 +127,74 @@ struct FilterPopover: View {
         }
     }
 
+    /// The short segment labels: All, Today, 7 days, 30 days.
+    static func segmentTitle(_ range: DateRange) -> String {
+        switch range {
+        case .all: L10n.t("periodAll")
+        case .today: L10n.t("today")
+        case .last7Days: L10n.t("period7")
+        case .last30Days: L10n.t("period30")
+        }
+    }
+
+    /// Lives only while the popover is open, so it starts empty each time (spec 2.5).
+    @State private var sourceQuery = ""
+    /// Past this height the source list scrolls instead of growing the popover.
+    private static let sourceListMaxHeight: CGFloat = 280
+
     var body: some View {
-        Form {
-            Picker(L10n.t("filterApp"), selection: $model.app) {
-                Text(L10n.t("allApps")).tag(String?.none)
-                ForEach(model.allApps, id: \.self) { Text($0).tag(String?.some($0)) }
+        let groups = model.sourceGroups(matching: sourceQuery)
+        VStack(alignment: .leading, spacing: Spacing.m) {
+            VStack(alignment: .leading, spacing: Spacing.s) {
+                Text(L10n.t("source")).font(.headline)
+                TextField(L10n.t("searchSources"), text: $sourceQuery)
+                    .textFieldStyle(.roundedBorder)
+                    .accessibilityLabel(L10n.t("searchSources"))
+                if groups.websites.isEmpty && groups.apps.isEmpty {
+                    Text(L10n.t("noMatchingSources")).font(.callout).foregroundStyle(.secondary)
+                } else {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: Spacing.s) {
+                            sourceGroup(L10n.t("sourceWebsites"), groups.websites)
+                            sourceGroup(L10n.t("sourceApps"), groups.apps)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(maxHeight: Self.sourceListMaxHeight).fixedSize(horizontal: false, vertical: true)
+                    .slimScrollers()
+                }
             }
-            Picker(L10n.t("filterDate"), selection: $model.dateRange) {
-                ForEach([DateRange.all, .today, .last7Days, .last30Days], id: \.self) { Text(Self.title($0)).tag($0) }
+            Divider()
+            VStack(alignment: .leading, spacing: Spacing.s) {
+                Text(L10n.t("period")).font(.headline)
+                Picker(L10n.t("period"), selection: $model.dateRange) {
+                    ForEach([DateRange.all, .today, .last7Days, .last30Days], id: \.self) { Text(Self.segmentTitle($0)).tag($0) }
+                }
+                .pickerStyle(.segmented).labelsHidden()
             }
         }
         .padding(Spacing.l).frame(width: LayoutMetrics.popoverWidth)
+    }
+
+    @ViewBuilder private func sourceGroup(_ title: String, _ rows: [SourceCount]) -> some View {
+        if !rows.isEmpty {
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
+                Text(title).font(.caption).fontWeight(.semibold).foregroundStyle(.secondary)
+                ForEach(rows, id: \.key) { row in
+                    Toggle(isOn: Binding(
+                        get: { model.sources.contains(row.key) },
+                        set: { on in if on { model.sources.insert(row.key) } else { model.removeSource(row.key) } }
+                    )) {
+                        HStack {
+                            Text(row.key.name).lineLimit(1).truncationMode(.middle)
+                            Spacer(minLength: Spacing.s)
+                            Text("\(row.count)").font(.caption).foregroundStyle(.secondary).monospacedDigit()
+                        }
+                    }
+                    .toggleStyle(.checkbox)
+                }
+            }
+        }
     }
 }
 
@@ -151,6 +232,8 @@ struct DropRow: View {
                 HStack {
                     Text(drop.title).fontWeight(.semibold).lineLimit(1)
                     Spacer(minLength: Spacing.xs)
+                    // The row's accessibility label already ends with "Pinned", so the icon itself is decoration.
+                    if drop.isPinned { Image(systemName: "pin.fill").font(.caption).foregroundStyle(Color.accentColor) }
                     Text(Formatting.time(drop.createdAt)).font(.caption).foregroundStyle(.secondary)
                 }
                 Text(Formatting.preview(drop)).font(.callout).foregroundStyle(.secondary).lineLimit(1)

@@ -61,17 +61,23 @@ public struct Drop: Equatable, Identifiable, Sendable {
     public var format: DropFormat?
     /// Only set when `format == .code`.
     public var codeLanguage: String?
+    /// When the drop was pinned; `nil` when it is not pinned (spec 1.2, PLO-102).
+    public var pinnedAt: String?
 
     public init(
         id: String, type: DropType, title: String, text: String? = nil, imagePath: String? = nil,
         imageURL: URL? = nil, source: DropSource = DropSource(), note: String? = nil, tags: [String] = [],
-        createdAt: String, updatedAt: String, format: DropFormat? = nil, codeLanguage: String? = nil
+        createdAt: String, updatedAt: String, format: DropFormat? = nil, codeLanguage: String? = nil,
+        pinnedAt: String? = nil
     ) {
         self.id = id; self.type = type; self.title = title; self.text = text
         self.imagePath = imagePath; self.imageURL = imageURL; self.source = source
         self.note = note; self.tags = tags; self.createdAt = createdAt; self.updatedAt = updatedAt
         self.format = format; self.codeLanguage = format == .code ? codeLanguage : nil
+        self.pinnedAt = pinnedAt
     }
+
+    public var isPinned: Bool { pinnedAt != nil }
 }
 
 public struct DropScan: Equatable, Sendable {
@@ -91,16 +97,20 @@ struct DropMetadata: Codable {
     var updatedAt: String
     var format: DropFormat?
     var codeLanguage: String?
+    /// Added in PLO-102; a file without the key reads as not pinned.
+    var pinnedAt: String?
 
     private enum CodingKeys: String, CodingKey {
         case id, type, title, text, imagePath, source, note, tags, createdAt, updatedAt
         case format, codeLanguage
+        case pinnedAt
     }
 
     init(id: String, type: DropType, title: String, imagePath: String?, source: DropSource,
-         tags: [String], createdAt: String, updatedAt: String) {
+         tags: [String], createdAt: String, updatedAt: String, pinnedAt: String? = nil) {
         self.id = id; self.type = type; self.title = title; self.imagePath = imagePath
         self.source = source; self.tags = tags; self.createdAt = createdAt; self.updatedAt = updatedAt
+        self.pinnedAt = pinnedAt
     }
 
     init(from decoder: Decoder) throws {
@@ -113,6 +123,7 @@ struct DropMetadata: Codable {
         tags = Tags.normalize(try c.decodeIfPresent([String].self, forKey: .tags) ?? [])
         createdAt = try c.decode(String.self, forKey: .createdAt)
         updatedAt = try c.decode(String.self, forKey: .updatedAt)
+        pinnedAt = try c.decodeIfPresent(String.self, forKey: .pinnedAt)
         // A missing or unknown format means automatic detection, without a scan warning (spec 1.2, R-01).
         let format = (try? c.decodeIfPresent(String.self, forKey: .format)).flatMap { $0 }.flatMap(DropFormat.init(rawValue:))
         let language = (try? c.decodeIfPresent(String.self, forKey: .codeLanguage)).flatMap { $0 }
@@ -139,5 +150,6 @@ struct DropMetadata: Codable {
         try c.encode(updatedAt, forKey: .updatedAt)
         try c.encode(format, forKey: .format)
         try c.encode(codeLanguage, forKey: .codeLanguage)
+        try c.encode(pinnedAt, forKey: .pinnedAt)
     }
 }

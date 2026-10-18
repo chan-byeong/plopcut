@@ -109,7 +109,7 @@ private func json(_ url: URL) throws -> [String: Any] {
         let meta = try json(folder.appendingPathComponent("drop.json"))
         #expect(Set(meta.keys) == [
             "id", "type", "title", "text", "imagePath", "source", "note", "tags", "createdAt", "updatedAt",
-            "format", "codeLanguage",
+            "format", "codeLanguage", "pinnedAt",
         ])
         #expect(meta["text"] is NSNull && meta["note"] is NSNull && meta["imagePath"] is NSNull)
         let source = try #require(meta["source"] as? [String: Any])
