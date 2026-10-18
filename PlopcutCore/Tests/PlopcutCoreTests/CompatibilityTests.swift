@@ -25,6 +25,7 @@ private func fixtureText(_ id: String, _ file: String) throws -> String {
 
 private let contractKeys: Set<String> = [
     "id", "type", "title", "text", "imagePath", "source", "note", "tags", "createdAt", "updatedAt",
+    "format", "codeLanguage",
 ]
 
 private enum ID {
@@ -187,7 +188,8 @@ private enum ID {
             "본문", title: "한글", source: DropSource(appName: "A", url: "https://example.com/a"), tags: [], note: nil)
         let file = folder(root, saved.id).appendingPathComponent("drop.json")
         let fixture = try object(folder(root, ID.text).appendingPathComponent("drop.json"))
-        #expect(Set(try object(file).keys) == Set(fixture.keys))
+        // The legacy fixture predates the PLO-101 keys; the written file adds them and nothing else.
+        #expect(Set(try object(file).keys) == Set(fixture.keys).union(["format", "codeLanguage"]))
         let raw = try String(contentsOf: file, encoding: .utf8)
         #expect(!raw.contains("imageDataUrl"))
         #expect(raw.contains("https://example.com/a") && raw.contains("한글"))

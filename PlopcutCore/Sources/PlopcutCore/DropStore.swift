@@ -12,15 +12,30 @@ public struct SystemTrashMover: TrashMover {
     }
 }
 
+/// A change to a drop's format choice (PLO-101).
+public enum FormatUpdate: Equatable, Sendable {
+    /// Clear the choice so the drop goes back to detection.
+    case automatic
+    /// Store a choice. `codeLanguage` is kept only for `.code`.
+    case set(DropFormat, codeLanguage: String?)
+}
+
 /// Fields to change on an existing drop. `nil` leaves the field as it is.
 public struct DropUpdate: Sendable {
     public var title: String?
     public var tags: [String]?
     public var note: String?
     public var text: String?
+    /// Not a content edit: changing only the format keeps `updatedAt` (spec 1.2).
+    public var format: FormatUpdate?
 
-    public init(title: String? = nil, tags: [String]? = nil, note: String? = nil, text: String? = nil) {
-        self.title = title; self.tags = tags; self.note = note; self.text = text
+    public init(title: String? = nil, tags: [String]? = nil, note: String? = nil, text: String? = nil, format: FormatUpdate? = nil) {
+        self.title = title; self.tags = tags; self.note = note; self.text = text; self.format = format
+    }
+
+    /// Whether the change edits content, which moves `updatedAt`. An empty change still counts, as before.
+    var editsContent: Bool {
+        title != nil || tags != nil || note != nil || text != nil || format == nil
     }
 }
 
@@ -119,7 +134,7 @@ public struct DropStore: Sendable {
 
         var drop = Drop(
             id: meta.id, type: meta.type, title: meta.title, source: meta.source, tags: meta.tags,
-            createdAt: meta.createdAt, updatedAt: meta.updatedAt)
+            createdAt: meta.createdAt, updatedAt: meta.updatedAt, format: meta.format, codeLanguage: meta.codeLanguage)
 
         switch meta.type {
         case .text:
@@ -249,7 +264,12 @@ public struct DropStore: Sendable {
         if let tags = change.tags { meta.tags = Tags.normalize(tags) }
         // A legacy image drop may omit `imagePath`; rewrite it with the default it was read with (S-01, S-20).
         if meta.type == .image, meta.imagePath == nil { meta.imagePath = "image.png" }
-        meta.updatedAt = Timestamp.format(clock())
+        switch change.format {
+        case .automatic: meta.setFormat(nil, codeLanguage: nil)
+        case .set(let format, let language): meta.setFormat(format, codeLanguage: language)
+        case nil: break
+        }
+        if change.editsContent { meta.updatedAt = Timestamp.format(clock()) }
 
         do {
             if let note = change.note { try write(Data(note.utf8), to: folder.appendingPathComponent("note.md")) }

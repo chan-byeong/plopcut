@@ -31,6 +31,17 @@ Swift 구현은 같은 입력에서 같은 결과를 내야 합니다.
 모든 `drop.json`은 저장된 형식(`text`, `note`가 `null`, `imagePath`는 텍스트에서 `null`)을 따르지만 2번·3번만 의도적으로
 최소 키입니다. 이 앱이 파일을 다시 쓰면 키 집합이 체크리스트 S-01을 따라 정규화되어야 합니다.
 
+## `storage-format/drops` 기대 결과 (PLO-101)
+
+`drop.json`의 `format`·`codeLanguage` 키(스펙 1.2)를 담은 Swift 전용 사례입니다. 레거시 스캐너는 이 키를 모르므로 무시합니다.
+위 `storage`의 개수와 순서를 바꾸지 않으려고 따로 둡니다. 경고는 없습니다.
+
+| 순서 | 폴더 | 기대 |
+| --- | --- | --- |
+| 1 | `2026-02-03_…_code-choice` | `format: code`, `codeLanguage: python`. 본문의 `# not a heading`과 관계없이 코드(Python)로 보입니다. |
+| 2 | `2026-02-02_…_markdown-choice` | `format: markdown`, `codeLanguage: null`. 출처가 Terminal이라 자동 감지라면 코드(Shell)지만 사용자 선택인 Markdown이 먼저입니다. |
+| 3 | `2026-02-01_…_unknown-format` | `format: rich`(모르는 값), `codeLanguage: swift`. 자동 감지로 읽고 `codeLanguage`는 무시합니다. 본문은 Markdown으로 감지됩니다. |
+
 ## 설정 파일 기대 결과
 
 | 파일 | 기대 읽기 결과 |
