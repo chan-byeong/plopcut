@@ -20,11 +20,13 @@ Swift 구현은 같은 입력에서 같은 결과를 내야 합니다.
 | 1 | `2026-01-06_…_mixed` | `type: mixed`. 목록에는 나타나고 깨지지 않아야 합니다. 레거시는 `mixed`의 본문·이미지를 읽지 않아 `text`와 이미지가 비어 있습니다(체크리스트 D-02). |
 | 2 | `2026-01-04_…_legacy-minimal-text` | 선택 키가 모두 없는 `drop.json`. 태그 `["#Research","research"," Swift ","","##Two Words"]`는 `["research","swift","two words"]`로 정규화(앞쪽 `#` 제거, 소문자, 중복·빈 값 제거, 내부 공백 유지). `note.md`가 없으면 노트 없음. `source`는 빈 값. |
 | 3 | `2026-01-04_…_legacy-minimal-image` | `imagePath` 키가 없어도 `image.png`를 이미지로 읽습니다. 노트 없음. |
-| 4 | `2026-01-03_…_image-drop` | 일반 이미지 Drop. 노트 `Whiteboard photo.`. |
+| 4 | `2026-01-03_…_image-drop` | 일반 이미지 Drop. 노트 `Whiteboard photo.`. 고정한 Drop(`pinnedAt: 2026-01-03T12:00:00.000000003Z`, PLO-102). |
 | 5 | `2026-01-02_…_drop` | 한글 제목과 태그. ID의 slug는 `drop`(한글은 slug에서 제거). 빈 `note.md`는 노트 없음. URL이 있는 출처. |
 | 6 | `2026-01-01_…_example-app` | 일반 텍스트 Drop. 본문 두 문단, 노트에 마크다운 보존(끝 줄바꿈 포함). |
 | — | `2026-01-05_…_broken-json` | `drop.json`이 깨짐. 목록에서 제외되고 경고 `drop_scan_skipped` 1개. |
 | — | `not-a-drop.txt` | `drops/` 바로 아래의 파일. 무시합니다. |
+
+`pinnedAt`은 4번(고정)과 6번(`null`)에만 있습니다. 나머지는 키가 없는 예전 형식이며 고정 안 됨으로 읽습니다.
 
 2번과 3번은 `createdAt`이 같아서 `id` 내림차순(`…-text` > `…-image`)이 순서를 정합니다.
 

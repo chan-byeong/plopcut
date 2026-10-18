@@ -10,6 +10,8 @@ public struct LibraryFilter: Sendable {
     public var tag: String?
     public var app: String?
     public var dateRange: DateRange
+    /// The Pinned collection: only pinned drops pass (spec 1.6, PLO-102).
+    public var pinnedOnly = false
 
     public init(search: String = "", type: TypeFilter = .all, tag: String? = nil, app: String? = nil, dateRange: DateRange = .all) {
         self.search = search; self.type = type; self.tag = tag; self.app = app; self.dateRange = dateRange
@@ -34,7 +36,7 @@ public struct LibraryFilter: Sendable {
     private var normalizedQuery: String { search.trimmingCharacters(in: .whitespacesAndNewlines) }
 
     private func matchesIgnoringSearch(_ drop: Drop, now: Date, calendar: Calendar) -> Bool {
-        matchesType(drop) && (tag.map { drop.tags.contains($0) } ?? true)
+        matchesType(drop) && (tag.map { drop.tags.contains($0) } ?? true) && (!pinnedOnly || drop.isPinned)
             && (app.map { drop.source.appName == $0 } ?? true)
             && matchesDate(drop, now: now, calendar: calendar)
     }
@@ -142,5 +144,22 @@ public enum DateGroup: CaseIterable, Sendable {
         case 2...7: return .last7Days
         default: return .earlier
         }
+    }
+}
+
+/// A section of the Library list: the "Pinned" section first, then the date groups (spec 1.6, PLO-102).
+public enum ListSection: Hashable, Sendable {
+    case pinned
+    case date(DateGroup)
+
+    /// Pinned drops by `pinnedAt` (newest first, then `id`), then the remaining drops in date groups.
+    /// Empty sections are left out; a pinned drop is never repeated in its date group.
+    public static func make(_ drops: [Drop], now: Date = Date(), calendar: Calendar = .current) -> [(section: ListSection, drops: [Drop])] {
+        var pinned: [Drop] = []
+        var rest: [Drop] = []
+        for drop in drops { if drop.isPinned { pinned.append(drop) } else { rest.append(drop) } }
+        pinned.sort { ($0.pinnedAt ?? "", $0.id) > ($1.pinnedAt ?? "", $1.id) }
+        let dated = DateGroup.group(rest, now: now, calendar: calendar).map { (section: ListSection.date($0.group), drops: $0.drops) }
+        return (pinned.isEmpty ? [] : [(section: .pinned, drops: pinned)]) + dated
     }
 }
