@@ -13,28 +13,82 @@ struct DropDetailView: View {
 
     var body: some View {
         if let drop = model.selectedDrop {
-            ScrollView {
+            if editor.bodyEdit?.dropID == drop.id {
+                // The editor fills the pane and scrolls itself (spec 2.6 "본문 편집").
                 VStack(alignment: .leading, spacing: Spacing.l) {
-                    // The type is an eyebrow over the title, so the two stay together.
-                    VStack(alignment: .leading, spacing: Spacing.xs) {
-                        HStack(spacing: Spacing.s) {
-                            Text(drop.type == .image ? L10n.t("imageDrops") : drop.type == .text ? L10n.t("textDrops") : drop.type.rawValue)
-                                .font(.caption).foregroundStyle(.secondary)
-                            if drop.type == .text {
-                                FormatMenuButton(drop: drop) { choice in Task { await model.setFormat(choice, for: drop.id) } }
-                            }
-                        }
-                        titleField
-                    }
-                    actions(for: drop)
-                    Divider()
-                    body(of: drop)
+                    header(for: drop, editing: true)
+                    editBar
+                    bodyEditor
                 }
-                .padding(Spacing.xxl).frame(maxWidth: .infinity, alignment: .leading)
+                .padding(Spacing.xxl).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: Spacing.l) {
+                        header(for: drop, editing: false)
+                        actions(for: drop)
+                        Divider()
+                        body(of: drop)
+                    }
+                    .padding(Spacing.xxl).frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .slimScrollers()
             }
-            .slimScrollers()
         } else {
             ContentUnavailableView(L10n.t("selectHint"), systemImage: "text.cursor")
+        }
+    }
+
+    /// The type is an eyebrow over the title, so the two stay together. While editing it ends in "● Editing".
+    private func header(for drop: Drop, editing: Bool) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            HStack(spacing: Spacing.s) {
+                Text(drop.type == .image ? L10n.t("imageDrops") : drop.type == .text ? L10n.t("textDrops") : drop.type.rawValue)
+                    .font(.caption).foregroundStyle(.secondary)
+                if drop.type == .text {
+                    FormatMenuButton(drop: drop) { choice in Task { await model.setFormat(choice, for: drop.id) } }
+                }
+                if editing {
+                    Text("·").font(.caption).foregroundStyle(.secondary).accessibilityHidden(true)
+                    StatusDot(text: L10n.t("editingBody")).font(.caption.weight(.semibold))
+                }
+            }
+            titleField
+        }
+    }
+
+    // MARK: Content editing (spec 2.6 "본문 편집")
+
+    /// The hint, Cancel and Done take the action buttons' place while editing.
+    private var editBar: some View {
+        HStack(spacing: Spacing.s) {
+            Text(L10n.t("editBodyHint")).font(.caption).foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Button(L10n.t("cancel")) { editor.cancelBodyEdit() }
+            Button(L10n.t("done")) { Task { await editor.finishBodyEdit() } }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(BodyEditorShortcuts.done)
+                .disabled(editor.bodyEdit?.state == .saving)
+        }
+    }
+
+    private var bodyEditor: some View {
+        VStack(alignment: .leading, spacing: Spacing.s) {
+            BodyTextEditor(
+                text: Bindable(editor).bodyText, accessibilityLabel: L10n.t("editBodyField"),
+                onCancel: { editor.cancelBodyEdit() },
+                onDone: { Task { await editor.finishBodyEdit() } })
+                .inputSurface(focused: true)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            HStack(spacing: Spacing.m) {
+                if case .failed(let code)? = editor.bodyEdit?.state {
+                    FeedbackText(code == "empty_text" ? L10n.t("emptyBody") : ErrorText.message(forCode: code), kind: .fieldError)
+                } else if editor.bodyChanged {
+                    StatusDot(text: L10n.t("bodyChanged"))
+                }
+                Spacer(minLength: Spacing.s)
+                Text(L10n.t("editBodyShortcuts"))
+            }
+            .font(.caption).foregroundStyle(.secondary)
         }
     }
 
@@ -64,7 +118,7 @@ struct DropDetailView: View {
         listFocused.wrappedValue = true
     }
 
-    /// Icon-only buttons: Pin · Open Source · Export Markdown | Move to Trash (spec 2.6). PLO-104 adds Edit after Pin.
+    /// Icon-only buttons: Pin · Edit · Open Source · Export Markdown | Move to Trash (spec 2.6).
     private func actions(for drop: Drop) -> some View {
         HStack(spacing: Spacing.xs) {
             let pin = DropAction.pin(pinned: drop.isPinned)
@@ -73,6 +127,8 @@ struct DropDetailView: View {
             }
             .toggleStyle(.button)
             .help(pin.tooltip).accessibilityLabel(pin.title)
+            actionButton(.editBody) { model.beginBodyEdit() }
+                .disabled(!DropEditor.canEditBody(drop))
             actionButton(.openSource) { openSource(drop) }
                 .disabled(URL(string: drop.source.url ?? "") == nil || drop.source.url?.isEmpty != false)
             actionButton(.exportMarkdown) { Task { await model.exportWithPanel(id: drop.id) } }
@@ -207,6 +263,19 @@ struct InspectorView: View {
 
 /// The label of an icon action button (spec 2.6). The native bordered bezel adds its own padding, so the label is
 /// smaller than the 38 x 26 pt button it ends up in. Move to Trash is drawn red.
+/// A small accent dot before a status word: "● Editing", "● Changed" (spec 2.6).
+struct StatusDot: View {
+    let text: String
+
+    var body: some View {
+        HStack(spacing: Spacing.xs) {
+            Circle().fill(Color.accentColor).frame(width: 6, height: 6).accessibilityHidden(true)
+            Text(text)
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
 struct DropActionIcon: View {
     static let buttonSize = CGSize(width: 38, height: 26)
     /// Optical: the bordered bezel's padding at regular size, measured in the running app.

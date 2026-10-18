@@ -54,6 +54,7 @@ struct PlopcutApp: App {
         .commands {
             CommandGroup(after: .pasteboard) {
                 PinCommand(model: model)
+                EditBodyCommand(model: model)
                 TrashCommand()
             }
             CommandGroup(after: .toolbar) { RefreshCommand(model: model) }

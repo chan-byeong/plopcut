@@ -65,7 +65,7 @@ struct LibraryListView: View {
         } else if sections.isEmpty {
             ContentUnavailableView(L10n.t("noMatches"), systemImage: "magnifyingglass")
         } else {
-            List(selection: $model.selectedID) {
+            List(selection: $model.listSelection) {
                 ForEach(sections, id: \.section) { entry in
                     if model.showsSectionHeaders {
                         Section(Self.title(entry.section)) {
@@ -85,6 +85,9 @@ struct LibraryListView: View {
                     let pin = DropAction.pin(pinned: drop.isPinned)
                     Button(pin.title) { Task { await model.togglePin(id: drop.id) } }
                         .keyboardShortcut(PinCommand.shortcut)
+                    Button(DropAction.editBody.title) { model.beginBodyEdit(id: drop.id) }
+                        .keyboardShortcut(EditBodyCommand.shortcut)
+                        .disabled(!DropEditor.canEditBody(drop) || model.editor.isEditingBody)
                     if let url = drop.source.url.flatMap(URL.init(string:)), drop.source.url?.isEmpty == false {
                         Button(L10n.t("openSource")) { NSWorkspace.shared.open(url) }
                     }

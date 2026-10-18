@@ -4,7 +4,7 @@ struct SidebarView: View {
     @Bindable var model: LibraryModel
 
     var body: some View {
-        List(selection: $model.collection) {
+        List(selection: $model.sidebarSelection) {
             Section(L10n.t("collections")) {
                 row(L10n.t("library"), "tray.full", .all)
                 row(L10n.t("text"), "textformat", .text)
@@ -21,7 +21,7 @@ struct SidebarView: View {
         }
         .listStyle(.sidebar)
         .safeAreaInset(edge: .bottom) {
-            List(selection: $model.collection) { row(L10n.t("settings"), "gearshape", .settings) }
+            List(selection: $model.sidebarSelection) { row(L10n.t("settings"), "gearshape", .settings) }
                 .listStyle(.sidebar)
                 .frame(height: 44)
                 .scrollDisabled(true)

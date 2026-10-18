@@ -19,6 +19,7 @@ struct PinCommand: View {
 /// The drop actions shared by the detail view's icon buttons and the list's context menu (spec 2.6).
 enum DropAction: Equatable {
     case pin(pinned: Bool)
+    case editBody
     case openSource
     case exportMarkdown
     case moveTrash
@@ -26,6 +27,7 @@ enum DropAction: Equatable {
     var title: String {
         switch self {
         case .pin(let pinned): L10n.t(pinned ? "unpin" : "pin")
+        case .editBody: L10n.t("editBody")
         case .openSource: L10n.t("openSource")
         case .exportMarkdown: L10n.t("exportMarkdown")
         case .moveTrash: L10n.t("moveTrash")
@@ -35,6 +37,7 @@ enum DropAction: Equatable {
     var systemImage: String {
         switch self {
         case .pin(let pinned): pinned ? "pin.fill" : "pin"
+        case .editBody: "pencil"
         case .openSource: "arrow.up.right.square"
         case .exportMarkdown: "square.and.arrow.down"
         case .moveTrash: "trash"
@@ -44,6 +47,7 @@ enum DropAction: Equatable {
     var shortcut: KeyboardShortcut? {
         switch self {
         case .pin: PinCommand.shortcut
+        case .editBody: EditBodyCommand.shortcut
         case .moveTrash: KeyboardShortcut(.delete, modifiers: .command)
         case .openSource, .exportMarkdown: nil
         }
@@ -53,6 +57,7 @@ enum DropAction: Equatable {
     private var shortcutText: String? {
         switch self {
         case .pin: "⇧⌘P"
+        case .editBody: "⌘E"
         case .moveTrash: "⌘⌫"
         case .openSource, .exportMarkdown: nil
         }

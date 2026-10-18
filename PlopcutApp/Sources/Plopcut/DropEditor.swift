@@ -11,6 +11,23 @@ enum SaveState: Equatable {
 
 enum TagAddResult: Equatable { case added, alreadyAdded, nothing }
 
+/// The content editor of one text drop (spec 2.6 "본문 편집", PLO-104). Saved only by Done, never automatically.
+struct BodyEdit: Equatable {
+    enum State: Equatable {
+        case editing, saving
+        /// Holds the error code; the editor stays open with the typed text.
+        case failed(String)
+    }
+
+    let dropID: String
+    /// The content when editing began; "changed" compares against it.
+    var original: String
+    var text: String
+    var state = State.editing
+
+    var isChanged: Bool { text != original }
+}
+
 /// Editing state for the selected drop: a draft, the last saved copy, and the autosave rules of spec 2.7
 /// (600 ms debounce, save when a field is left, no blur retries after a failure, late responses ignored).
 ///
@@ -69,6 +86,11 @@ final class DropEditor {
     /// Drops with a write running right now. Their slot must outlive a switch, even if the text was reverted meanwhile.
     private var writing: [String: Int] = [:]
     private var titleEditing = false
+    /// The open content editor, if any. Separate from the title, note and tag draft above (spec 2.6, E-12).
+    private(set) var bodyEdit: BodyEdit?
+    /// The move (cancel, another drop, another Collection) waiting for "Discard changes?" (E-10).
+    private var pendingLeave: (@MainActor () -> Void)?
+    private(set) var isConfirmingDiscard = false
 
     private let sleep: @Sendable (Duration) async throws -> Void
     private let save: @Sendable (String, DropUpdate) async throws -> Drop
@@ -127,6 +149,7 @@ final class DropEditor {
             if !isDirty && state != .saving { adopt(drop) }
             return
         }
+        if bodyEdit != nil, bodyEdit?.dropID != drop?.id { closeBodyEdit() }
         debounceTask?.cancel()
         // A title typed but not committed yet belongs to the drop being left.
         if titleEditing, dropID != nil, titleText != draft.title { setTitle(titleText); debounceTask?.cancel() }
@@ -154,6 +177,7 @@ final class DropEditor {
     /// The drop is gone (moved to the Trash): drop its draft without saving anything.
     func forget(_ id: String) {
         slots[id] = nil
+        if bodyEdit?.dropID == id { closeBodyEdit() }
         guard dropID == id else { return }
         debounceTask?.cancel()
         dropID = nil; draft = Draft(); base = Draft(); revision = 0
@@ -228,6 +252,116 @@ final class DropEditor {
         titleEditing = false
         if titleText != draft.title { setTitle(titleText) }
         await flush()
+    }
+
+    // MARK: Content editing (spec 2.6 "본문 편집")
+
+    var isEditingBody: Bool { bodyEdit != nil }
+    var bodyChanged: Bool { bodyEdit?.isChanged ?? false }
+
+    /// What the content editor shows. Setting it is ignored when no editor is open.
+    var bodyText: String {
+        get { bodyEdit?.text ?? "" }
+        set {
+            guard var edit = bodyEdit, edit.text != newValue else { return }
+            edit.text = newValue
+            bodyEdit = edit
+        }
+    }
+
+    /// Only a text drop whose content could be read can be edited; image drops cannot (E-07).
+    static func canEditBody(_ drop: Drop?) -> Bool { drop?.type == .text && drop?.text != nil }
+
+    /// Opens the content editor on the drop's current text. Returns false when the drop cannot be edited.
+    @discardableResult
+    func beginBodyEdit(_ drop: Drop) -> Bool {
+        guard Self.canEditBody(drop), let text = drop.text else { return false }
+        if bodyEdit?.dropID == drop.id { return true }
+        bodyEdit = BodyEdit(dropID: drop.id, original: text, text: text)
+        return true
+    }
+
+    /// Done: writes the typed text to content.md without asking (E-08). Returns true when the editor closed.
+    func finishBodyEdit() async -> Bool {
+        guard var edit = bodyEdit, edit.state != .saving else { return false }
+        guard edit.isChanged else { bodyEdit = nil; return true }
+        // The store refuses it too (`empty_text`); checking here keeps the editor open without a write (E-09).
+        guard edit.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false else {
+            edit.state = .failed("empty_text")
+            bodyEdit = edit
+            return false
+        }
+        let id = edit.dropID, text = edit.text
+        edit.state = .saving
+        bodyEdit = edit
+        let saved: Drop
+        do {
+            saved = try await write { [save] in try await save(id, DropUpdate(text: text)) }
+        } catch {
+            log.log(error: error)
+            let code = (error as? PlopcutError)?.code ?? "defaultError"
+            if var latest = bodyEdit, latest.dropID == id {
+                latest.state = .failed(code)
+                bodyEdit = latest
+            } else {
+                // The user left while the write ran; the failure must still be seen.
+                onBackgroundFailure(code)
+            }
+            return false
+        }
+        if bodyEdit?.dropID == id { bodyEdit = nil }
+        onSaved(saved)
+        return true
+    }
+
+    /// Cancel (button or Escape): ends at once without a change, otherwise asks first (E-10).
+    func cancelBodyEdit() { requestLeave {} }
+
+    /// Runs `proceed` once the content editor may close: at once when nothing typed would be lost, otherwise after
+    /// the user confirms "Discard changes?". Until then the move is held, and Keep Editing drops it (E-10).
+    func requestLeave(_ proceed: @escaping @MainActor () -> Void) {
+        guard let edit = bodyEdit, edit.isChanged, edit.state != .saving else {
+            closeBodyEdit()
+            proceed()
+            return
+        }
+        pendingLeave = proceed
+        isConfirmingDiscard = true
+    }
+
+    /// Discard: drops the typed text without writing and runs the held move.
+    func confirmDiscard() {
+        let proceed = pendingLeave
+        closeBodyEdit()
+        proceed?()
+    }
+
+    /// Keep Editing: the held move is dropped and the editor stays as it was.
+    func keepEditing() {
+        pendingLeave = nil
+        isConfirmingDiscard = false
+    }
+
+    private func closeBodyEdit() {
+        bodyEdit = nil
+        pendingLeave = nil
+        isConfirmingDiscard = false
+    }
+
+    /// Runs a write behind every write already queued, so content saves and autosaves reach the disk one at a time.
+    private func write(_ work: @escaping @Sendable () async throws -> Drop) async throws -> Drop {
+        let previous = tail
+        queued += 1
+        let task = Task { @MainActor () -> Result<Drop, Error> in
+            _ = await previous?.value
+            do { return .success(try await work()) } catch { return .failure(error) }
+        }
+        tail = Task { @MainActor [weak self] in
+            let result = await task.value
+            self?.queued -= 1
+            if case .success = result { return true } else { return false }
+        }
+        return try await task.value.get()
     }
 
     // MARK: Saving

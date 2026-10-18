@@ -10,6 +10,8 @@ PLO-101에서 추가한 키(본문 렌더링과 형식 메뉴): `formatMenu`, `f
 
 PLO-105에서 추가한 키(Save Popup 제목과 저장 후 고정): `titleField`, `autoTitle`, `autoTitleHelp`, `titleHintWindow`, `titleHintApp`, `titleHintFirstLine`, `titleHintDefault`, `pinAfterSave`.
 
+PLO-104에서 추가한 키(본문 편집): `editBody`, `editingBody`, `bodyChanged`, `done`, `editBodyHint`, `editBodyShortcuts`, `editBodyField`, `emptyBody`, `discardChangesTitle`, `discardChangesBody`, `discardChanges`, `keepEditing`.
+
 | 키 | en | ko |
 | --- | --- | --- |
 | `collections` | Collections | 보관함 |
@@ -54,6 +56,18 @@ PLO-105에서 추가한 키(Save Popup 제목과 저장 후 고정): `titleField
 | `copyCode` | Copy code | 코드 복사 |
 | `markdownList` | List | 목록 |
 | `markdownQuote` | Quote | 인용 |
+| `editBody` | Edit | 편집 |
+| `editingBody` | Editing | 편집 중 |
+| `bodyChanged` | Changed | 변경됨 |
+| `done` | Done | 완료 |
+| `editBodyHint` | Edit the original text. Done saves it to content.md. | 원문을 직접 고칩니다. 완료하면 content.md에 저장합니다. |
+| `editBodyShortcuts` | ⌘↩ Done · esc Cancel | ⌘↩ 완료 · esc 취소 |
+| `editBodyField` | Edit drop content | 드롭 내용 편집 |
+| `emptyBody` | The content can't be empty. | 본문을 비울 수 없습니다. |
+| `discardChangesTitle` | Discard changes? | 변경 사항을 버릴까요? |
+| `discardChangesBody` | The changes to this drop's content will be lost. | 이 드롭 본문에서 고친 내용이 사라집니다. |
+| `discardChanges` | Discard | 버리기 |
+| `keepEditing` | Keep Editing | 계속 편집 |
 | `openFilters` | Open filters | 필터 열기 |
 | `clearFilters` | Clear filters | 필터 지우기 |
 | `activeFilters` | Active filters | 적용된 필터 |
