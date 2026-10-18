@@ -198,5 +198,8 @@ enum StringTable {
         "deleteFailed": (en: "The drop could not be moved to the Trash. It is still in the Library.", ko: "드롭을 휴지통으로 이동하지 못했습니다. 드롭은 라이브러리에 그대로 있습니다."),
         "dropNotFound": (en: "This drop no longer exists. Refresh the library.", ko: "이 드롭이 더 이상 없습니다. 라이브러리를 새로고침하세요."),
         "exportFailed": (en: "The Markdown file could not be written. Choose another location.", ko: "Markdown 파일을 쓰지 못했습니다. 다른 위치를 선택하세요."),
+        "pin": (en: "Pin", ko: "고정"),
+        "unpin": (en: "Unpin", ko: "고정 해제"),
+        "pinned": (en: "Pinned", ko: "고정됨"),
     ]
 }

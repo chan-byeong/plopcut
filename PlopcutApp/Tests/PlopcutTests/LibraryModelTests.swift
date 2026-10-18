@@ -18,7 +18,7 @@ import Testing
         let model = try await loadedModel()
         #expect(model.drops.count == 6)
         #expect(model.warnings.count == 1)
-        #expect(model.selectedID == model.filtered.first?.id)
+        #expect(model.selectedID == model.sections.first?.drops.first?.id)
     }
 
     @Test func sidebarSelectionIsSingleAndFiltersCombine() async throws {
