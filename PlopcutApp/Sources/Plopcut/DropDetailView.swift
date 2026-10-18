@@ -104,6 +104,11 @@ struct InspectorView: View {
                     section(L10n.t("source")) {
                         Text(drop.source.appName ?? L10n.t("unknownApp"))
                         Text("\(L10n.t("savedAt")) \(Formatting.dateTime(drop.createdAt))").font(.caption).foregroundStyle(.secondary)
+                        Button { model.showDropsFromSource(of: drop) } label: {
+                            Label(L10n.t("showSourceDrops"), systemImage: "line.3.horizontal.decrease")
+                        }
+                        .controlSize(.small)
+                        .disabled(!LibraryModel.hasSource(drop))
                     }
                     DisclosureGroup(L10n.t("sourceDetails")) {
                         VStack(alignment: .leading, spacing: Spacing.s) {
