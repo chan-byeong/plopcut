@@ -17,8 +17,13 @@ struct DropDetailView: View {
                 VStack(alignment: .leading, spacing: Spacing.l) {
                     // The type is an eyebrow over the title, so the two stay together.
                     VStack(alignment: .leading, spacing: Spacing.xs) {
-                        Text(drop.type == .image ? L10n.t("imageDrops") : drop.type == .text ? L10n.t("textDrops") : drop.type.rawValue)
-                            .font(.caption).foregroundStyle(.secondary)
+                        HStack(spacing: Spacing.s) {
+                            Text(drop.type == .image ? L10n.t("imageDrops") : drop.type == .text ? L10n.t("textDrops") : drop.type.rawValue)
+                                .font(.caption).foregroundStyle(.secondary)
+                            if drop.type == .text {
+                                FormatMenuButton(drop: drop) { choice in Task { await model.setFormat(choice, for: drop.id) } }
+                            }
+                        }
                         titleField
                     }
                     actions(for: drop)
@@ -88,7 +93,7 @@ struct DropDetailView: View {
         } else if drop.type == .image {
             Label(L10n.t("imagePreviewUnavailable"), systemImage: "photo.badge.exclamationmark").foregroundStyle(.secondary)
         } else if let text = drop.text {
-            Text(text).font(.body).textSelection(.enabled)
+            RenderedBodyView(text: text, format: FormatDetection.resolve(drop), openLink: model.openLink)
         }
     }
 

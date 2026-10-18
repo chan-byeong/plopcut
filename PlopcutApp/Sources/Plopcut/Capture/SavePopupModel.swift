@@ -54,6 +54,11 @@ final class SavePopupModel {
 
     var isMixed: Bool { draft.type == .mixed }
 
+    /// How the text preview renders: the Library's automatic detection (spec 3.5, PLO-101). The popup never stores a choice.
+    var previewFormat: ResolvedFormat {
+        FormatDetection.detect(text: draft.text ?? "", source: draft.source)
+    }
+
     /// One line: `app · window · URL`, or the unknown-source text when nothing was collected.
     var sourceSummary: String {
         let parts = [draft.source.appName, draft.source.windowTitle, draft.source.url]

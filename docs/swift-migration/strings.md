@@ -6,6 +6,8 @@ Linear: STA-39
 
 Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA-72, 로고 접근성 라벨), `settingsFailure`·`deleteFailed`·`dropNotFound`·`exportFailed`(STA-78, 알려진 오류 코드의 문구), `dropCountOne`(영어 단수형), `dropTitle`(제목 입력란 접근성 라벨), `ok`(알림 단추), `unreadableDrops`(읽지 못한 드롭 경고, STA-80), `showLogInFinder`(Settings의 로그 파일 보기 단추, STA-80), `menuBarSaved`·`menuBarFailed`(메뉴 막대 저장 피드백의 접근성 이름·툴팁, PLO-93), `noDropsTitle`·`noDropsShortcutHint`·`noDropsClipboardHint`(빈 Library, 레거시 `noDrops`를 대체), `aboutVersion`(정보 섹션, 레거시 `appVersion`을 대체), `popupShortcutHint`(Save Popup 단축키 힌트, PLO-94), `pin`·`unpin`·`pinned`(Drop 고정 동작, 고정됨 Collection·묶음 제목·행 접근성, PLO-102).
 
+PLO-101에서 추가한 키(본문 렌더링과 형식 메뉴): `formatMenu`, `formatMenuHelp`, `formatAutomatic`, `formatPlain`, `formatMarkdown`, `formatCode`, `codeBlock`, `copyCode`, `markdownList`, `markdownQuote`.
+
 | 키 | en | ko |
 | --- | --- | --- |
 | `collections` | Collections | 보관함 |
@@ -40,6 +42,16 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `allDrops` | All drops | 모든 드롭 |
 | `textDrops` | Text drops | 텍스트 드롭 |
 | `imageDrops` | Image drops | 이미지 드롭 |
+| `formatMenu` | Format: {format} | 형식: {format} |
+| `formatMenuHelp` | Change how this drop is shown | 이 드롭을 보여 주는 형식 바꾸기 |
+| `formatAutomatic` | Automatic ({format}) | 자동 감지 ({format}) |
+| `formatPlain` | Plain Text | 일반 텍스트 |
+| `formatMarkdown` | Markdown | Markdown |
+| `formatCode` | Code | 코드 |
+| `codeBlock` | Code block, {language} | 코드 블록, {language} |
+| `copyCode` | Copy code | 코드 복사 |
+| `markdownList` | List | 목록 |
+| `markdownQuote` | Quote | 인용 |
 | `openFilters` | Open filters | 필터 열기 |
 | `clearFilters` | Clear filters | 필터 지우기 |
 | `activeFilters` | Active filters | 적용된 필터 |

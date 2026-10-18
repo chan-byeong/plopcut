@@ -256,6 +256,29 @@ final class LibraryModel {
         dropsChanged(rebuildIndex: false)
     }
 
+    /// Stores or clears the drop's format choice (spec 2.6, R-08). Not a content edit, so `updatedAt` stays.
+    /// On failure the drop keeps its old format and the error is shown.
+    func setFormat(_ change: FormatUpdate, for id: String) async {
+        let (root, trash) = (storageRoot, trash)
+        let result: Result<Drop, Error> = await Task.detached {
+            Result { try DropStore(root: try root(), trash: trash).update(id: id, DropUpdate(format: change)) }
+        }.value
+        switch result {
+        case .success(let saved): apply(saved)
+        case .failure(let error): showAlert(forCode: (error as? PlopcutError)?.code ?? "")
+        }
+    }
+
+    /// Opens a link from a rendered body in the default browser. Only web and mail links open (spec 2.6, R-07).
+    func openLink(_ url: URL) {
+        guard Self.isOpenableLink(url) else { return }
+        openURL(url)
+    }
+
+    nonisolated static func isOpenableLink(_ url: URL) -> Bool {
+        ["http", "https", "mailto"].contains(url.scheme?.lowercased() ?? "")
+    }
+
     /// Pins or unpins the drop (spec 2.5, 2.6). The selection stays on it while it is still listed; unpinning in the
     /// Pinned collection removes it from the list, so the selection then follows spec 1.6.
     func togglePin(id: String) async {

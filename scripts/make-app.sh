@@ -16,6 +16,11 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp ".build/$CONFIG/Plopcut" "$APP/Contents/MacOS/plopcut"
 # App icon, reused for the Dock and the empty Library logo (Bundle.main "AppIcon").
 cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
+# SwiftPM resource bundles of dependencies (HighlighterSwift's highlight.js and themes, PLO-101). Their Bundle.module
+# accessor looks in Bundle.main.resourceURL first; without the bundle it stops the app with a fatal error.
+for bundle in ".build/$CONFIG"/*.bundle; do
+  if [ -d "$bundle" ]; then cp -R "$bundle" "$APP/Contents/Resources/"; fi
+done
 # SwiftPM does not compile asset catalogs; actool builds Assets.car so NSAccentColorName finds AccentColor (spec 5).
 xcrun actool Resources/Assets.xcassets --compile "$APP/Contents/Resources" --platform macosx \
   --minimum-deployment-target "$MIN_MACOS" --accent-color AccentColor \

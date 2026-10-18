@@ -12,17 +12,31 @@ public struct SystemTrashMover: TrashMover {
     }
 }
 
+/// A change to a drop's format choice (PLO-101).
+public enum FormatUpdate: Equatable, Sendable {
+    /// Clear the choice so the drop goes back to detection.
+    case automatic
+    /// Store a choice. `codeLanguage` is kept only for `.code`.
+    case set(DropFormat, codeLanguage: String?)
+}
+
 /// Fields to change on an existing drop. `nil` leaves the field as it is.
 public struct DropUpdate: Sendable {
     public var title: String?
     public var tags: [String]?
     public var note: String?
     public var text: String?
+    /// Not a content edit: changing only the format keeps `updatedAt` (spec 1.2, PLO-101).
+    public var format: FormatUpdate?
     /// `true` pins (keeping an earlier pin time), `false` unpins. Pinning alone leaves `updatedAt` as it is (spec 1.2).
     public var pinned: Bool?
 
-    public init(title: String? = nil, tags: [String]? = nil, note: String? = nil, text: String? = nil, pinned: Bool? = nil) {
-        self.title = title; self.tags = tags; self.note = note; self.text = text; self.pinned = pinned
+    public init(
+        title: String? = nil, tags: [String]? = nil, note: String? = nil, text: String? = nil,
+        format: FormatUpdate? = nil, pinned: Bool? = nil
+    ) {
+        self.title = title; self.tags = tags; self.note = note; self.text = text
+        self.format = format; self.pinned = pinned
     }
 
     /// Whether the change edits the drop's content, which refreshes `updatedAt`.
@@ -124,7 +138,8 @@ public struct DropStore: Sendable {
 
         var drop = Drop(
             id: meta.id, type: meta.type, title: meta.title, source: meta.source, tags: meta.tags,
-            createdAt: meta.createdAt, updatedAt: meta.updatedAt, pinnedAt: meta.pinnedAt)
+            createdAt: meta.createdAt, updatedAt: meta.updatedAt, format: meta.format, codeLanguage: meta.codeLanguage,
+            pinnedAt: meta.pinnedAt)
 
         switch meta.type {
         case .text:
@@ -254,6 +269,11 @@ public struct DropStore: Sendable {
         if let tags = change.tags { meta.tags = Tags.normalize(tags) }
         // A legacy image drop may omit `imagePath`; rewrite it with the default it was read with (S-01, S-20).
         if meta.type == .image, meta.imagePath == nil { meta.imagePath = "image.png" }
+        switch change.format {
+        case .automatic: meta.setFormat(nil, codeLanguage: nil)
+        case .set(let format, let language): meta.setFormat(format, codeLanguage: language)
+        case nil: break
+        }
         switch change.pinned {
         case true?: if meta.pinnedAt == nil { meta.pinnedAt = Timestamp.format(clock()) }
         case false?: meta.pinnedAt = nil

@@ -1,0 +1,19 @@
+{
+  "id": "2026-02-01_090000_000000001_unknown-format",
+  "type": "text",
+  "title": "Unknown format",
+  "text": null,
+  "imagePath": null,
+  "source": {
+    "appName": null,
+    "windowTitle": null,
+    "url": null,
+    "filePath": null
+  },
+  "note": null,
+  "tags": [],
+  "createdAt": "2026-02-01T09:00:00.000000001Z",
+  "updatedAt": "2026-02-01T09:00:00.000000001Z",
+  "format": "rich",
+  "codeLanguage": "swift"
+}

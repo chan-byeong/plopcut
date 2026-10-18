@@ -79,12 +79,14 @@ struct SavePopupView: View {
                 .accessibilityLabel(L10n.t("image"))
         } else {
             ScrollView {
-                Text(model.draft.text ?? "")
-                    .font(.body).frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled).padding(Spacing.s)
+                // The same rendering as the Library body; links do not open from the popup (spec 3.5).
+                RenderedBodyView(text: model.draft.text ?? "", format: model.previewFormat, openLink: { _ in })
+                    .frame(maxWidth: .infinity, alignment: .leading).padding(Spacing.s)
             }
             .slimScrollers()
             .frame(height: Self.previewHeight)
             .contentWell()
+            .overlay(alignment: .topTrailing) { FormatBadge(format: model.previewFormat).padding(Spacing.xs) }
         }
     }
 
