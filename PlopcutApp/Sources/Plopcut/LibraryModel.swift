@@ -93,6 +93,8 @@ final class LibraryModel {
 
     private let settings: SettingsStore?
     private let trash: TrashMover
+    /// The time stamped on saved drops; tests hold it to interleave writes.
+    private let clock: @Sendable () -> Date
     /// Edits of the selected drop live here, not in the views, so toggling the inspector never loses a draft (E-05).
     private(set) var editor: DropEditor!
     /// One-line confirmation (trash, export) shown briefly; `alertMessage` is an error the user must dismiss.
@@ -109,16 +111,17 @@ final class LibraryModel {
     init(
         storageRoot: @escaping @Sendable () throws -> URL = LibraryModel.defaultStorageRoot,
         settings: SettingsStore? = nil, trash: TrashMover = SystemTrashMover(),
+        clock: @escaping @Sendable () -> Date = { Date() },
         openURL: @escaping (URL) -> Void = { NSWorkspace.shared.open($0) }
     ) {
         self.openURL = openURL
         self.storageRoot = storageRoot
         self.settings = settings
         self.trash = trash
+        self.clock = clock
         paneWidths = (try? settings?.read().paneWidths) ?? .default
-        let trashMover = trash
         editor = DropEditor(
-            save: { id, update in try DropStore(root: try storageRoot(), trash: trashMover).update(id: id, update) },
+            save: { [store] id, update in try store().update(id: id, update) },
             onSaved: { [weak self] in self?.apply($0) },
             onBackgroundFailure: { [weak self] code in self?.showAlert(forCode: code, logged: false) })
     }
@@ -147,6 +150,17 @@ final class LibraryModel {
     static let defaultStorageRoot: @Sendable () throws -> URL = {
         let environment = ProcessInfo.processInfo.environment
         return try resolveStorageRoot(settings: settingsStore(environment: environment), environment: environment)
+    }
+
+    /// The store over the current storage folder; every read and write of the Library builds it here.
+    private var store: @Sendable () throws -> DropStore {
+        { [storageRoot, clock, trash] in DropStore(root: try storageRoot(), clock: clock, trash: trash) }
+    }
+
+    /// Runs `work` against the store off the main actor.
+    private func withStore<T: Sendable>(_ work: @escaping @Sendable (DropStore) throws -> T) async -> Result<T, Error> {
+        let store = store
+        return await Task.detached { Result { try work(try store()) } }.value
     }
 
     // MARK: Derived state
@@ -229,11 +243,7 @@ final class LibraryModel {
     func reload(selecting id: String? = nil) async {
         isLoading = true
         defer { isLoading = false }
-        let root = storageRoot
-        let result: Result<DropScan, Error> = await Task.detached {
-            Result { try DropStore(root: try root()).scan() }
-        }.value
-        switch result {
+        switch await withStore({ try $0.scan() }) {
         case .success(let scan):
             drops = scan.drops
             warnings = scan.warnings
@@ -295,15 +305,14 @@ final class LibraryModel {
     }
 
     /// Stores or clears the drop's format choice (spec 2.6, R-08). Not a content edit, so `updatedAt` stays.
-    /// On failure the drop keeps its old format and the error is shown.
+    /// On failure the drop keeps its old format and the error is shown as a status message, not an alert.
     func setFormat(_ change: FormatUpdate, for id: String) async {
-        let (root, trash) = (storageRoot, trash)
-        let result: Result<Drop, Error> = await Task.detached {
-            Result { try DropStore(root: try root(), trash: trash).update(id: id, DropUpdate(format: change)) }
-        }.value
-        switch result {
-        case .success(let saved): apply(saved)
-        case .failure(let error): showAlert(forCode: (error as? PlopcutError)?.code ?? "")
+        do {
+            _ = try await editor.queueChange(for: id) { DropUpdate(format: change) }
+        } catch {
+            let code = ErrorText.code(for: error)
+            AppLog.shared.log(.error(code: code))
+            notice = ErrorText.message(forCode: code)
         }
     }
 
@@ -339,28 +348,22 @@ final class LibraryModel {
 
     /// Pins or unpins the drop (spec 2.5, 2.6). The selection stays on it while it is still listed; unpinning in the
     /// Pinned collection removes it from the list, so the selection then follows spec 1.6.
+    /// The toggle reads the pin when its write's turn comes, so two quick toggles end where they started.
     func togglePin(id: String) async {
-        guard let drop = drops.first(where: { $0.id == id }) else { return }
-        let (root, pinned) = (storageRoot, !drop.isPinned)
-        let result: Result<Drop, Error> = await Task.detached {
-            Result { try DropStore(root: try root()).update(id: id, DropUpdate(pinned: pinned)) }
-        }.value
-        switch result {
-        case .success(let saved):
-            apply(saved)
-            reselect()
-        case .failure(let error):
-            showAlert(forCode: (error as? PlopcutError)?.code ?? "")
+        do {
+            let saved = try await editor.queueChange(for: id) { [weak self] in
+                guard let drop = self?.drops.first(where: { $0.id == id }) else { return nil }
+                return DropUpdate(pinned: !drop.isPinned)
+            }
+            if saved != nil { reselect() }
+        } catch {
+            showAlert(forCode: ErrorText.code(for: error))
         }
     }
 
     /// Moves the drop's folder to the Trash (spec 2.6). The drop stays in the list when the move fails.
     func delete(id: String) async -> Bool {
-        let (root, trash) = (storageRoot, trash)
-        let result: Result<Void, Error> = await Task.detached {
-            Result { try DropStore(root: try root(), trash: trash).delete(id: id) }
-        }.value
-        switch result {
+        switch await withStore({ try $0.delete(id: id) }) {
         case .success:
             editor.forget(id)
             drops.removeAll { $0.id == id }
@@ -371,7 +374,7 @@ final class LibraryModel {
             notice = L10n.t("trashSuccess")
             return true
         case .failure(let error):
-            showAlert(forCode: (error as? PlopcutError)?.code ?? "")
+            showAlert(forCode: ErrorText.code(for: error))
             return false
         }
     }

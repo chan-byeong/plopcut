@@ -53,16 +53,22 @@ enum DropAction: Equatable {
         }
     }
 
-    /// The shortcut as the menu shows it, for the tooltip.
-    private var shortcutText: String? {
-        switch self {
-        case .pin: "⇧⌘P"
-        case .editBody: "⌘E"
-        case .moveTrash: "⌘⌫"
-        case .openSource, .exportMarkdown: nil
-        }
-    }
-
     /// "Name (Shortcut)", or just the name when the action has no shortcut.
-    var tooltip: String { shortcutText.map { "\(title) (\($0))" } ?? title }
+    var tooltip: String { shortcut.map { "\(title) (\($0.menuText))" } ?? title }
+}
+
+extension KeyboardShortcut {
+    /// The shortcut as a menu shows it (`⇧⌘P`, `⌘⌫`): modifiers in the system order, then the key.
+    var menuText: String {
+        let symbols: [(EventModifiers, String)] = [(.control, "⌃"), (.option, "⌥"), (.shift, "⇧"), (.command, "⌘")]
+        let prefix = symbols.filter { modifiers.contains($0.0) }.map(\.1).joined()
+        let key: String
+        switch self.key {
+        case .delete: key = "⌫"
+        case .return: key = "↩"
+        case .escape: key = "esc"
+        default: key = String(self.key.character).uppercased()
+        }
+        return prefix + key
+    }
 }

@@ -107,6 +107,7 @@ import Testing
         #expect(DropAction.openSource.tooltip == "출처 열기")
         #expect(DropAction.exportMarkdown.tooltip == "Markdown 내보내기")
         #expect(DropAction.moveTrash.tooltip == "휴지통으로 이동 (⌘⌫)")
+        #expect(DropAction.editBody.tooltip.hasSuffix(" (⌘E)"))
         #expect(DropAction.pin(pinned: false).shortcut == PinCommand.shortcut)
     }
 

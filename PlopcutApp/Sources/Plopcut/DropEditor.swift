@@ -33,7 +33,8 @@ struct BodyEdit: Equatable {
 ///
 /// Each drop with unsaved or in-flight work owns a `Slot`. The selected drop's slot lives in the observable
 /// properties below; the others wait in `slots` until their save finishes, so switching drops never loses,
-/// duplicates or resurrects an edit. All writes go through one chain and reach the disk in order.
+/// duplicates or resurrects an edit. All writes of the Library (autosave, Done, pin, format) go through one chain,
+/// reach the disk in order, and hand their result to `onSaved` in that order.
 @MainActor @Observable
 final class DropEditor {
     struct Draft: Equatable {
@@ -81,7 +82,7 @@ final class DropEditor {
     private var slots: [String: Slot] = [:]
     private var debounceTask: Task<Void, Never>?
     /// Every write is queued behind this task.
-    private var tail: Task<Bool, Never>?
+    private var tail: Task<Void, Never>?
     private var queued = 0
     /// Drops with a write running right now. Their slot must outlive a switch, even if the text was reverted meanwhile.
     private var writing: [String: Int] = [:]
@@ -294,12 +295,13 @@ final class DropEditor {
         let id = edit.dropID, text = edit.text
         edit.state = .saving
         bodyEdit = edit
-        let saved: Drop
         do {
-            saved = try await write { [save] in try await save(id, DropUpdate(text: text)) }
+            _ = try await queueChange(for: id) { [weak self] _ in
+                if self?.bodyEdit?.dropID == id { self?.bodyEdit = nil }
+            } update: { DropUpdate(text: text) }
         } catch {
             log.log(error: error)
-            let code = (error as? PlopcutError)?.code ?? "defaultError"
+            let code = ErrorText.code(for: error)
             if var latest = bodyEdit, latest.dropID == id {
                 latest.state = .failed(code)
                 bodyEdit = latest
@@ -309,8 +311,6 @@ final class DropEditor {
             }
             return false
         }
-        if bodyEdit?.dropID == id { bodyEdit = nil }
-        onSaved(saved)
         return true
     }
 
@@ -348,20 +348,40 @@ final class DropEditor {
         isConfirmingDiscard = false
     }
 
-    /// Runs a write behind every write already queued, so content saves and autosaves reach the disk one at a time.
-    private func write(_ work: @escaping @Sendable () async throws -> Drop) async throws -> Drop {
+    /// Writes one change of a drop behind every write already queued, so it never overwrites an autosave or another
+    /// change in drop.json. `update` runs when the write's turn comes, so it sees what earlier writes left (a toggle
+    /// reads the pin the previous toggle saved); nil writes nothing and returns nil. On success `prepare` and then
+    /// `onSaved` run before the next queued write starts.
+    func queueChange(
+        for id: String,
+        prepare: @escaping @MainActor (Drop) -> Void = { _ in },
+        update: @escaping @MainActor () -> DropUpdate?
+    ) async throws -> Drop? {
+        try await run { [weak self, save] () -> Result<Drop?, Error> in
+            guard let change = update() else { return .success(nil) }
+            do {
+                let saved = try await save(id, change)
+                prepare(saved)
+                self?.onSaved(saved)
+                return .success(saved)
+            } catch {
+                return .failure(error)
+            }
+        }.value.get()
+    }
+
+    /// Runs `work` after every write already queued; `queued` counts it until it ends.
+    private func run<T: Sendable>(_ work: @escaping @MainActor () async -> T) -> Task<T, Never> {
         let previous = tail
         queued += 1
-        let task = Task { @MainActor () -> Result<Drop, Error> in
-            _ = await previous?.value
-            do { return .success(try await work()) } catch { return .failure(error) }
-        }
-        tail = Task { @MainActor [weak self] in
-            let result = await task.value
+        let task = Task { @MainActor [weak self] () -> T in
+            await previous?.value
+            let result = await work()
             self?.queued -= 1
-            if case .success = result { return true } else { return false }
+            return result
         }
-        return try await task.value.get()
+        tail = Task { _ = await task.value }
+        return task
     }
 
     // MARK: Saving
@@ -403,18 +423,12 @@ final class DropEditor {
     /// Queues one write behind every write already queued, so saves reach the disk one at a time and in order.
     /// `retry` is false for writes that only follow a field being left: they must not restart a failed save.
     private func enqueue(_ id: String, retry: Bool) -> Task<Bool, Never> {
-        let previous = tail
-        queued += 1
-        let task = Task { @MainActor [weak self] () -> Bool in
-            _ = await previous?.value
+        run { [weak self] in
             guard let self else { return false }
-            defer { self.queued -= 1 }
             let ok = await self.writeNow(id, retry: retry)
             if !ok, id != self.dropID, case .failed(let code)? = self.slots[id]?.state { self.onBackgroundFailure(code) }
             return ok
         }
-        tail = task
-        return task
     }
 
     /// Writes one drop's pending changes. Returns true when nothing is left unsaved for it.
@@ -460,7 +474,7 @@ final class DropEditor {
             return !latest.isDirty || id == dropID
         } catch {
             writing[id, default: 1] -= 1
-            let code = (error as? PlopcutError)?.code ?? "defaultError"
+            let code = ErrorText.code(for: error)
             if !wasFailed { log.log(error: error) }
             guard var latest = self.slot(id) else { return false }
             latest.state = latest.revision == sentRevision ? .failed(code) : .pending
