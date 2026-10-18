@@ -2,12 +2,12 @@ import AppKit
 import SwiftUI
 import PlopcutCore
 
-/// The Save Popup content (spec 3.5): preview, source, note, tags, Save and Cancel.
+/// The Save Popup content (spec 3.5): title, preview, source, note, tags, "Pin after saving", Save and Cancel.
 struct SavePopupView: View {
     /// The content below the window's title bar for a draft without warnings, tag chips or many recent tags.
     /// Content that needs more height (warnings, tag chips, recent tags, an error) makes the window taller instead
     /// of being cut off (STA-67), up to `maxHeight`; past that the fields scroll and the buttons stay at the bottom.
-    static let contentSize = CGSize(width: 430, height: 390)
+    static let contentSize = CGSize(width: 430, height: 487)
     private static let previewHeight: CGFloat = 96
     /// About two lines of body text: the popup note is for a quick remark.
     private static let noteHeight: CGFloat = 52
@@ -16,6 +16,7 @@ struct SavePopupView: View {
     /// The tallest the content may get: the screen's visible height minus the title bar.
     var maxHeight: CGFloat = .infinity
     @FocusState private var tagFocused: Bool
+    @FocusState private var titleFocused: Bool
     @State private var noteFocused = false
     @State private var noteControl = PopupNoteEditorControl()
 
@@ -27,7 +28,11 @@ struct SavePopupView: View {
             .scrollBounceBehavior(.basedOnSize)
             .slimScrollers()
             .layoutPriority(1)
-            buttons.padding(.horizontal, Spacing.l)
+            VStack(alignment: .leading, spacing: Spacing.s) {
+                pinToggle
+                buttons
+            }
+            .padding(.horizontal, Spacing.l)
         }
         .padding(.bottom, Spacing.l)
         .frame(width: Self.contentSize.width)
@@ -41,6 +46,7 @@ struct SavePopupView: View {
     private var fields: some View {
         VStack(alignment: .leading, spacing: Spacing.m) {
             header
+            titleField
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 preview
                 source
@@ -61,6 +67,33 @@ struct SavePopupView: View {
             Spacer(minLength: Spacing.s)
             if model.isMixed { typePicker }
         }
+    }
+
+    /// The title, prefilled with the automatic one; `Auto` puts it back (spec 3.5, PLO-105).
+    private var titleField: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            Text(L10n.t("titleField")).font(.callout.weight(.semibold)).accessibilityHidden(true)
+            HStack(spacing: Spacing.s) {
+                TextField(L10n.t("titleField"), text: $model.title)
+                    .textFieldStyle(.roundedBorder)
+                    .accessibilityLabel(L10n.t("dropTitle"))
+                    .onChange(of: titleFocused) { _, _ in CompositionMonitor.shared.reset() }
+                    .focused($titleFocused)
+                Button(L10n.t("autoTitle")) { model.restoreAutoTitle() }
+                    .help(L10n.t("autoTitleHelp"))
+                    .accessibilityHint(L10n.t("autoTitleHelp"))
+                    .disabled(!model.canRestoreAutoTitle)
+            }
+            Text(model.titleHint).font(.caption).foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var pinToggle: some View {
+        Toggle(isOn: $model.pinAfterSave) {
+            Label(L10n.t("pinAfterSave"), systemImage: "pin")
+        }
+        .toggleStyle(.checkbox)
     }
 
     private var typePicker: some View {

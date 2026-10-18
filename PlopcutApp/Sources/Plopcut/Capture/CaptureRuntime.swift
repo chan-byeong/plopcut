@@ -179,10 +179,13 @@ final class CaptureRuntime {
             try StorageFolderCheck.ensureUsable(root)
             let store = DropStore(root: root)
             if let png = request.imagePNG {
-                return try store.saveImage(png, title: request.title, source: request.source, tags: request.tags, note: request.note)
+                return try store.saveImage(
+                    png, title: request.title, source: request.source, tags: request.tags, note: request.note,
+                    pinned: request.pinned)
             }
             return try store.saveText(
-                request.text, title: request.title, source: request.source, tags: request.tags, note: request.note)
+                request.text, title: request.title, source: request.source, tags: request.tags, note: request.note,
+                pinned: request.pinned)
         }.value
     }
 
