@@ -6,11 +6,14 @@ import Observation
 /// What the popup asks storage to write: a text drop, or an image drop when `imagePNG` is set.
 struct SaveRequest: Equatable, Sendable {
     var text: String
-    var title: String
+    /// The title the user asked for; nil lets storage infer it (spec 1.4).
+    var title: String?
     var source: DropSource
     var note: String?
     var tags: [String]
     var imagePNG: Data?
+    /// Save the drop already pinned (spec 3.5 "Pin after saving", PLO-105).
+    var pinned = false
 }
 
 /// State of one Save Popup (spec 3.5). The popup never closes itself: the owner reacts to `onSaved` and `onCancel`.
@@ -25,10 +28,14 @@ final class SavePopupModel {
     var selectedType: DropType
     var note = ""
     var tagInput = ""
+    /// "Pin after saving". Off for every new popup (spec 3.5, PLO-105).
+    var pinAfterSave = false
     var tagMessage: String?
     private(set) var tags: [String]
     private(set) var isSaving = false
     private(set) var errorMessage: String?
+    /// What the user typed over the automatic title; nil while the field follows it (spec 3.5, PLO-105).
+    private var editedTitle: String?
 
     private let save: @Sendable (SaveRequest) async throws -> Drop
     private let onSaved: (Drop) -> Void
@@ -53,6 +60,39 @@ final class SavePopupModel {
     }
 
     var isMixed: Bool { draft.type == .mixed }
+
+    // MARK: Title (spec 3.5, PLO-105)
+
+    /// The title storage would infer for the type being saved; the capture worked it out with spec 1.4's order.
+    var autoTitle: String { selectedType == .image ? (draft.imageTitle ?? draft.title) : draft.title }
+
+    /// The title field. It follows `autoTitle` until the user types something else.
+    var title: String {
+        get { editedTitle ?? autoTitle }
+        set { editedTitle = newValue == autoTitle ? nil : newValue }
+    }
+
+    /// The `Auto` button is only offered when it would change the field.
+    var canRestoreAutoTitle: Bool { title != autoTitle }
+
+    func restoreAutoTitle() { editedTitle = nil }
+
+    /// Where the automatic title came from, by spec 1.4's order, and that an empty field saves it.
+    var titleHint: String {
+        let source = draft.source
+        let firstLine = selectedType == .image ? nil : draft.text?
+            .split(whereSeparator: \.isNewline).first { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+        let key = if source.windowTitle?.trimmedOrNil != nil {
+            "titleHintWindow"
+        } else if source.appName?.trimmedOrNil != nil {
+            "titleHintApp"
+        } else if firstLine != nil {
+            "titleHintFirstLine"
+        } else {
+            "titleHintDefault"
+        }
+        return L10n.t(key)
+    }
 
     /// How the text preview renders: the Library's automatic detection (spec 3.5, PLO-101). The popup never stores a choice.
     var previewFormat: ResolvedFormat {
@@ -103,8 +143,9 @@ final class SavePopupModel {
         let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
         let saveImage = selectedType == .image
         let request = SaveRequest(
-            text: saveImage ? "" : draft.text ?? "", title: saveImage ? (draft.imageTitle ?? draft.title) : draft.title, source: draft.source,
-            note: trimmedNote.isEmpty ? nil : note, tags: tags, imagePNG: saveImage ? draft.imagePNG : nil)
+            text: saveImage ? "" : draft.text ?? "", title: title.trimmedOrNil, source: draft.source,
+            note: trimmedNote.isEmpty ? nil : note, tags: tags, imagePNG: saveImage ? draft.imagePNG : nil,
+            pinned: pinAfterSave)
         do {
             let drop = try await save(request)
             onSaved(drop)
@@ -123,4 +164,11 @@ final class SavePopupModel {
 
 extension SavePopupModel: TagEditing {
     var currentTags: [String] { tags }
+}
+
+private extension String {
+    var trimmedOrNil: String? {
+        let value = trimmingCharacters(in: .whitespacesAndNewlines)
+        return value.isEmpty ? nil : value
+    }
 }

@@ -9,7 +9,7 @@ import Testing
         type: .text, title: "Ideas", text: "hello", source: DropSource(appName: "Notes", windowTitle: "Ideas"))
 
     private nonisolated static func drop(_ request: SaveRequest) -> Drop {
-        Drop(id: "d1", type: .text, title: request.title, text: request.text, source: request.source,
+        Drop(id: "d1", type: .text, title: request.title ?? "", text: request.text, source: request.source,
              note: request.note, tags: request.tags, createdAt: "t", updatedAt: "t")
     }
 
