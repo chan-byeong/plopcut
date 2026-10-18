@@ -118,22 +118,27 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 | L-02 | 기간 필터: 오늘은 같은 달력 날짜, 7·30일은 `createdAt ≥ 지금 − N일`. 날짜를 해석할 수 없는 Drop은 기간 필터에서 제외. | `matchesDateFilter` | 단위 | ☑ |
 | L-03 | 날짜 그룹: 오늘/어제/지난 7일(2~7일 전)/이전. 해석 불가한 날짜는 `이전`. 빈 그룹 숨김. | `drop-groups.ts` | 단위 | ☑ |
 | L-04 | 선택이 필터 결과에서 사라지면 첫 항목, 결과가 비면 선택 없음. | `useLibraryFilters.ts` | 단위 | ☑ |
-| L-05 | 사이드바 선택은 항상 하나. 유형 선택은 태그 필터를 지우고 태그 선택은 유형을 `all`로 돌린다. 필터 지우기는 앱·기간만 지운다. | `Sidebar.tsx`, `useLibraryFilters.ts`(STA-37) | 단위 | ☑ |
+| L-05 | 사이드바 선택은 항상 하나. 유형 선택은 태그 필터를 지우고 태그 선택은 유형을 `all`로 돌린다. 필터 지우기는 출처·기간만 지운다(PLO-103에서 앱 → 출처). | `Sidebar.tsx`, `useLibraryFilters.ts`(STA-37) | 단위 | ☑ |
 | L-06 | 사이드바 접힘은 Library↔Settings 전환과 창 크기 변경을 지나도 유지. 두 화면에서 사이드바 너비·모양이 같다. | `MainWindow.tsx`(STA-38) | 수동 | ☑ |
 | L-07 | 인스펙터 오버레이: 같은 토글 또는 Escape로 닫고 Drop 목록으로 포커스 복귀(D-13). 검색 편집 중 Escape는 검색을 먼저 닫는다. | STA-30 검증 기록(저장소에 미포함) | 수동 | ☑ |
 | L-08 | 검색을 닫아도(Escape) 검색어와 결과 유지. 지우기는 전체 복원. `Cmd+F`는 검색 포커스. | `design-system.md` | 수동 | ☑ |
 | L-09 | 새로고침은 디스크를 다시 스캔한다. 다른 곳(팝업 창 등)의 저장 신호를 받아도 다시 스캔한다. | `useLibraryRefreshEvent.ts` | 수동 | ☑ |
 | L-10 | Save Popup에서 저장하면 Library가 새로고침되고 새 Drop이 선택된다. | `handleCaptureSaved` | 단위(`LibraryModel`) + 수동 | ☑ |
-| L-11 | 목록 우클릭 메뉴: 출처 열기(URL 있을 때), 내용 복사(텍스트일 때), Markdown 내보내기, 구분선, 휴지통. 우클릭하면 그 행을 먼저 선택. | `LibraryPane.tsx` | 수동 | ☑ |
+| L-11 | 목록 우클릭 메뉴: 출처 열기(URL 있을 때), 이 출처의 드롭 보기(PLO-103, L-20), 내용 복사(텍스트일 때), Markdown 내보내기, 구분선, 휴지통. 우클릭하면 그 행을 먼저 선택. | `LibraryPane.tsx` | 수동 | ☑ |
 | L-12 | `Cmd+Backspace`는 삭제 확인 시트, 확인 후에만 휴지통으로 이동. | `LibraryPane.tsx`, `DeleteConfirmationSheet.tsx` | 수동 | ☑ |
 | L-13 | 출처 열기: URL이 비어 있으면 `source_url_missing`. 버튼은 URL이 없을 때 비활성. | `commands.rs` `open_source_url` | 단위·수동 | ☑ |
 | L-14 | Markdown 내보내기: 취소하면 파일을 쓰지 않는다. 형식은 spec 7장. | `markdown.rs`, 테스트: `markdown_generation_includes_drop_fields` | 단위 | ☑ |
 | L-15 | 창 크기 때문에 줄어든 표시 너비를 `paneWidths`에 저장하지 않는다. 구분선 조절이 끝났을 때만 저장. | `MainWindow.tsx` | 수동 | ☑ |
-| L-16 | 목록 맨 위 `고정됨` 묶음: 현재 검색·Collection·필터 결과 안의 고정한 Drop만, `pinnedAt` 최근순(같으면 `id` 내림차순). 날짜 그룹에 다시 나오지 않는다(PLO-102). | spec 1.6 | 단위(`LibraryTests`) | ☑ |
-| L-17 | 사이드바 보관함의 `고정됨` Collection: 개수는 고정한 Drop 수, 고르면 태그 필터를 지우고 유형은 전체. 묶음 제목 없이 고정 시각순. | spec 2.4, 2.5 | 단위(`LibraryModelTests`) + 수동 | ☐ |
-| L-18 | 동작 버튼, 우클릭 메뉴 맨 위 항목, `Shift+Cmd+P`로 고정·고정 해제. 고정한 Drop에서는 문구가 `고정 해제`이고 동작 버튼이 눌린 상태. 고정 후 선택 유지. | spec 2.5, 2.6 | 단위(`LibraryModelTests`) + 수동 | ☐ |
-| L-19 | 고정한 행에 파란 핀 아이콘, VoiceOver는 `고정됨`을 읽는다. | spec 2.5 | 단위(접근성 라벨) + 수동(VoiceOver) | ☐ |
-| L-20 | 동작 버튼은 아이콘만 있는 38×26 pt, 순서 고정 · 출처 열기 · Markdown 내보내기 \| 휴지통(빨강, 구분선 뒤). 툴팁 `이름 (단축키)`, 버튼마다 접근성 이름. 더 보기 버튼 없음. 우클릭 메뉴 항목에 단축키 표시. | spec 2.6 | 단위(툴팁 문구) + 수동(시안 MainFeatures, FeatureDetails 3번) | ☐ |
+| L-16 | 출처 키: http(s) URL의 호스트를 소문자로, 앞의 `www.` 하나만 떼고 하위 도메인은 유지. http가 아닌 URL과 URL 없는 Drop은 앱 이름, 둘 다 없으면 출처 없음. | 스펙 1.6(PLO-103) | 단위(`SourceKeyTests`) | ☑ |
+| L-17 | 출처 필터: 고른 출처끼리 OR, 검색·Collection·기간과 AND. 출처 필터가 걸리면 출처 없는 Drop은 빠지고, 걸리지 않으면 보인다. 앱 필터는 없다. | 스펙 1.6, 2.5(PLO-103) | 단위(`LibraryTests`) | ☑ |
+| L-18 | 필터 팝오버: 출처 검색, 웹사이트·앱 묶음, 출처마다 체크박스와 개수(출처 필터를 뺀 조건 기준), 여러 개 선택, 기간 분할 컨트롤(전체/오늘/7일/30일). 문구 끝에 말줄임 없음. | 스펙 2.5(PLO-103) | 단위(`LibraryModelTests`) + 수동 | ☐ |
+| L-19 | 고른 출처마다 `출처: {source}` 칩 하나. 칩을 누르면 그 출처만 해제. 필터 지우기는 사이드바 선택을 유지. | 스펙 2.5(PLO-103) | 단위(`LibraryModelTests`) + 수동 | ☐ |
+| L-20 | `이 출처의 드롭 보기`(인스펙터 출처 칸, 우클릭 메뉴): Collection을 라이브러리로, 출처 필터를 그 출처 하나로. 기간은 유지. 출처 없는 Drop에서는 비활성. | 스펙 2.5, 2.7(PLO-103) | 단위(`LibraryModelTests`) + 수동 | ☐ |
+| L-21 | 목록 맨 위 `고정됨` 묶음: 현재 검색·Collection·필터 결과 안의 고정한 Drop만, `pinnedAt` 최근순(같으면 `id` 내림차순). 날짜 그룹에 다시 나오지 않는다(PLO-102). | spec 1.6 | 단위(`LibraryTests`) | ☑ |
+| L-22 | 사이드바 보관함의 `고정됨` Collection: 개수는 고정한 Drop 수, 고르면 태그 필터를 지우고 유형은 전체. 묶음 제목 없이 고정 시각순. | spec 2.4, 2.5 | 단위(`LibraryModelTests`) + 수동 | ☐ |
+| L-23 | 동작 버튼, 우클릭 메뉴 맨 위 항목, `Shift+Cmd+P`로 고정·고정 해제. 고정한 Drop에서는 문구가 `고정 해제`이고 동작 버튼이 눌린 상태. 고정 후 선택 유지. | spec 2.5, 2.6 | 단위(`LibraryModelTests`) + 수동 | ☐ |
+| L-24 | 고정한 행에 파란 핀 아이콘, VoiceOver는 `고정됨`을 읽는다. | spec 2.5 | 단위(접근성 라벨) + 수동(VoiceOver) | ☐ |
+| L-25 | 동작 버튼은 아이콘만 있는 38×26 pt, 순서 고정 · 출처 열기 · Markdown 내보내기 \| 휴지통(빨강, 구분선 뒤). 툴팁 `이름 (단축키)`, 버튼마다 접근성 이름. 더 보기 버튼 없음. 우클릭 메뉴 항목에 단축키 표시. | spec 2.6 | 단위(툴팁 문구) + 수동(시안 MainFeatures, FeatureDetails 3번) | ☐ |
 
 ## E. 편집
 
@@ -575,4 +580,4 @@ S·C 항목을 픽스처 **복사본**으로 다시 확인하고 항목마다 Sw
 - 목록: `ListSection.make`가 `고정됨` 묶음을 날짜 그룹 앞에 둔다. 단위: `PinTests.ListSectionTests`. 선택 대체 규칙의 "첫 항목"은 화면의 첫 행(고정됨 포함).
 - 앱: `SidebarSelection.pinned`, `LibraryModel.togglePin`, `PinCommand`(`⇧⌘P`), 우클릭 메뉴 맨 위 고정/고정 해제와 단축키 표시, 동작 버튼 `DropAction`. 단위: `PinModelTests`, `PinPresentationTests`(툴팁 `이름 (단축키)`, 행 접근성 `고정됨`).
 - 실제 앱(픽스처 복사본, 라이트, 1120×720): 사이드바 `고정됨 1`, 목록 맨 위 `고정됨` 묶음과 파란 핀, 첫 행 선택, 동작 버튼 38×26 pt(스크린샷에서 측정), 고정 버튼 눌린 상태, 휴지통 빨강·구분선 뒤를 확인했다.
-- 수동 확인이 남음: 고정됨 Collection 클릭(묶음 제목 없음), 동작 버튼·우클릭 메뉴·`⇧⌘P`로 고정·고정 해제 클릭 흐름, 툴팁 표시, VoiceOver 낭독, 다크 모드, 시안(MainFeatures, FeatureDetails 3번)과 나란히 비교. 그래서 S-21~S-23, L-16은 단위로 ☑, L-17~L-20은 ☐로 둔다.
+- 수동 확인이 남음: 고정됨 Collection 클릭(묶음 제목 없음), 동작 버튼·우클릭 메뉴·`⇧⌘P`로 고정·고정 해제 클릭 흐름, 툴팁 표시, VoiceOver 낭독, 다크 모드, 시안(MainFeatures, FeatureDetails 3번)과 나란히 비교. 그래서 S-21~S-23, L-21은 단위로 ☑, L-22~L-25는 ☐로 둔다(PLO-103이 L-16~L-20을 먼저 써서 번호를 옮겼다).

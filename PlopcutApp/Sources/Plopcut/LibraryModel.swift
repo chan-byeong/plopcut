@@ -9,6 +9,18 @@ enum SidebarSelection: Hashable {
     case all, text, image, pinned, tag(String), settings
 }
 
+/// A row of the filter popover's source list (spec 2.5, PLO-103).
+struct SourceCount: Equatable {
+    let key: SourceKey
+    let count: Int
+}
+
+/// The filter popover's source list, websites before apps.
+struct SourceGroups: Equatable {
+    var websites: [SourceCount] = []
+    var apps: [SourceCount] = []
+}
+
 @MainActor @Observable
 final class LibraryModel {
     private(set) var drops: [Drop] = []
@@ -17,7 +29,6 @@ final class LibraryModel {
     /// The Pinned section first, then the date groups (spec 1.6).
     private(set) var sections: [(section: ListSection, drops: [Drop])] = []
     private(set) var allTags: [String] = []
-    private(set) var allApps: [String] = []
     private var typeCounts: (text: Int, image: Int) = (0, 0)
     private var pinnedCount = 0
     private var tagCounts: [String: Int] = [:]
@@ -28,7 +39,8 @@ final class LibraryModel {
 
     var collection: SidebarSelection = .all { didSet { if collection != oldValue { collectionChanged() } } }
     var search = "" { didSet { reselect() } }
-    var app: String? { didSet { reselect() } }
+    /// The selected sources; empty means no source filter (spec 1.6, PLO-103).
+    var sources: Set<SourceKey> = [] { didSet { if sources != oldValue { reselect() } } }
     var dateRange: DateRange = .all { didSet { reselect() } }
     var selectedID: String? { didSet { editor.show(selectedDrop) } }
 
@@ -111,7 +123,7 @@ final class LibraryModel {
         case .tag(let name): tag = name
         case .all, .pinned, .settings: break
         }
-        var filter = LibraryFilter(search: search, type: type, tag: tag, app: app, dateRange: dateRange)
+        var filter = LibraryFilter(search: search, type: type, tag: tag, sources: sources, dateRange: dateRange)
         filter.pinnedOnly = collection == .pinned
         return filter
     }
@@ -120,7 +132,37 @@ final class LibraryModel {
     var showsSectionHeaders: Bool { collection != .pinned }
 
     var selectedDrop: Drop? { drops.first { $0.id == selectedID } }
-    var hasRefiningFilters: Bool { app != nil || dateRange != .all }
+    var hasRefiningFilters: Bool { !sources.isEmpty || dateRange != .all }
+
+    /// Whether "Show Drops from This Source" can act on the drop.
+    static func hasSource(_ drop: Drop) -> Bool { SourceKey(drop.source) != nil }
+
+    /// The popover's sources with counts under every condition but the source filter (Collection, search, period).
+    /// A selected source stays listed even at 0 so it can be unchecked. Each group sorts by count, then name.
+    /// A non-blank `query` keeps the sources whose name contains it, ignoring case.
+    func sourceGroups(matching query: String) -> SourceGroups {
+        var unfiltered = filter
+        unfiltered.sources = []
+        var counts: [SourceKey: Int] = Dictionary(uniqueKeysWithValues: sources.map { ($0, 0) })
+        for drop in unfiltered.apply(drops, index: searchIndex) {
+            if let key = SourceKey(drop.source) { counts[key, default: 0] += 1 }
+        }
+        let needle = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        let rows: [SourceCount] = counts
+            .map { SourceCount(key: $0.key, count: $0.value) }
+            .filter { needle.isEmpty || $0.key.name.localizedStandardContains(needle) }
+            .sorted(by: Self.listsBefore)
+        var groups = SourceGroups()
+        for row in rows {
+            if case .website = row.key { groups.websites.append(row) } else { groups.apps.append(row) }
+        }
+        return groups
+    }
+
+    private static func listsBefore(_ a: SourceCount, _ b: SourceCount) -> Bool {
+        if a.count != b.count { return a.count > b.count }
+        return a.key.name.localizedStandardCompare(b.key.name) == .orderedAscending
+    }
 
     func count(for collection: SidebarSelection) -> Int {
         switch collection {
@@ -284,31 +326,40 @@ final class LibraryModel {
         _ = try? settings?.update(SettingsUpdate(paneWidths: widths))
     }
 
+    /// Clears sources and period; the sidebar selection and the search stay (spec 2.5).
     func clearFilters() {
-        app = nil
+        sources = []
         dateRange = .all
+    }
+
+    /// The chip of one source removes only that source.
+    func removeSource(_ key: SourceKey) { sources.remove(key) }
+
+    /// "Show Drops from This Source": the Library Collection filtered to the drop's source alone; the period and the
+    /// search stay. A drop without source changes nothing (spec 2.5).
+    func showDropsFromSource(of drop: Drop) {
+        guard let key = SourceKey(drop.source) else { return }
+        collection = .all
+        sources = [key]
     }
 
     /// Selecting a type row clears the tag filter and vice versa because `collection` holds only one of them.
     private func collectionChanged() { reselect() }
 
-    /// Recomputes everything derived from `drops`: counts, tag and app lists, the search index, and the filtered list.
+    /// Recomputes everything derived from `drops`: counts, the tag list, the search index, and the filtered list.
     private func dropsChanged(rebuildIndex: Bool) {
         if rebuildIndex { searchIndex = SearchIndex(drops) }
         var tags: [String: Int] = [:]
-        var apps = Set<String>()
         var text = 0, image = 0, pinned = 0
         for drop in drops {
             if drop.type == .text { text += 1 } else if drop.type == .image { image += 1 }
             if drop.isPinned { pinned += 1 }
             for tag in drop.tags { tags[tag, default: 0] += 1 }
-            if let app = drop.source.appName { apps.insert(app) }
         }
         typeCounts = (text, image)
         pinnedCount = pinned
         tagCounts = tags
         allTags = tags.keys.sorted()
-        allApps = apps.sorted()
         refilter()
     }
 

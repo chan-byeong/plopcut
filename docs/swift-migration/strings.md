@@ -47,13 +47,21 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `dropCount` | {count} drops | {count}개의 드롭 |
 | `dropCountOne` | 1 drop | 1개의 드롭 |
 | `filterTag` | Filter by tag | 태그로 필터 |
-| `filterApp` | Filter by app | 앱으로 필터 |
 | `filterDate` | Filter by date | 날짜로 필터 |
 | `allTags` | All tags | 모든 태그 |
-| `allApps` | All apps | 모든 앱 |
 | `anyTime` | Any time | 전체 기간 |
 | `last7` | Last 7 days | 최근 7일 |
 | `last30` | Last 30 days | 최근 30일 |
+| `searchSources` | Search sources | 출처 검색 |
+| `sourceWebsites` | Websites | 웹사이트 |
+| `sourceApps` | Apps | 앱 |
+| `noMatchingSources` | No matching sources | 일치하는 출처가 없습니다 |
+| `sourceChip` | Source: {source} | 출처: {source} |
+| `showSourceDrops` | Show Drops from This Source | 이 출처의 드롭 보기 |
+| `period` | Period | 기간 |
+| `periodAll` | All | 전체 |
+| `period7` | 7 days | 7일 |
+| `period30` | 30 days | 30일 |
 | `today` | Today | 오늘 |
 | `yesterday` | Yesterday | 어제 |
 | `previous7` | Previous 7 Days | 지난 7일 |
@@ -207,3 +215,11 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 
 - 메뉴 항목, 플레이스홀더, 진행 상태 문구 끝의 `...`/`…`를 모두 지웠다: `saveClipboard`, `searchPlaceholder`, `loadingDrops`, `saving`, `noNote`, `tagPlaceholder`, `shortcutRecording`, `loadingPermissions`, `optionalNote`, `capturing`. `noDropsClipboardHint` 안의 메뉴 이름도 새 표기(`Save Clipboard`, `클립보드 저장`)로 맞췄다.
 - 문구에 `...`/`…`가 없는지는 `LocalizationTests.noPhraseUsesAnEllipsis`가 검사한다.
+
+## 출처 필터 (PLO-103)
+
+- 앱 필터를 출처 필터로 바꾸면서 쓰지 않게 된 `filterApp`, `allApps`를 지웠다.
+- 추가: `searchSources`(팝오버 출처 검색), `sourceWebsites`·`sourceApps`(출처 묶음 제목), `noMatchingSources`(검색 결과 없음),
+  `sourceChip`(출처 칩), `showSourceDrops`(인스펙터 버튼과 우클릭 메뉴), `period`(기간 제목과 분할 컨트롤 접근성 이름),
+  `periodAll`·`period7`·`period30`(분할 컨트롤의 짧은 문구, `오늘`은 `today`를 쓴다). 기간 칩은 예전처럼 `anyTime`/`last7`/`last30`을 쓴다.
+- 팝오버의 `출처` 제목은 인스펙터와 같은 `source` 키를 쓴다.

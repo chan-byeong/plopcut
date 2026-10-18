@@ -3,18 +3,19 @@ import Foundation
 public enum TypeFilter: Sendable { case all, text, image }
 public enum DateRange: Sendable { case all, today, last7Days, last30Days }
 
-/// Search and filters for the Library list (spec section 1.6). All conditions combine with AND.
+/// Search and filters for the Library list (spec section 1.6). All conditions combine with AND; the selected
+/// sources combine with OR among themselves, and an empty set sets no condition.
 public struct LibraryFilter: Sendable {
     public var search: String
     public var type: TypeFilter
     public var tag: String?
-    public var app: String?
+    public var sources: Set<SourceKey>
     public var dateRange: DateRange
     /// The Pinned collection: only pinned drops pass (spec 1.6, PLO-102).
     public var pinnedOnly = false
 
-    public init(search: String = "", type: TypeFilter = .all, tag: String? = nil, app: String? = nil, dateRange: DateRange = .all) {
-        self.search = search; self.type = type; self.tag = tag; self.app = app; self.dateRange = dateRange
+    public init(search: String = "", type: TypeFilter = .all, tag: String? = nil, sources: Set<SourceKey> = [], dateRange: DateRange = .all) {
+        self.search = search; self.type = type; self.tag = tag; self.sources = sources; self.dateRange = dateRange
     }
 
     /// With an `index` built from the same drops, search runs on prebuilt lowercase text instead of rebuilding it per keystroke.
@@ -37,7 +38,7 @@ public struct LibraryFilter: Sendable {
 
     private func matchesIgnoringSearch(_ drop: Drop, now: Date, calendar: Calendar) -> Bool {
         matchesType(drop) && (tag.map { drop.tags.contains($0) } ?? true) && (!pinnedOnly || drop.isPinned)
-            && (app.map { drop.source.appName == $0 } ?? true)
+            && (sources.isEmpty || SourceKey(drop.source).map(sources.contains) == true)
             && matchesDate(drop, now: now, calendar: calendar)
     }
 
