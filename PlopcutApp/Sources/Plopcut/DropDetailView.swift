@@ -121,25 +121,27 @@ struct DropDetailView: View {
 
     /// Icon-only buttons: Pin · Edit · Open Source · Export Markdown | Move to Trash (spec 2.6).
     private func actions(for drop: Drop) -> some View {
-        HStack(spacing: Spacing.xs) {
+        HStack(spacing: DropActionIcon.gap) {
             let pin = DropAction.pin(pinned: drop.isPinned)
             Toggle(isOn: Binding(get: { drop.isPinned }, set: { _ in Task { await model.togglePin(id: drop.id) } })) {
                 DropActionIcon(action: pin)
             }
-            .toggleStyle(.button)
+            .toggleStyle(DropActionToggleStyle())
             .help(pin.tooltip).accessibilityLabel(pin.title)
             actionButton(.editBody) { model.beginBodyEdit() }
                 .disabled(!DropEditor.canEditBody(drop))
             actionButton(.openSource) { openSource(drop) }
                 .disabled(URL(string: drop.source.url ?? "") == nil || drop.source.url?.isEmpty != false)
             actionButton(.exportMarkdown) { Task { await model.exportWithPanel(id: drop.id) } }
-            Divider().frame(height: DropActionIcon.buttonSize.height)
+            Rectangle().fill(.separator).frame(width: 1, height: DropActionIcon.dividerHeight)
+                .padding(.horizontal, Spacing.xxs).accessibilityHidden(true)
             actionButton(.moveTrash, role: .destructive) { model.pendingDeleteID = drop.id }
         }
     }
 
     private func actionButton(_ action: DropAction, role: ButtonRole? = nil, perform: @escaping () -> Void) -> some View {
         Button(role: role, action: perform) { DropActionIcon(action: action) }
+            .buttonStyle(DropActionButtonStyle())
             .help(action.tooltip).accessibilityLabel(action.title)
     }
 
@@ -262,8 +264,6 @@ struct InspectorView: View {
     }
 }
 
-/// The label of an icon action button (spec 2.6). The native bordered bezel adds its own padding, so the label is
-/// smaller than the 38 x 26 pt button it ends up in. Move to Trash is drawn red.
 /// A small accent dot before a status word: "● Editing", "● Changed" (spec 2.6).
 struct StatusDot: View {
     let text: String
@@ -277,16 +277,72 @@ struct StatusDot: View {
     }
 }
 
+/// The label of an icon action button: a 38 x 26 pt cell (spec 2.6, MainFeatures design). Move to Trash is drawn red;
+/// a pinned Pin takes the accent from `DropActionToggleStyle`.
 struct DropActionIcon: View {
     static let buttonSize = CGSize(width: 38, height: 26)
-    /// Optical: the bordered bezel's padding at regular size, measured in the running app.
-    static let bezelInset = CGSize(width: 16, height: 2)
+    /// From the MainFeatures design: 6 pt between buttons, a 16 pt divider before Move to Trash.
+    static let gap: CGFloat = 6
+    static let dividerHeight: CGFloat = 16
     let action: DropAction
 
     var body: some View {
+        // Only Trash sets its own color; the others take the button style's foreground (accent while pinned).
+        if action == .moveTrash { icon.foregroundStyle(.red) } else { icon }
+    }
+
+    private var icon: some View {
         Image(systemName: action.systemImage)
-            .foregroundStyle(action == .moveTrash ? AnyShapeStyle(.red) : AnyShapeStyle(.primary))
-            .frame(width: Self.buttonSize.width - Self.bezelInset.width, height: Self.buttonSize.height - Self.bezelInset.height)
+            .font(.system(size: 13))
+            .frame(width: Self.buttonSize.width, height: Self.buttonSize.height)
             .contentShape(Rectangle())
+    }
+}
+
+/// The MainFeatures action button: a rounded cell with a hairline border on the control background. Hover darkens the
+/// border and fill, pressing darkens the fill more, and `isOn` (a pinned Pin) tints it with the accent.
+struct DropActionButtonStyle: ButtonStyle {
+    var isOn = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        DropActionCell(configuration: configuration, isOn: isOn)
+    }
+}
+
+/// Pin's toggle: the same cell, tinted while on, keeping the toggle's VoiceOver state.
+struct DropActionToggleStyle: ToggleStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        Button { configuration.isOn.toggle() } label: { configuration.label }
+            .buttonStyle(DropActionButtonStyle(isOn: configuration.isOn))
+    }
+}
+
+private struct DropActionCell: View {
+    static let radius: CGFloat = 7
+    let configuration: ButtonStyleConfiguration
+    let isOn: Bool
+    @Environment(\.isEnabled) private var isEnabled
+    @State private var hovering = false
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: Self.radius, style: .continuous)
+        configuration.label
+            .foregroundStyle(isOn ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.primary))
+            .background(shape.fill(fill))
+            .overlay(shape.strokeBorder(border, lineWidth: 1))
+            .opacity(isEnabled ? 1 : 0.4)
+            .onHover { hovering = $0 && isEnabled }
+    }
+
+    private var fill: AnyShapeStyle {
+        if isOn { return AnyShapeStyle(Color.accentColor.opacity(configuration.isPressed ? 0.18 : 0.10)) }
+        if configuration.isPressed { return AnyShapeStyle(Color.primary.opacity(0.10)) }
+        if hovering { return AnyShapeStyle(Color.primary.opacity(0.05)) }
+        return AnyShapeStyle(Color(nsColor: .controlBackgroundColor))
+    }
+
+    private var border: Color {
+        if isOn { return Color.accentColor.opacity(0.35) }
+        return Color.primary.opacity(hovering || configuration.isPressed ? 0.22 : 0.12)
     }
 }
