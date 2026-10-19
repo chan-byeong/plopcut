@@ -19,10 +19,20 @@ clipboard or the selected text only when you ask it to capture.
 - **Capture selected text** with the global shortcut (default `Shift`+`Command`+`C`).
   The shortcut is changeable in Settings.
 - **Save the clipboard** from the menu bar item (`Save Clipboard`).
-- **Add a note and tags** in the save popup. You can also choose to save plain
-  text instantly, without the popup, in Settings.
-- **Browse the Library**: search, filter by type, tag, app, or date, and open
-  a drop to edit its title, note, and tags.
+- **Add a title, a note, and tags** in the save popup. The title is filled in
+  for you and can be changed or reset to the automatic one. You can also choose
+  to save plain text instantly, without the popup, in Settings.
+- **Browse the Library**: search, filter by type or tag, and narrow by source
+  (websites such as `github.com`, or apps such as Google Chrome or Terminal;
+  pick several at once) and date.
+- **Read drops formatted**: Markdown shows headings, lists, and code blocks;
+  code is highlighted and has a copy button. If the format is guessed wrong,
+  change it from the format menu. The saved file stays as it was.
+- **Edit a drop**: change its title, note, and tags, or edit the text itself
+  with `Command`+`E`. Saving an edit overwrites `content.md`; the earlier text
+  is not kept.
+- **Pin drops** you use often (`Shift`+`Command`+`P`). Pinned drops stay at the
+  top of the list and in the sidebar's Pinned collection.
 - **Open the source** of a drop (for example the URL of a Chrome page), copy
   its text, export it as Markdown, or move it to the Trash.
 
@@ -75,7 +85,8 @@ status in Settings.
 ## Where your data is stored
 
 - **Drops:** `~/Documents/plopcut/drops/<drop-id>/`, one folder per drop,
-  containing `drop.json` (metadata), `content.md` or `image.png`, and `note.md`.
+  containing `drop.json` (metadata, including when it was pinned and the format
+  you chose), `content.md` or `image.png`, and `note.md`.
   You can open these files with any text editor or Finder.
 - **Settings:** `~/Library/Application Support/plopcut/settings.json`.
 
@@ -135,7 +146,10 @@ See [docs/update-method.md](docs/update-method.md). plopcut is distributed as a 
 
 ## License
 
-plopcut is open source under the [MIT License](LICENSE). Contributions are
+plopcut is open source under the [MIT License](LICENSE). It includes
+open-source packages for Markdown rendering and code highlighting; their
+licenses are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), which is also
+inside the app (`plopcut.app/Contents/Resources`). Contributions are
 welcome: see [CONTRIBUTING.md](CONTRIBUTING.md). Report security problems
 privately as described in [SECURITY.md](SECURITY.md).
 
