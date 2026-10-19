@@ -12,7 +12,8 @@ struct LibraryListView: View {
         VStack(spacing: 0) {
             header
             if !model.warnings.isEmpty { warningBanner }
-            content
+            // Fill the pane so the chips stay on top when an empty state sizes to its content.
+            content.frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .navigationTitle(model.title)
         .navigationSubtitle(Formatting.dropCount(model.filtered.count))
