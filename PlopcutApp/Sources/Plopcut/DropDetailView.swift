@@ -357,8 +357,8 @@ extension View {
 }
 
 private struct DropActionTooltip: ViewModifier {
-    /// About the system tooltip delay.
-    static let delay: Duration = .milliseconds(600)
+    /// Shorter than the system tooltip delay, so the shortcut shows up quickly.
+    static let delay: Duration = .milliseconds(300)
     /// From the MainFeatures design: the bubble's top sits 6 pt under the 26 pt button.
     static let offset = DropActionIcon.buttonSize.height + 6
     let text: String
