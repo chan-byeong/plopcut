@@ -20,16 +20,29 @@ Swift 구현은 같은 입력에서 같은 결과를 내야 합니다.
 | 1 | `2026-01-06_…_mixed` | `type: mixed`. 목록에는 나타나고 깨지지 않아야 합니다. 레거시는 `mixed`의 본문·이미지를 읽지 않아 `text`와 이미지가 비어 있습니다(체크리스트 D-02). |
 | 2 | `2026-01-04_…_legacy-minimal-text` | 선택 키가 모두 없는 `drop.json`. 태그 `["#Research","research"," Swift ","","##Two Words"]`는 `["research","swift","two words"]`로 정규화(앞쪽 `#` 제거, 소문자, 중복·빈 값 제거, 내부 공백 유지). `note.md`가 없으면 노트 없음. `source`는 빈 값. |
 | 3 | `2026-01-04_…_legacy-minimal-image` | `imagePath` 키가 없어도 `image.png`를 이미지로 읽습니다. 노트 없음. |
-| 4 | `2026-01-03_…_image-drop` | 일반 이미지 Drop. 노트 `Whiteboard photo.`. |
+| 4 | `2026-01-03_…_image-drop` | 일반 이미지 Drop. 노트 `Whiteboard photo.`. 고정한 Drop(`pinnedAt: 2026-01-03T12:00:00.000000003Z`, PLO-102). |
 | 5 | `2026-01-02_…_drop` | 한글 제목과 태그. ID의 slug는 `drop`(한글은 slug에서 제거). 빈 `note.md`는 노트 없음. URL이 있는 출처. |
 | 6 | `2026-01-01_…_example-app` | 일반 텍스트 Drop. 본문 두 문단, 노트에 마크다운 보존(끝 줄바꿈 포함). |
 | — | `2026-01-05_…_broken-json` | `drop.json`이 깨짐. 목록에서 제외되고 경고 `drop_scan_skipped` 1개. |
 | — | `not-a-drop.txt` | `drops/` 바로 아래의 파일. 무시합니다. |
 
+`pinnedAt`은 4번(고정)과 6번(`null`)에만 있습니다. 나머지는 키가 없는 예전 형식이며 고정 안 됨으로 읽습니다.
+
 2번과 3번은 `createdAt`이 같아서 `id` 내림차순(`…-text` > `…-image`)이 순서를 정합니다.
 
 모든 `drop.json`은 저장된 형식(`text`, `note`가 `null`, `imagePath`는 텍스트에서 `null`)을 따르지만 2번·3번만 의도적으로
 최소 키입니다. 이 앱이 파일을 다시 쓰면 키 집합이 체크리스트 S-01을 따라 정규화되어야 합니다.
+
+## `storage-format/drops` 기대 결과 (PLO-101)
+
+`drop.json`의 `format`·`codeLanguage` 키(스펙 1.2)를 담은 Swift 전용 사례입니다. 레거시 스캐너는 이 키를 모르므로 무시합니다.
+위 `storage`의 개수와 순서를 바꾸지 않으려고 따로 둡니다. 경고는 없습니다.
+
+| 순서 | 폴더 | 기대 |
+| --- | --- | --- |
+| 1 | `2026-02-03_…_code-choice` | `format: code`, `codeLanguage: python`. 본문의 `# not a heading`과 관계없이 코드(Python)로 보입니다. |
+| 2 | `2026-02-02_…_markdown-choice` | `format: markdown`, `codeLanguage: null`. 출처가 Terminal이라 자동 감지라면 코드(Shell)지만 사용자 선택인 Markdown이 먼저입니다. |
+| 3 | `2026-02-01_…_unknown-format` | `format: rich`(모르는 값), `codeLanguage: swift`. 자동 감지로 읽고 `codeLanguage`는 무시합니다. 본문은 Markdown으로 감지됩니다. |
 
 ## 설정 파일 기대 결과
 

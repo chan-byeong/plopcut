@@ -1,0 +1,74 @@
+import SwiftUI
+
+/// "Pin" / "Unpin" for the selected drop with Shift+Cmd+P (spec 2.5, checklist L-18). Unlike Cmd+Backspace the
+/// shortcut never edits text, so it works wherever the Library shows a selected drop, not only in the list.
+struct PinCommand: View {
+    static let shortcut = KeyboardShortcut("p", modifiers: [.command, .shift])
+    let model: LibraryModel
+
+    var body: some View {
+        let drop = model.collection == .settings ? nil : model.selectedDrop
+        Button(DropAction.pin(pinned: drop?.isPinned ?? false).title) {
+            if let id = drop?.id { Task { await model.togglePin(id: id) } }
+        }
+        .keyboardShortcut(Self.shortcut)
+        .disabled(drop == nil)
+    }
+}
+
+/// The drop actions shared by the detail view's icon buttons and the list's context menu (spec 2.6).
+enum DropAction: Equatable {
+    case pin(pinned: Bool)
+    case editBody
+    case openSource
+    case exportMarkdown
+    case moveTrash
+
+    var title: String {
+        switch self {
+        case .pin(let pinned): L10n.t(pinned ? "unpin" : "pin")
+        case .editBody: L10n.t("editBody")
+        case .openSource: L10n.t("openSource")
+        case .exportMarkdown: L10n.t("exportMarkdown")
+        case .moveTrash: L10n.t("moveTrash")
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .pin(let pinned): pinned ? "pin.fill" : "pin"
+        case .editBody: "pencil"
+        case .openSource: "arrow.up.right.square"
+        case .exportMarkdown: "square.and.arrow.down"
+        case .moveTrash: "trash"
+        }
+    }
+
+    var shortcut: KeyboardShortcut? {
+        switch self {
+        case .pin: PinCommand.shortcut
+        case .editBody: EditBodyCommand.shortcut
+        case .moveTrash: KeyboardShortcut(.delete, modifiers: .command)
+        case .openSource, .exportMarkdown: nil
+        }
+    }
+
+    /// "Name (Shortcut)", or just the name when the action has no shortcut.
+    var tooltip: String { shortcut.map { "\(title) (\($0.menuText))" } ?? title }
+}
+
+extension KeyboardShortcut {
+    /// The shortcut as a menu shows it (`⇧⌘P`, `⌘⌫`): modifiers in the system order, then the key.
+    var menuText: String {
+        let symbols: [(EventModifiers, String)] = [(.control, "⌃"), (.option, "⌥"), (.shift, "⇧"), (.command, "⌘")]
+        let prefix = symbols.filter { modifiers.contains($0.0) }.map(\.1).joined()
+        let key: String
+        switch self.key {
+        case .delete: key = "⌫"
+        case .return: key = "↩"
+        case .escape: key = "esc"
+        default: key = String(self.key.character).uppercased()
+        }
+        return prefix + key
+    }
+}

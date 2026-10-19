@@ -35,6 +35,9 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 | S-18 | 읽는 중 `content.md`/이미지/`note.md` 하나가 실패해도 Drop은 남기고 해당 경고만 추가. | `read_drop_folder` | 단위 | ☑ |
 | S-19 | `drops/`가 없으면 빈 목록(오류 아님). 저장 시에는 `drops/`를 만든다. | `scan_drops_from_root` | 단위 | ☑ |
 | S-20 | 이미지 Drop은 `imagePath`가 없어도 `image.png`를 기본으로 본다. | `read_drop_folder` | 픽스처: `legacy-minimal-image` | ☑ |
+| S-21 | `drop.json`에 `pinnedAt`(시각 문자열 \| null)을 항상 쓴다. 키가 없는 예전 `drop.json`은 고정 안 됨으로 읽는다(PLO-102). | spec 1.2 | 단위·픽스처: `image-drop`(고정), `legacy-minimal-text`(키 없음) | ☑ |
+| S-22 | 고정·고정 해제는 `pinnedAt`만 바꾸고 `updatedAt`과 다른 파일은 그대로 둔다. 이미 고정한 Drop을 다시 고정하면 처음 시각을 유지한다. | spec 1.2 | 단위 | ☑ |
+| S-23 | 텍스트·이미지 Drop을 처음부터 고정한 상태로 저장할 수 있다(`pinnedAt` = `createdAt`). | spec 1.2 | 단위 | ☑ |
 
 ## C. 설정
 
@@ -115,17 +118,27 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 | L-02 | 기간 필터: 오늘은 같은 달력 날짜, 7·30일은 `createdAt ≥ 지금 − N일`. 날짜를 해석할 수 없는 Drop은 기간 필터에서 제외. | `matchesDateFilter` | 단위 | ☑ |
 | L-03 | 날짜 그룹: 오늘/어제/지난 7일(2~7일 전)/이전. 해석 불가한 날짜는 `이전`. 빈 그룹 숨김. | `drop-groups.ts` | 단위 | ☑ |
 | L-04 | 선택이 필터 결과에서 사라지면 첫 항목, 결과가 비면 선택 없음. | `useLibraryFilters.ts` | 단위 | ☑ |
-| L-05 | 사이드바 선택은 항상 하나. 유형 선택은 태그 필터를 지우고 태그 선택은 유형을 `all`로 돌린다. 필터 지우기는 앱·기간만 지운다. | `Sidebar.tsx`, `useLibraryFilters.ts`(STA-37) | 단위 | ☑ |
+| L-05 | 사이드바 선택은 항상 하나. 유형 선택은 태그 필터를 지우고 태그 선택은 유형을 `all`로 돌린다. 필터 지우기는 출처·기간만 지운다(PLO-103에서 앱 → 출처). | `Sidebar.tsx`, `useLibraryFilters.ts`(STA-37) | 단위 | ☑ |
 | L-06 | 사이드바 접힘은 Library↔Settings 전환과 창 크기 변경을 지나도 유지. 두 화면에서 사이드바 너비·모양이 같다. | `MainWindow.tsx`(STA-38) | 수동 | ☑ |
 | L-07 | 인스펙터 오버레이: 같은 토글 또는 Escape로 닫고 Drop 목록으로 포커스 복귀(D-13). 검색 편집 중 Escape는 검색을 먼저 닫는다. | STA-30 검증 기록(저장소에 미포함) | 수동 | ☑ |
 | L-08 | 검색을 닫아도(Escape) 검색어와 결과 유지. 지우기는 전체 복원. `Cmd+F`는 검색 포커스. | `design-system.md` | 수동 | ☑ |
 | L-09 | 새로고침은 디스크를 다시 스캔한다. 다른 곳(팝업 창 등)의 저장 신호를 받아도 다시 스캔한다. | `useLibraryRefreshEvent.ts` | 수동 | ☑ |
 | L-10 | Save Popup에서 저장하면 Library가 새로고침되고 새 Drop이 선택된다. | `handleCaptureSaved` | 단위(`LibraryModel`) + 수동 | ☑ |
-| L-11 | 목록 우클릭 메뉴: 출처 열기(URL 있을 때), 내용 복사(텍스트일 때), Markdown 내보내기, 구분선, 휴지통. 우클릭하면 그 행을 먼저 선택. | `LibraryPane.tsx` | 수동 | ☑ |
+| L-11 | 목록 우클릭 메뉴: 출처 열기(URL 있을 때), 이 출처의 드롭 보기(PLO-103, L-20), 내용 복사(텍스트일 때), Markdown 내보내기, 구분선, 휴지통. 우클릭하면 그 행을 먼저 선택. | `LibraryPane.tsx` | 수동 | ☑ |
 | L-12 | `Cmd+Backspace`는 삭제 확인 시트, 확인 후에만 휴지통으로 이동. | `LibraryPane.tsx`, `DeleteConfirmationSheet.tsx` | 수동 | ☑ |
 | L-13 | 출처 열기: URL이 비어 있으면 `source_url_missing`. 버튼은 URL이 없을 때 비활성. | `commands.rs` `open_source_url` | 단위·수동 | ☑ |
 | L-14 | Markdown 내보내기: 취소하면 파일을 쓰지 않는다. 형식은 spec 7장. | `markdown.rs`, 테스트: `markdown_generation_includes_drop_fields` | 단위 | ☑ |
 | L-15 | 창 크기 때문에 줄어든 표시 너비를 `paneWidths`에 저장하지 않는다. 구분선 조절이 끝났을 때만 저장. | `MainWindow.tsx` | 수동 | ☑ |
+| L-16 | 출처 키: http(s) URL의 호스트를 소문자로, 앞의 `www.` 하나만 떼고 하위 도메인은 유지. http가 아닌 URL과 URL 없는 Drop은 앱 이름, 둘 다 없으면 출처 없음. | 스펙 1.6(PLO-103) | 단위(`SourceKeyTests`) | ☑ |
+| L-17 | 출처 필터: 고른 출처끼리 OR, 검색·Collection·기간과 AND. 출처 필터가 걸리면 출처 없는 Drop은 빠지고, 걸리지 않으면 보인다. 앱 필터는 없다. | 스펙 1.6, 2.5(PLO-103) | 단위(`LibraryTests`) | ☑ |
+| L-18 | 필터 팝오버: 출처 검색, 웹사이트·앱 묶음, 출처마다 체크박스와 개수(출처 필터를 뺀 조건 기준), 여러 개 선택, 기간 분할 컨트롤(전체/오늘/7일/30일). 문구 끝에 말줄임 없음. | 스펙 2.5(PLO-103) | 단위(`LibraryModelTests`) + 수동 | ☐ |
+| L-19 | 고른 출처마다 `출처: {source}` 칩 하나. 칩을 누르면 그 출처만 해제. 필터 지우기는 사이드바 선택을 유지. | 스펙 2.5(PLO-103) | 단위(`LibraryModelTests`) + 수동 | ☐ |
+| L-20 | `이 출처의 드롭 보기`(인스펙터 출처 칸, 우클릭 메뉴): Collection을 라이브러리로, 출처 필터를 그 출처 하나로. 기간은 유지. 출처 없는 Drop에서는 비활성. | 스펙 2.5, 2.7(PLO-103) | 단위(`LibraryModelTests`) + 수동 | ☐ |
+| L-21 | 목록 맨 위 `고정됨` 묶음: 현재 검색·Collection·필터 결과 안의 고정한 Drop만, `pinnedAt` 최근순(같으면 `id` 내림차순). 날짜 그룹에 다시 나오지 않는다(PLO-102). | spec 1.6 | 단위(`LibraryTests`) | ☑ |
+| L-22 | 사이드바 보관함의 `고정됨` Collection: 개수는 고정한 Drop 수, 고르면 태그 필터를 지우고 유형은 전체. 묶음 제목 없이 고정 시각순. | spec 2.4, 2.5 | 단위(`LibraryModelTests`) + 수동 | ☐ |
+| L-23 | 동작 버튼, 우클릭 메뉴 맨 위 항목, `Shift+Cmd+P`로 고정·고정 해제. 고정한 Drop에서는 문구가 `고정 해제`이고 동작 버튼이 눌린 상태. 고정 후 선택 유지. | spec 2.5, 2.6 | 단위(`LibraryModelTests`) + 수동 | ☐ |
+| L-24 | 고정한 행에 파란 핀 아이콘, VoiceOver는 `고정됨`을 읽는다. | spec 2.5 | 단위(접근성 라벨) + 수동(VoiceOver) | ☐ |
+| L-25 | 동작 버튼은 아이콘만 있는 38×26 pt, 순서 고정 · 출처 열기 · Markdown 내보내기 \| 휴지통(빨강, 구분선 뒤). 툴팁 `이름 (단축키)`, 버튼마다 접근성 이름. 더 보기 버튼 없음. 우클릭 메뉴 항목에 단축키 표시. | spec 2.6 | 단위(툴팁 문구) + 수동(시안 MainFeatures, FeatureDetails 3번) | ☐ |
 
 ## E. 편집
 
@@ -137,6 +150,16 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 | E-04 | 제목이 공백이면 저장하지 않고 `blankTitle` 오류. 저장 실패 상태에서는 blur가 재시도하지 않고 `다시 시도` 버튼으로만 재시도. | `useDropAutoSave.ts`, `DropDetailPane.tsx` | 단위 | ☑ |
 | E-05 | 패널을 접거나 오버레이를 열고 닫아도 편집 중인 노트·태그 초안을 잃지 않는다(편집기를 다시 만들지 않는다). | `design-system.md` | 수동 | ☑ |
 | E-06 | 편집 후 목록에 즉시 반영하되 선택은 유지한다. | `useDropActions.ts` | 수동 | ☑ |
+| E-07 | 본문 편집 시작: 동작 버튼 `편집`(고정 다음), 우클릭 메뉴 `편집`(고정 다음), `Cmd+E`. 이미지 Drop에서는 셋 다 비활성. 툴팁 `편집 (⌘E)`. | 스펙 2.5, 2.6(PLO-104) | 단위(`DropEditorTests`, `DropAction`) + 수동 | ☐ |
+| E-08 | `완료`(`Cmd+Return`)는 확인 없이 `content.md`를 덮어쓰고 `updatedAt`을 갱신한다(끝 줄바꿈 제거). 변경이 없으면 쓰지 않는다. 원본은 보관하지 않는다. | 스펙 1.3, 2.6(PLO-104) | 단위(`DropStoreTests`, `DropEditorTests`) || ☑ |
+| E-09 | 빈 본문(공백뿐 포함)이나 저장 실패이면 편집기를 연 채 입력을 유지하고 오류를 보여 준다. 빈 본문은 저장소도 `empty_text`로 거부하고 파일을 건드리지 않는다. | 스펙 1.3, 2.6(PLO-104) | 단위 || ☑ |
+| E-10 | `취소`(Escape): 변경이 없으면 바로 끝나고, 있으면 `변경 사항을 버릴까요?`를 묻는다. 변경이 있는 채로 다른 Drop을 고르거나 Collection을 바꾸면 같은 확인을 묻고 그동안 선택을 보류한다. 버리면 보류한 변경을 적용한다. | 스펙 2.6(PLO-104) | 단위(`DropEditorTests`, `LibraryModelTests`) + 수동 || ☑ |
+| E-11 | 완료 뒤 형식대로 다시 렌더링하고, 목록 미리보기와 검색에 바로 반영되며, 인스펙터 수정 시각이 바뀐다. 선택은 그 Drop에 남는다. | 스펙 2.6, 2.7(PLO-104) | 단위(`LibraryModelTests`) + 수동 || ☑ |
+| E-12 | 본문 편집 중에도 제목·노트·태그 자동 저장이 동작하고, 본문 저장과 서로의 초안·상태를 덮어쓰지 않는다. | 스펙 2.6, 2.7(PLO-104) | 단위(`DropEditorTests`) || ☑ |
+| E-13 | 편집기: 고정폭 글꼴, 줄 번호, 흐린 Markdown 기호, 유형 줄 `● 편집 중`, 아래 `● 변경됨`과 `⌘↩ 완료 · esc 취소`. 인스펙터에 원본 보관 표시가 없다. | 스펙 2.6(PLO-104) | 단위(기호 범위) + 수동(시안 MainFeaturesEdit) || ☑ |
+| E-14 | `완료`의 쓰기가 끝날 때까지 편집기는 입력을 받지 않는다. `완료` 뒤에 친 글자가 저장되지 않은 채 사라지는 일이 없다. | 스펙 2.6(PLO-104 리뷰) | 단위(`BodyEditTests.typingWhileTheSaveIsPendingIsRefused`) | ☑ |
+| E-15 | `완료`의 쓰기가 끝나기 전의 떠나기(다른 Drop, Collection, `취소`)는 확인 없이 보류된다. 성공하면 그때 적용하고, 실패하면 보류를 버리고 편집기를 텍스트·오류와 함께 열어 둔다(배경 알림만 남기지 않는다). | 스펙 2.6(PLO-104 리뷰) | 단위(`BodyEditTests.leavingDuringAPendingSave…`) | ☑ |
+| E-16 | 종료할 때 진행 중인 `완료` 쓰기를 기다리고, 변경이 남은 본문 초안이 있으면 자동 저장하지 않고 `저장`/`저장 안 함`/`취소`를 묻는다. 저장은 성공해야 종료하고, 실패하면 앱과 편집기(오류 표시)를 남긴다. 취소는 초안을 그대로 둔다. | 스펙 2.6(PLO-104 리뷰) | 단위(`BodyEditTests.quitting…`) + 수동(실제 앱 Cmd+Q) | ☐ |
 
 ## I. 입력
 
@@ -148,6 +171,12 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 | I-04 | 팝업 `Cmd+Enter` 저장(저장 중이면 무시), Escape 취소. 레거시는 `Cmd+Enter`에서 입력기 조합 여부를 검사하지 않는다(조합 중에도 동작). 웹 textarea처럼 조합 중인 글자도 노트 값에 들어 있으므로 Swift 노트도 화면에 보이는 글자(조합 중 글자 포함)를 저장한다(STA-66). | `SavePopover.tsx`, 단위: `SavePopupWindowTests.NoteEditor.savingClosesAnOpenCompositionAndKeepsItsCharacters` | 수동 | ☑ |
 | I-05 | 포커스 링은 컨트롤 모양을 따르는 둥근 링이고 레이아웃을 밀지 않는다. 컨테이너에는 링이 없다. 목록 행은 안쪽 링. | STA-38 CSS(실제 앱 미검증) | 수동 | ☑ |
 | I-06 | 제목 인라인 이름 변경: Return 확정, Escape 되돌림, 둘 다 포커스를 목록에 돌린다. | STA-38(실제 앱 미검증) | 수동 | ☑ |
+| I-07 | Save Popup 맨 위 제목 입력란에 저장할 유형의 자동 제목(윈도우 제목 → 앱 이름 → 본문 첫 줄 → 기본 제목)을 미리 채운다. 입력란을 건드리지 않고 저장하면 PLO-105 이전과 같은 제목이다. | 스펙 1.4, 3.5(PLO-105) | 단위(`SavePopupModelTests`) + 수동 | ☑ |
+| I-08 | 고치기 전에는 `mixed` Draft의 유형을 바꾸면 제목이 그 유형의 자동 제목으로 바뀌고, 고친 뒤에는 그대로다. `자동` 버튼은 입력값이 자동 제목과 다를 때만 활성이고 누르면 자동 제목으로 되돌린다. | 스펙 3.5(PLO-105) | 단위(`SavePopupModelTests`) + 수동 | ☐ |
+| I-09 | 입력란을 비우고(공백뿐 포함) 저장하면 명시한 제목 없이 보내 저장소가 자동 제목을 쓴다. 그 밖에는 앞뒤 공백을 지운 값을 명시한 제목으로 저장한다(80자 제한). 입력란 아래 문구가 자동 제목의 출처(윈도우 제목/앱 이름/본문 첫 줄/없음)와 비우면 자동 제목을 쓴다는 점을 알리고, 끝에 말줄임이 없다. | 스펙 1.4, 3.5(PLO-105) | 단위(`SavePopupModelTests`, `LocalizationTests`) + 수동 | ☑ |
+| I-10 | 제목 입력란에 포커스가 있어도 `Cmd+Enter`는 저장, Escape는 취소다. | 스펙 3.5(PLO-105) | 단위(`SavePopupWindowTests`) + 수동 | ☑ |
+| I-11 | (제거) `저장 후 고정` 체크박스는 PLO-100 수정(2026-10-19)에서 뺐다. Save Popup에 고정 옵션이 없다. | 스펙 3.5(PLO-100) | 수동 | ☐ |
+| I-12 | 제목 입력란이 들어가도 Save Popup이 내용을 자르지 않는다. 경고·태그가 없는 Draft의 최소 높이는 스펙 2.1의 값이다. | 스펙 2.1, 3.5(PLO-105) | 단위(`SavePopupWindowTests.Layout`) + 수동(시안 SavePopupTitle) | ☑ |
 
 ## T. 메뉴 막대
 
@@ -181,6 +210,23 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 | U-04 | 태그 아이콘이 `number`이고 목록 행, 인스펙터·팝업 칩, 최근 태그가 `#design`처럼 표시된다. 저장 값에는 `#`이 없다. | 스펙 1.5, 2.4, 2.5, 5장 | 단위(저장 값) + 수동 | ☐ |
 | U-05 | 빈 Library에 컬러 마크, `noDropsTitle`, `noDropsShortcutHint`, 현재 단축키 키캡(기본 ⇧ ⌘ C), `noDropsClipboardHint`가 보이고 키캡 묶음이 단축키를 하나의 접근성 이름으로 읽는다. | 스펙 2.5 | 수동 + VoiceOver | ☐ |
 | U-06 | Settings 정보 섹션에 앱 아이콘, `plopcut`, `aboutVersion`이 한 줄로 있다. Save Popup 제목 앞에 작은 마크, 출처 앞에 출처 앱 아이콘, 하단에 `popupShortcutHint`가 있다. | 스펙 3.5, 4장 | 수동(한국어·영어) | ☐ |
+
+## R. 본문 렌더링과 형식 (PLO-101)
+
+텍스트 Drop 본문의 형식 감지, Markdown·코드 렌더링, 형식 메뉴입니다. 기준은 [스펙](spec.md) 1.2, 2.6 "형식과 렌더링", 3.5입니다.
+
+| ID | 동작 | 근거 | 확인 방법 | ☐ |
+| --- | --- | --- | --- | --- |
+| R-01 | `drop.json`에 `format`·`codeLanguage`를 항상 쓴다(없으면 `null`). 키가 없거나 `format`이 모르는 값이면 자동 감지로 읽고 경고를 내지 않는다. `format`이 `code`가 아니면 `codeLanguage`는 무시한다. | 스펙 1.2 | 단위 + 픽스처(`storage-format`) | ☑ |
+| R-02 | 형식을 바꾸거나 지워도 `updatedAt`과 `content.md`는 그대로다. 제목·노트·태그·본문 수정은 여전히 `updatedAt`을 바꾼다. | 스펙 1.2 | 단위 | ☑ |
+| R-03 | 자동 감지: Terminal·iTerm·Xcode 출처는 코드(Shell/Swift), 전체가 JSON 객체·배열이면 코드(JSON), Markdown 신호가 뚜렷하면 Markdown, 나머지와 `*`·`#`이 섞인 평문은 일반 텍스트. 사용자가 고른 형식이 감지보다 먼저다. | 스펙 2.6 | 단위(`FormatDetectionTests`) | ☑ |
+| R-04 | Markdown의 제목, 문단, 굵게·기울임, 인라인 코드, 중첩 목록, 인용, 구분선, 링크, 코드 블록을 렌더링하고, 표·이미지·HTML은 원문 텍스트로 보여 준다. 이미지는 불러오지 않는다. | 스펙 2.6 | 단위(렌더 모델) + 수동 | ☐ |
+| R-05 | 코드 블록에 언어 이름, `코드 복사` 버튼(코드만 복사), 문법 하이라이팅(라이트 `github`, 다크 `github-dark`)이 있고 두 외형 모두 읽을 수 있다. | 스펙 2.6 | 단위(복사·하이라이트 색) + 수동(라이트·다크) | ☐ |
+| R-06 | 렌더링한 본문을 선택하고 복사할 수 있다. Markdown은 한 블록 안에서만 선택된다(블록 사이 선택은 알려진 제약, 스펙 2.6). | 스펙 2.6 | 수동 | ☐ |
+| R-07 | `http`·`https`·`mailto` 링크만 누를 수 있고 기본 브라우저(기존 URL 열기 경로)로 연다. 그 밖의 주소는 글자만 보인다. | 스펙 2.6 | 단위(렌더 모델, `LibraryModel.openLink`) + 수동 | ☐ |
+| R-08 | 형식 메뉴: `자동 감지 (감지 결과)`, `일반 텍스트`, `Markdown`, `코드 ▸ 언어`. 고른 값은 앱을 다시 실행해도 유지되고, `자동 감지`를 고르면 선택이 지워진다. 형식을 바꿔도 선택한 Drop과 목록 위치는 유지된다. | 스펙 2.6 | 단위(`LibraryModel`) + 수동 | ☐ |
+| R-09 | Save Popup 미리보기가 같은 방식으로 렌더링되고 형식 배지를 보여 준다. | 스펙 3.5 | 수동 | ☐ |
+| R-10 | VoiceOver가 제목(역할·단계), 목록, 코드 블록(`코드 블록, 언어`)과 `코드 복사` 버튼 이름을 읽는다. | 스펙 2.6 | 수동(VoiceOver) | ☐ |
 
 ## D. 결정이 필요한 차이와 알려진 공백
 
@@ -560,3 +606,46 @@ S·C 항목을 픽스처 **복사본**으로 다시 확인하고 항목마다 Sw
 - Save Popup: `.nonactivatingPanel`로 만들고 `NSApp.activate`를 뺐다. 팝업이 키보드를 받지만 plopcut은 활성화되지 않아 메인 창이 앞으로 오지 않고, 저장·취소 뒤 사용자가 쓰던 앱에 포커스가 남는다. 단위: `SavePopupWindowTests.Layout.thePopupDoesNotActivateTheApp`.
 - Save Popup 키: plopcut이 비활성이면 AppKit이 단축키(key equivalent)를 앱에 주지 않아 `Cmd+Enter`, Escape, 편집 메뉴(`Cmd+V` 등)가 듣지 않았다. `SavePopupPanel.sendEvent`가 처리되지 않은 명령 키와 Escape를 창의 단추 단축키로, 그다음 편집 명령(잘라내기, 복사, 붙여넣기, 전체 선택, 실행 취소, 실행 복귀)으로 보낸다. 한국어 자판처럼 라틴 문자가 없는 자판은 키 위치로 판단한다. 단위: `SavePopupWindowTests.KeyRouting`, `NoteEditor.editShortcutsReachTheNoteWithoutTheEditMenu`.
 - 실패(P-13, T-04): 선택 텍스트 캡처 실패도 메뉴 막대 실패 표시와 오류 보관만 한다. `permission_missing`만 예외로 메인 창을 연다(소유자 결정).
+
+## PLO-102: Drop 고정과 아이콘 동작 버튼
+
+- 저장 형식: `drop.json`에 `pinnedAt`을 항상 쓴다. 픽스처 `image-drop`은 고정, `example-app`은 `null`, 나머지는 키 없음. 단위: `PinTests.DropStorePinTests`(왕복, `updatedAt` 유지, 다시 고정해도 처음 시각, 고정한 상태로 저장, 예전 폴더), `CompatibilityTests`(계약 키).
+- 목록: `ListSection.make`가 `고정됨` 묶음을 날짜 그룹 앞에 둔다. 단위: `PinTests.ListSectionTests`. 선택 대체 규칙의 "첫 항목"은 화면의 첫 행(고정됨 포함).
+- 앱: `SidebarSelection.pinned`, `LibraryModel.togglePin`, `PinCommand`(`⇧⌘P`), 우클릭 메뉴 맨 위 고정/고정 해제와 단축키 표시, 동작 버튼 `DropAction`. 단위: `PinModelTests`, `PinPresentationTests`(툴팁 `이름 (단축키)`, 행 접근성 `고정됨`).
+- 실제 앱(픽스처 복사본, 라이트, 1120×720): 사이드바 `고정됨 1`, 목록 맨 위 `고정됨` 묶음과 파란 핀, 첫 행 선택, 동작 버튼 38×26 pt(스크린샷에서 측정), 고정 버튼 눌린 상태, 휴지통 빨강·구분선 뒤를 확인했다.
+- 수동 확인이 남음: 고정됨 Collection 클릭(묶음 제목 없음), 동작 버튼·우클릭 메뉴·`⇧⌘P`로 고정·고정 해제 클릭 흐름, 툴팁 표시, VoiceOver 낭독, 다크 모드, 시안(MainFeatures, FeatureDetails 3번)과 나란히 비교. 그래서 S-21~S-23, L-21은 단위로 ☑, L-22~L-25는 ☐로 둔다(PLO-103이 L-16~L-20을 먼저 써서 번호를 옮겼다).
+
+## PLO-101: 본문 렌더링과 형식 메뉴
+
+- 저장: `drop.json`에 `format`·`codeLanguage`를 더했다(R-01, R-02). 단위: `DropFormatStorageTests`(왕복, 지우기, `updatedAt`·`content.md` 유지, 예전 파일, 모르는 값), 픽스처 `storage-format`. 고정(`pinnedAt`, PLO-102)과 같은 `drop.json`에 함께 쓴다.
+- 감지: `FormatDetection`(PlopcutCore). 단위: `FormatDetectionTests`(R-03).
+- 렌더링: `BodyRenderer`(swift-markdown 0.9.0)가 Sendable 블록으로 바꾸고, `RenderedBodyView`가 그린다. 하이라이팅은 HighlighterSwift 3.1.0, 테마 `github`/`github-dark`. 단위: `BodyRendererTests`(R-04, R-07), `CodeHighlighterTests`, `FormatMenuTests`(이름, 체크, 코드 복사), `DropFormatModelTests`(형식 저장·다시 읽기·지우기·실패, 링크 스킴), `SavePopupModelTests.previewUsesTheDetectedFormat`.
+- 앱 묶음: `scripts/make-app.sh`가 의존성의 SwiftPM 리소스 묶음(`Highlighter_Highlighter.bundle`)을 `Contents/Resources`에 복사한다. 없으면 하이라이터가 시작할 때 앱이 멈춘다.
+- 실행 확인(2026-10-18, 다크, `storage-format` 복사본): 형식 버튼 `Python ▾`, 코드 블록의 언어 이름·복사 버튼·`github-dark` 색이 보였다.
+
+수동 확인이 남음: 라이트 모드 색, Markdown 요소 모양과 시안(MainFeatures, FeatureDetails 2번) 비교, 형식 메뉴 선택과 재실행 후 유지, 텍스트 선택·복사, 링크가 기본 브라우저로 열리는지, Save Popup 미리보기와 배지, VoiceOver(R-06, R-09, R-10).
+
+## PLO-105: Save Popup 제목과 저장 후 고정
+
+- 모델: `SavePopupModel.title`(고치기 전에는 `autoTitle`을 따라감), `autoTitle`(텍스트는 Draft 제목, 이미지는 `imageTitle`. 캡처가 1.4 순서로 이미 계산한 값), `canRestoreAutoTitle`, `restoreAutoTitle()`, `titleHint`. `SaveRequest.title`은 비면 `nil`. (`pinAfterSave`·`SaveRequest.pinned`는 PLO-100 수정에서 뺐다.) 단위: `SavePopupTitleTests`(I-07~I-09), `SavePopupWindowTests.TitleKeys`(I-10), `SavePopupWindowTests.Layout.theTitleAndTagRowsFitTheCompactSize`(I-12).
+- 최소 높이: 최근 태그 3개인 텍스트 Draft의 자연 높이를 재어 487(창 519)로 정했다. PLO-100 수정에서 체크박스를 빼고 빈 태그 칩 줄 자리를 두어 489(창 521)가 됐다. 한국어·영어 모두 같다. `mixed`는 유형 선택 때문에 헤더가 조금 높아 그만큼 커진다.
+- 실행 확인(2026-10-18, 라이트, 픽스처 복사본, 메뉴 막대 `클립보드 저장`): 제목 `Orca`(윈도우 제목)와 안내 문구가 미리 채워지고 `자동`은 비활성. 제목을 고치면 `자동`이 활성. 제목 입력란에 포커스를 둔 채 `저장 후 고정`을 켜고 `Cmd+Enter`로 저장하자 `Release checklist` 제목, `pinnedAt` = `createdAt`으로 저장되어 Library `고정됨` 묶음 맨 위에 선택되어 보였다. 다음 팝업에서 체크박스는 꺼져 있었고, 제목을 비우고 저장하자 자동 제목 `Orca`·고정 안 됨으로 저장됐다. 제목 입력란에서 Escape로 취소했다. 시안(SavePopupTitle)과 순서·문구가 같고, 다른 점은 `자동` 버튼이 입력란 안이 아니라 옆의 기본 버튼이고 제목 글꼴이 기본 크기다.
+
+수동 확인이 남음: 선택 텍스트 캡처(`Shift+Cmd+C`) 흐름, `mixed` Draft에서 유형을 바꿀 때 제목이 따라가는지, 다크 모드, 영어, VoiceOver(제목 입력란 이름 `드롭 제목`, `자동` 버튼 힌트). 노트에서 `Shift+Tab`으로 제목 입력란에 가는지는 확인하지 못했다(스펙에는 클릭만 적음).
+
+## PLO-100 수정 (2026-10-19)
+
+- 빈 상태 필터 칩: `LibraryListView`의 내용 영역이 창 높이를 채워, 드롭이 없거나 결과가 없을 때도 출처·기간 칩이 목록 위에 남는다. 단위 없음, 수동 확인 남음.
+- 동작 버튼: `DropActionButtonStyle`·`DropActionToggleStyle`로 시안 MainFeatures의 38×26 테두리 버튼을 그린다(스펙 2.6). 빌드만 확인, 라이트·다크 모양과 호버는 수동 확인 남음. 사용자 확인에서 시스템 `.help` 툴팁이 뜨지 않아 시안의 말풍선(`dropActionTooltip`)으로 바꿨다.
+- Save Popup: `저장 후 고정` 체크박스와 `pinAfterSave`·`SaveRequest.pinned`를 뺐다(I-11). 저장소의 `saveText`/`saveImage(pinned:)`는 남겨 두었다.
+- Save Popup 태그: 태그가 없을 때 숨긴 칩 하나로 한 줄 높이를 잡아, 첫 태그를 등록해도 창 높이가 그대로다. 최소 높이는 489(창 521). 단위: `SavePopupWindowTests.Layout.theFirstTagDoesNotGrowThePopup`, `theTitleAndTagRowsFitTheCompactSize`.
+- 출처 필터의 브라우저: `SourceKey.all`이 웹 Drop을 웹사이트와 앱 둘에 속하게 해 `Google Chrome`이 앱 묶음에 나타나고, 고르면 그 브라우저의 웹 Drop이 모두 보인다. `이 출처의 드롭 보기`는 대표 키(웹사이트)를 쓴다. 단위: `SourceKeyTests.aWebDropBelongsToItsWebsiteAndItsApp`, `SourceFilterTests.selectedSourcesCombineWithOr`, `SourceFilterModelTests`(팝오버 개수, `choosingTheBrowserShowsItsWebDrops`).
+
+## PLO-104: Drop 본문 편집
+
+- 저장: 기존 `DropUpdate.text` 경로를 그대로 쓴다(끝 줄바꿈 제거, 빈 본문 `empty_text`, `updatedAt` 갱신). 원본은 보관하지 않는다.
+- 상태: `DropEditor`가 본문 편집(편집 중 → 저장 중 → 끝 또는 실패)과 버릴지 묻는 확인을 맡고, `LibraryModel`이 선택·Collection 변경을 확인이 끝날 때까지 보류한다.
+- 단위: `DropStoreTests.UpdateTests`(덮어쓰기, 끝 줄바꿈, `updatedAt`, 빈 본문 거부), `BodyEditTests`(완료, 변경 없는 완료, 빈 본문, 실패 후 재시도, 이미지 Drop, 취소·확인·보류, 자동 저장과의 순서), `BodyEditModelTests`(목록·검색 반영, 선택·Collection 보류, 보류 뒤 목록 강조 복귀, 검색 중 선택 유지), `BodyEditPresentationTests`(툴팁 `편집 (⌘E)`, 단축키 충돌, 흐린 기호 범위).
+- 실제 앱(2026-10-18, 다크, 픽스처 복사본, 1311×720): 이미지 Drop에서 편집 버튼 비활성. 편집 버튼과 메뉴 `편집 > 편집`(⌘E 표시)으로 시작하면 편집기에 포커스, 유형 줄 `● 편집 중`, 안내·`취소`·`완료` 줄, 줄 번호와 흐린 `##`·`-`·`**`·`` ` ``, 입력 뒤 `● 변경됨`, `⌘↩ 완료 · esc 취소`를 확인했다. `Cmd+Return`으로 `content.md`가 바뀌고 `updatedAt`이 갱신되었으며 원본 파일은 생기지 않았다. 본문은 Markdown으로 다시 렌더링되고 목록 미리보기가 바뀌었다. 변경 없이 Escape면 바로 끝났다. 변경한 채 다른 행을 고르면 `변경 사항을 버릴까요?` 시트가 뜨고 목록 강조가 편집 중인 행에 남았으며, `버리기`면 쓰지 않고 고른 행으로 옮겨 갔다. 본문을 모두 지우고 완료하면 편집기가 열린 채 `본문을 비울 수 없습니다.`가 보이고 파일은 그대로였다. 시안(MainFeaturesEdit)과 배치(안내·버튼 줄, 줄 번호 칸, 아래 상태 줄)가 같다.
+- 실제 앱에서 고친 것: 보류한 선택 뒤 목록이 클릭한 행을 계속 강조했다(바인딩 값이 바뀌지 않아 테이블이 되돌아오지 않음). `LibraryModel.listSelection`·`sidebarSelection`이 클릭한 값을 한 턴 보여 준 뒤 원래 값으로 돌려준다. 또 macOS 14부터 스크롤 뷰가 자르지 않아 줄 번호 칸의 구분선이 창 전체 높이로 그려졌다(`clipsToBounds = true`).
+- 수동 확인이 남음: 실제 키보드의 `Cmd+E`(이 환경의 합성 키 입력은 메뉴 단축키에 닿지 않아 메뉴 항목 클릭으로 확인), 라이트 모드, 창이 키 창일 때 `완료` 강조색, 한국어 입력기 조합 중 입력, VoiceOver. 그래서 E-07은 ☐로 둔다.

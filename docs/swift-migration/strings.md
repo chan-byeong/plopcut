@@ -4,7 +4,13 @@ Linear: STA-39
 
 레거시 `src/i18n/i18n.tsx`에서 그대로 추출한 사용자 문구입니다. 키는 [스펙](spec.md)과 [체크리스트](behavior-checklist.md)가 참조하는 이름입니다. 시스템 언어가 `ko`로 시작하면 한국어, 아니면 영어를 씁니다. 두 언어의 키 집합은 같습니다(158개). `shortcutFormatHint`만 구현 용어(Tauri)를 말하므로 Swift 구현의 단축키 형식에 맞게 고쳐 씁니다(체크리스트 D-12). `{count}` 같은 자리 표시자는 치환합니다.
 
-Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA-72, 로고 접근성 라벨), `settingsFailure`·`deleteFailed`·`dropNotFound`·`exportFailed`(STA-78, 알려진 오류 코드의 문구), `dropCountOne`(영어 단수형), `dropTitle`(제목 입력란 접근성 라벨), `ok`(알림 단추), `unreadableDrops`(읽지 못한 드롭 경고, STA-80), `showLogInFinder`(Settings의 로그 파일 보기 단추, STA-80), `menuBarSaved`·`menuBarFailed`(메뉴 막대 저장 피드백의 접근성 이름·툴팁, PLO-93), `noDropsTitle`·`noDropsShortcutHint`·`noDropsClipboardHint`(빈 Library, 레거시 `noDrops`를 대체), `aboutVersion`(정보 섹션, 레거시 `appVersion`을 대체), `popupShortcutHint`(Save Popup 단축키 힌트, PLO-94).
+Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA-72, 로고 접근성 라벨), `settingsFailure`·`deleteFailed`·`dropNotFound`·`exportFailed`(STA-78, 알려진 오류 코드의 문구), `dropCountOne`(영어 단수형), `dropTitle`(제목 입력란 접근성 라벨), `ok`(알림 단추), `unreadableDrops`(읽지 못한 드롭 경고, STA-80), `showLogInFinder`(Settings의 로그 파일 보기 단추, STA-80), `menuBarSaved`·`menuBarFailed`(메뉴 막대 저장 피드백의 접근성 이름·툴팁, PLO-93), `noDropsTitle`·`noDropsShortcutHint`·`noDropsClipboardHint`(빈 Library, 레거시 `noDrops`를 대체), `aboutVersion`(정보 섹션, 레거시 `appVersion`을 대체), `popupShortcutHint`(Save Popup 단축키 힌트, PLO-94), `pin`·`unpin`·`pinned`(Drop 고정 동작, 고정됨 Collection·묶음 제목·행 접근성, PLO-102).
+
+PLO-101에서 추가한 키(본문 렌더링과 형식 메뉴): `formatMenu`, `formatMenuHelp`, `formatAutomatic`, `formatPlain`, `formatMarkdown`, `formatCode`, `codeBlock`, `copyCode`, `markdownList`, `markdownQuote`.
+
+PLO-105에서 추가한 키(Save Popup 제목): `titleField`, `autoTitle`, `autoTitleHelp`, `titleHintWindow`, `titleHintApp`, `titleHintFirstLine`, `titleHintDefault`. 같이 넣은 `pinAfterSave`는 PLO-100 수정에서 체크박스와 함께 뺐습니다.
+
+PLO-104에서 추가한 키(본문 편집): `editBody`, `editingBody`, `bodyChanged`, `done`, `editBodyHint`, `editBodyShortcuts`, `editBodyField`, `emptyBody`, `discardChangesTitle`, `discardChangesBody`, `discardChanges`, `keepEditing`, `quitBodyDraftTitle`, `quitBodyDraftBody`, `dontSave`(종료할 때 본문 초안 저장 여부, 리뷰 수정).
 
 | 키 | en | ko |
 | --- | --- | --- |
@@ -40,6 +46,31 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `allDrops` | All drops | 모든 드롭 |
 | `textDrops` | Text drops | 텍스트 드롭 |
 | `imageDrops` | Image drops | 이미지 드롭 |
+| `formatMenu` | Format: {format} | 형식: {format} |
+| `formatMenuHelp` | Change how this drop is shown | 이 드롭을 보여 주는 형식 바꾸기 |
+| `formatAutomatic` | Automatic ({format}) | 자동 감지 ({format}) |
+| `formatPlain` | Plain Text | 일반 텍스트 |
+| `formatMarkdown` | Markdown | Markdown |
+| `formatCode` | Code | 코드 |
+| `codeBlock` | Code block, {language} | 코드 블록, {language} |
+| `copyCode` | Copy code | 코드 복사 |
+| `markdownList` | List | 목록 |
+| `markdownQuote` | Quote | 인용 |
+| `editBody` | Edit | 편집 |
+| `editingBody` | Editing | 편집 중 |
+| `bodyChanged` | Changed | 변경됨 |
+| `done` | Done | 완료 |
+| `editBodyHint` | Edit the original text. Done saves it to content.md. | 원문을 직접 고칩니다. 완료하면 content.md에 저장합니다. |
+| `editBodyShortcuts` | ⌘↩ Done · esc Cancel | ⌘↩ 완료 · esc 취소 |
+| `editBodyField` | Edit drop content | 드롭 내용 편집 |
+| `emptyBody` | The content can't be empty. | 본문을 비울 수 없습니다. |
+| `discardChangesTitle` | Discard changes? | 변경 사항을 버릴까요? |
+| `discardChangesBody` | The changes to this drop's content will be lost. | 이 드롭 본문에서 고친 내용이 사라집니다. |
+| `discardChanges` | Discard | 버리기 |
+| `keepEditing` | Keep Editing | 계속 편집 |
+| `quitBodyDraftTitle` | Save the changes to this drop's content before quitting? | 종료하기 전에 이 드롭 본문의 변경 사항을 저장할까요? |
+| `quitBodyDraftBody` | If you don't save, the changes will be lost. | 저장하지 않으면 고친 내용이 사라집니다. |
+| `dontSave` | Don't Save | 저장 안 함 |
 | `openFilters` | Open filters | 필터 열기 |
 | `clearFilters` | Clear filters | 필터 지우기 |
 | `activeFilters` | Active filters | 적용된 필터 |
@@ -47,13 +78,21 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `dropCount` | {count} drops | {count}개의 드롭 |
 | `dropCountOne` | 1 drop | 1개의 드롭 |
 | `filterTag` | Filter by tag | 태그로 필터 |
-| `filterApp` | Filter by app | 앱으로 필터 |
 | `filterDate` | Filter by date | 날짜로 필터 |
 | `allTags` | All tags | 모든 태그 |
-| `allApps` | All apps | 모든 앱 |
 | `anyTime` | Any time | 전체 기간 |
 | `last7` | Last 7 days | 최근 7일 |
 | `last30` | Last 30 days | 최근 30일 |
+| `searchSources` | Search sources | 출처 검색 |
+| `sourceWebsites` | Websites | 웹사이트 |
+| `sourceApps` | Apps | 앱 |
+| `noMatchingSources` | No matching sources | 일치하는 출처가 없습니다 |
+| `sourceChip` | Source: {source} | 출처: {source} |
+| `showSourceDrops` | Show Drops from This Source | 이 출처의 드롭 보기 |
+| `period` | Period | 기간 |
+| `periodAll` | All | 전체 |
+| `period7` | 7 days | 7일 |
+| `period30` | 30 days | 30일 |
 | `today` | Today | 오늘 |
 | `yesterday` | Yesterday | 어제 |
 | `previous7` | Previous 7 Days | 지난 7일 |
@@ -190,6 +229,16 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 | `deleteFailed` | The drop could not be moved to the Trash. It is still in the Library. | 드롭을 휴지통으로 이동하지 못했습니다. 드롭은 라이브러리에 그대로 있습니다. |
 | `dropNotFound` | This drop no longer exists. Refresh the library. | 이 드롭이 더 이상 없습니다. 라이브러리를 새로고침하세요. |
 | `exportFailed` | The Markdown file could not be written. Choose another location. | Markdown 파일을 쓰지 못했습니다. 다른 위치를 선택하세요. |
+| `pin` | Pin | 고정 |
+| `unpin` | Unpin | 고정 해제 |
+| `pinned` | Pinned | 고정됨 |
+| `titleField` | Title | 제목 |
+| `autoTitle` | Auto | 자동 |
+| `autoTitleHelp` | Restore the automatic title | 자동 제목으로 되돌리기 |
+| `titleHintWindow` | Taken from the window title. Leave empty to use the automatic title. | 윈도우 제목에서 가져왔습니다. 비우면 자동 제목을 씁니다. |
+| `titleHintApp` | Taken from the app name. Leave empty to use the automatic title. | 앱 이름에서 가져왔습니다. 비우면 자동 제목을 씁니다. |
+| `titleHintFirstLine` | Taken from the first line of the text. Leave empty to use the automatic title. | 본문 첫 줄에서 가져왔습니다. 비우면 자동 제목을 씁니다. |
+| `titleHintDefault` | Nothing to take a title from, so this is the default. Leave empty to use the automatic title. | 가져올 곳이 없어 기본 제목입니다. 비우면 자동 제목을 씁니다. |
 
 ## 문구 점검 기록 (STA-80)
 
@@ -204,3 +253,11 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 
 - 메뉴 항목, 플레이스홀더, 진행 상태 문구 끝의 `...`/`…`를 모두 지웠다: `saveClipboard`, `searchPlaceholder`, `loadingDrops`, `saving`, `noNote`, `tagPlaceholder`, `shortcutRecording`, `loadingPermissions`, `optionalNote`, `capturing`. `noDropsClipboardHint` 안의 메뉴 이름도 새 표기(`Save Clipboard`, `클립보드 저장`)로 맞췄다.
 - 문구에 `...`/`…`가 없는지는 `LocalizationTests.noPhraseUsesAnEllipsis`가 검사한다.
+
+## 출처 필터 (PLO-103)
+
+- 앱 필터를 출처 필터로 바꾸면서 쓰지 않게 된 `filterApp`, `allApps`를 지웠다.
+- 추가: `searchSources`(팝오버 출처 검색), `sourceWebsites`·`sourceApps`(출처 묶음 제목), `noMatchingSources`(검색 결과 없음),
+  `sourceChip`(출처 칩), `showSourceDrops`(인스펙터 버튼과 우클릭 메뉴), `period`(기간 제목과 분할 컨트롤 접근성 이름),
+  `periodAll`·`period7`·`period30`(분할 컨트롤의 짧은 문구, `오늘`은 `today`를 쓴다). 기간 칩은 예전처럼 `anyTime`/`last7`/`last30`을 쓴다.
+- 팝오버의 `출처` 제목은 인스펙터와 같은 `source` 키를 쓴다.

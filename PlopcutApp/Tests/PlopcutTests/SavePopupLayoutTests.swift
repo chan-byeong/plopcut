@@ -55,6 +55,29 @@ extension SavePopupWindowTests {
             #expect(contentHeight(window) < 560)
         }
 
+        // I-12: the title field (PLO-105) and the empty tag row (PLO-100) fit the compact size: 489 below the title bar
+        // (spec 2.1) holds a plain text or image draft with three recent tags, and nothing in it scrolls.
+        @Test(arguments: [DropType.text, .image, .mixed])
+        func theTitleAndTagRowsFitTheCompactSize(type: DropType) async throws {
+            #expect(SavePopupView.contentSize == CGSize(width: 430, height: 489))
+            let screen = NSRect(x: 0, y: 0, width: 1600, height: 1200)
+            let controller = SavePopupWindowController(visibleFrame: { _ in screen })
+            var draft = try Self.fullDraft(type)
+            draft.warnings = []
+            let window = try await show(model(draft), in: controller)
+            defer { controller.close() }
+            let host = try #require(window.contentView)
+            let compact = SavePopupView.contentSize.height + host.safeAreaInsets.top
+            if type == .mixed {
+                // The type picker makes the header a little taller, so a mixed draft grows past the compact size.
+                #expect(contentHeight(window) > compact)
+            } else {
+                #expect(contentHeight(window) == compact)
+            }
+            #expect(host.fittingSize.height <= contentHeight(window))
+            #expect(!Self.scrollViews(in: host).contains { $0.documentView.map { $0.frame.height > $0.visibleRect.height + 1 } ?? false })
+        }
+
         @Test(arguments: [DropType.text, .image, .mixed])
         func extraRowsMakeThePopupTallerInsteadOfCuttingItOff(type: DropType) async throws {
             // A fixed, roomy screen: on a small real screen (CI runners) the window is moved to stay on it.
@@ -71,6 +94,22 @@ extension SavePopupWindowTests {
             #expect(window.frame.maxY == top)
             // The window is as tall as the content asks for, so nothing is cut off.
             #expect(contentHeight(window) == (window.contentView?.fittingSize.height ?? 0))
+        }
+
+        // PLO-100: the empty tag list keeps one chip row, so the first tag does not move the content below it.
+        @Test(arguments: [DropType.text, .image, .mixed])
+        func theFirstTagDoesNotGrowThePopup(type: DropType) async throws {
+            let screen = NSRect(x: 0, y: 0, width: 1600, height: 1200)
+            let controller = SavePopupWindowController(visibleFrame: { _ in screen })
+            // The warnings make the content taller than the compact minimum, so its own height decides the window's.
+            let popup = model(try Self.fullDraft(type))
+            let window = try await show(popup, in: controller)
+            defer { controller.close() }
+            let before = contentHeight(window)
+            #expect(before > SavePopupView.contentSize.height + (window.contentView?.safeAreaInsets.top ?? 0))
+            addTags(1, to: popup)
+            await settle()
+            #expect(contentHeight(window) == before)
         }
 
         @Test(arguments: [DropType.text, .image, .mixed])

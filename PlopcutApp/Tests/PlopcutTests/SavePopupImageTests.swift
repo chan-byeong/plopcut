@@ -15,7 +15,7 @@ import Testing
             save: { request in
                 if let fail { throw fail }
                 captured.request = request
-                return Drop(id: "d", type: request.imagePNG == nil ? .text : .image, title: request.title,
+                return Drop(id: "d", type: request.imagePNG == nil ? .text : .image, title: request.title ?? "",
                             source: request.source, tags: request.tags, createdAt: "t", updatedAt: "t")
             },
             onSaved: { _ in }, onCancel: {})

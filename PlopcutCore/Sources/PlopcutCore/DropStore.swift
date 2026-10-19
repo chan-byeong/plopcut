@@ -12,16 +12,35 @@ public struct SystemTrashMover: TrashMover {
     }
 }
 
+/// A change to a drop's format choice (PLO-101).
+public enum FormatUpdate: Equatable, Sendable {
+    /// Clear the choice so the drop goes back to detection.
+    case automatic
+    /// Store a choice. `codeLanguage` is kept only for `.code`.
+    case set(DropFormat, codeLanguage: String?)
+}
+
 /// Fields to change on an existing drop. `nil` leaves the field as it is.
 public struct DropUpdate: Sendable {
     public var title: String?
     public var tags: [String]?
     public var note: String?
     public var text: String?
+    /// Not a content edit: changing only the format keeps `updatedAt` (spec 1.2, PLO-101).
+    public var format: FormatUpdate?
+    /// `true` pins (keeping an earlier pin time), `false` unpins. Pinning alone leaves `updatedAt` as it is (spec 1.2).
+    public var pinned: Bool?
 
-    public init(title: String? = nil, tags: [String]? = nil, note: String? = nil, text: String? = nil) {
+    public init(
+        title: String? = nil, tags: [String]? = nil, note: String? = nil, text: String? = nil,
+        format: FormatUpdate? = nil, pinned: Bool? = nil
+    ) {
         self.title = title; self.tags = tags; self.note = note; self.text = text
+        self.format = format; self.pinned = pinned
     }
+
+    /// Whether the change edits the drop's content, which refreshes `updatedAt`.
+    var editsContent: Bool { title != nil || tags != nil || note != nil || text != nil }
 }
 
 /// Slots written by concurrent scan workers, one per folder, so results keep directory order.
@@ -119,7 +138,8 @@ public struct DropStore: Sendable {
 
         var drop = Drop(
             id: meta.id, type: meta.type, title: meta.title, source: meta.source, tags: meta.tags,
-            createdAt: meta.createdAt, updatedAt: meta.updatedAt)
+            createdAt: meta.createdAt, updatedAt: meta.updatedAt, format: meta.format, codeLanguage: meta.codeLanguage,
+            pinnedAt: meta.pinnedAt)
 
         switch meta.type {
         case .text:
@@ -157,33 +177,33 @@ public struct DropStore: Sendable {
     // MARK: Save
 
     public func saveText(
-        _ text: String, title: String?, source: DropSource, tags: [String], note: String?
+        _ text: String, title: String?, source: DropSource, tags: [String], note: String?, pinned: Bool = false
     ) throws -> Drop {
         let body = Self.trimTrailingNewlines(text)
         guard body.trimmedNonEmpty != nil else { throw PlopcutError("empty_text") }
         let resolved = Naming.inferTitle(
             explicit: title, windowTitle: source.windowTitle, appName: source.appName, text: body)
-        return try create(type: .text, title: resolved, source: source, tags: tags, note: note) { folder in
+        return try create(type: .text, title: resolved, source: source, tags: tags, note: note, pinned: pinned) { folder in
             try write(Data(body.utf8), to: folder.appendingPathComponent("content.md"))
             return nil
         }
     }
 
     public func saveImage(
-        _ png: Data, title: String?, source: DropSource, tags: [String], note: String?
+        _ png: Data, title: String?, source: DropSource, tags: [String], note: String?, pinned: Bool = false
     ) throws -> Drop {
         guard !png.isEmpty else { throw PlopcutError("empty_image") }
         guard png.starts(with: [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]) else { throw PlopcutError("invalid_image") }
         let resolved = Naming.inferTitle(
             explicit: title, windowTitle: source.windowTitle, appName: source.appName, fallback: "Image Drop")
-        return try create(type: .image, title: resolved, source: source, tags: tags, note: note) { folder in
+        return try create(type: .image, title: resolved, source: source, tags: tags, note: note, pinned: pinned) { folder in
             try write(png, to: folder.appendingPathComponent("image.png"))
             return "image.png"
         }
     }
 
     private func create(
-        type: DropType, title: String, source: DropSource, tags: [String], note: String?,
+        type: DropType, title: String, source: DropSource, tags: [String], note: String?, pinned: Bool,
         writeContent: (URL) throws -> String?
     ) throws -> Drop {
         let now = clock()
@@ -214,7 +234,7 @@ public struct DropStore: Sendable {
             let stamp = Timestamp.format(now)
             let meta = DropMetadata(
                 id: id, type: type, title: title, imagePath: imagePath, source: source,
-                tags: Tags.normalize(tags), createdAt: stamp, updatedAt: stamp)
+                tags: Tags.normalize(tags), createdAt: stamp, updatedAt: stamp, pinnedAt: pinned ? stamp : nil)
             try writeMetadata(meta, in: folder)
             return try readFolder(folder).0
         } catch {
@@ -249,7 +269,17 @@ public struct DropStore: Sendable {
         if let tags = change.tags { meta.tags = Tags.normalize(tags) }
         // A legacy image drop may omit `imagePath`; rewrite it with the default it was read with (S-01, S-20).
         if meta.type == .image, meta.imagePath == nil { meta.imagePath = "image.png" }
-        meta.updatedAt = Timestamp.format(clock())
+        switch change.format {
+        case .automatic: meta.setFormat(nil, codeLanguage: nil)
+        case .set(let format, let language): meta.setFormat(format, codeLanguage: language)
+        case nil: break
+        }
+        switch change.pinned {
+        case true?: if meta.pinnedAt == nil { meta.pinnedAt = Timestamp.format(clock()) }
+        case false?: meta.pinnedAt = nil
+        case nil: break
+        }
+        if change.editsContent { meta.updatedAt = Timestamp.format(clock()) }
 
         do {
             if let note = change.note { try write(Data(note.utf8), to: folder.appendingPathComponent("note.md")) }

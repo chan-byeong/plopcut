@@ -2,12 +2,12 @@ import AppKit
 import SwiftUI
 import PlopcutCore
 
-/// The Save Popup content (spec 3.5): preview, source, note, tags, Save and Cancel.
+/// The Save Popup content (spec 3.5): title, preview, source, note, tags, Save and Cancel.
 struct SavePopupView: View {
     /// The content below the window's title bar for a draft without warnings, tag chips or many recent tags.
     /// Content that needs more height (warnings, tag chips, recent tags, an error) makes the window taller instead
     /// of being cut off (STA-67), up to `maxHeight`; past that the fields scroll and the buttons stay at the bottom.
-    static let contentSize = CGSize(width: 430, height: 390)
+    static let contentSize = CGSize(width: 430, height: 489)
     private static let previewHeight: CGFloat = 96
     /// About two lines of body text: the popup note is for a quick remark.
     private static let noteHeight: CGFloat = 52
@@ -16,6 +16,7 @@ struct SavePopupView: View {
     /// The tallest the content may get: the screen's visible height minus the title bar.
     var maxHeight: CGFloat = .infinity
     @FocusState private var tagFocused: Bool
+    @FocusState private var titleFocused: Bool
     @State private var noteFocused = false
     @State private var noteControl = PopupNoteEditorControl()
 
@@ -41,6 +42,7 @@ struct SavePopupView: View {
     private var fields: some View {
         VStack(alignment: .leading, spacing: Spacing.m) {
             header
+            titleField
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 preview
                 source
@@ -63,6 +65,26 @@ struct SavePopupView: View {
         }
     }
 
+    /// The title, prefilled with the automatic one; `Auto` puts it back (spec 3.5, PLO-105).
+    private var titleField: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            Text(L10n.t("titleField")).font(.callout.weight(.semibold)).accessibilityHidden(true)
+            HStack(spacing: Spacing.s) {
+                TextField(L10n.t("titleField"), text: $model.title)
+                    .textFieldStyle(.roundedBorder)
+                    .accessibilityLabel(L10n.t("dropTitle"))
+                    .onChange(of: titleFocused) { _, _ in CompositionMonitor.shared.reset() }
+                    .focused($titleFocused)
+                Button(L10n.t("autoTitle")) { model.restoreAutoTitle() }
+                    .help(L10n.t("autoTitleHelp"))
+                    .accessibilityHint(L10n.t("autoTitleHelp"))
+                    .disabled(!model.canRestoreAutoTitle)
+            }
+            Text(model.titleHint).font(.caption).foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
     private var typePicker: some View {
         Picker(L10n.t("chooseType"), selection: $model.selectedType) {
             Text(L10n.t("text")).tag(DropType.text)
@@ -79,12 +101,14 @@ struct SavePopupView: View {
                 .accessibilityLabel(L10n.t("image"))
         } else {
             ScrollView {
-                Text(model.draft.text ?? "")
-                    .font(.body).frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled).padding(Spacing.s)
+                // The same rendering as the Library body; links do not open from the popup (spec 3.5).
+                RenderedBodyView(text: model.draft.text ?? "", format: model.previewFormat, openLink: { _ in })
+                    .frame(maxWidth: .infinity, alignment: .leading).padding(Spacing.s)
             }
             .slimScrollers()
             .frame(height: Self.previewHeight)
             .contentWell()
+            .overlay(alignment: .topTrailing) { FormatBadge(format: model.previewFormat).padding(Spacing.xs) }
         }
     }
 
@@ -138,7 +162,7 @@ struct SavePopupView: View {
     private var tagField: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
             Text(L10n.t("tags")).font(.callout.weight(.semibold)).accessibilityHidden(true)
-            TagEntryField(model: model, focused: $tagFocused)
+            TagEntryField(model: model, focused: $tagFocused, reservesChipRow: true)
             let suggestions = model.recentTags.filter { !model.tags.contains($0) }
             if !suggestions.isEmpty {
                 VStack(alignment: .leading, spacing: Spacing.xs) {

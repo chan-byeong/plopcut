@@ -107,7 +107,10 @@ private func json(_ url: URL) throws -> [String: Any] {
         #expect(try String(contentsOf: folder.appendingPathComponent("content.md"), encoding: .utf8) == "  hello\nworld ")
         #expect(try String(contentsOf: folder.appendingPathComponent("note.md"), encoding: .utf8) == "")
         let meta = try json(folder.appendingPathComponent("drop.json"))
-        #expect(Set(meta.keys) == ["id", "type", "title", "text", "imagePath", "source", "note", "tags", "createdAt", "updatedAt"])
+        #expect(Set(meta.keys) == [
+            "id", "type", "title", "text", "imagePath", "source", "note", "tags", "createdAt", "updatedAt",
+            "format", "codeLanguage", "pinnedAt",
+        ])
         #expect(meta["text"] is NSNull && meta["note"] is NSNull && meta["imagePath"] is NSNull)
         let source = try #require(meta["source"] as? [String: Any])
         #expect(Set(source.keys) == ["appName", "windowTitle", "url", "filePath"])
@@ -190,6 +193,32 @@ private func json(_ url: URL) throws -> [String: Any] {
         #expect(updated.createdAt == drop.createdAt)
         #expect(updated.updatedAt > drop.updatedAt)
         #expect(try store.scan().drops == [updated])
+    }
+
+    // E-08: a content edit overwrites content.md through `DropUpdate.text`, trims trailing newlines, refreshes
+    // `updatedAt`, and leaves the other fields and the format choice alone (PLO-104).
+    @Test func contentEditOverwritesContentAndRefreshesUpdatedAt() throws {
+        let (store, drop, folder) = try seeded()
+        _ = try store.update(id: drop.id, DropUpdate(format: .set(.markdown, codeLanguage: nil), pinned: true))
+        let edited = try store.update(id: drop.id, DropUpdate(text: "# Fixed\n\nline two\r\n\n"))
+        #expect(try String(contentsOf: folder.appendingPathComponent("content.md"), encoding: .utf8) == "# Fixed\n\nline two")
+        #expect(edited.text == "# Fixed\n\nline two")
+        #expect(edited.updatedAt == Timestamp.format(sampleDate.addingTimeInterval(60)))
+        #expect(edited.title == "T" && edited.note == "old" && edited.tags == ["a"])
+        #expect(edited.format == .markdown && edited.isPinned)
+        #expect(!FileManager.default.fileExists(atPath: folder.appendingPathComponent("content.md.orig").path))
+        #expect(Set(try FileManager.default.contentsOfDirectory(atPath: folder.path)) == ["drop.json", "content.md", "note.md"])
+    }
+
+    // E-09: an empty or whitespace-only body is refused and no file changes.
+    @Test func emptyContentIsRefusedAndLeavesFilesUntouched() throws {
+        let (store, drop, folder) = try seeded()
+        let meta = try Data(contentsOf: folder.appendingPathComponent("drop.json"))
+        for blank in ["", " \n\t", "\n\r\n"] {
+            #expect(expectCode("empty_text") { try store.update(id: drop.id, DropUpdate(text: blank)) })
+        }
+        #expect(try Data(contentsOf: folder.appendingPathComponent("drop.json")) == meta)
+        #expect(try String(contentsOf: folder.appendingPathComponent("content.md"), encoding: .utf8) == "body")
     }
 
     @Test func blankTitleLeavesFilesUntouched() throws {

@@ -9,7 +9,7 @@ import Testing
         type: .text, title: "Ideas", text: "hello", source: DropSource(appName: "Notes", windowTitle: "Ideas"))
 
     private nonisolated static func drop(_ request: SaveRequest) -> Drop {
-        Drop(id: "d1", type: .text, title: request.title, text: request.text, source: request.source,
+        Drop(id: "d1", type: .text, title: request.title ?? "", text: request.text, source: request.source,
              note: request.note, tags: request.tags, createdAt: "t", updatedAt: "t")
     }
 
@@ -19,6 +19,17 @@ import Testing
         log: EventLogging = NullEventLog()
     ) -> SavePopupModel {
         SavePopupModel(draft: draft, recentTags: recent, save: save, onSaved: saved, onCancel: cancelled, log: log)
+    }
+
+    // R-09: the preview renders with the detected format, the same rules as the Library (spec 3.5).
+    @Test func previewUsesTheDetectedFormat() {
+        func model(_ text: String, app: String?) -> SavePopupModel {
+            SavePopupModel(draft: CaptureDraft(type: .text, title: "t", text: text, source: DropSource(appName: app)),
+                           recentTags: [], save: { Self.drop($0) }, onSaved: { _ in }, onCancel: {}, log: NullEventLog())
+        }
+        #expect(model("ls -la", app: "Terminal").previewFormat == .code(language: "shell"))
+        #expect(model("# Title\n- item", app: "Notes").previewFormat == .markdown)
+        #expect(model("hello", app: "Notes").previewFormat == .plain)
     }
 
     // STA-84: a save failure shown in the popup is logged by code only.

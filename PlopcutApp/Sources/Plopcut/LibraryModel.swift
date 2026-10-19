@@ -6,7 +6,19 @@ import UniformTypeIdentifiers
 
 /// What the sidebar has selected. Exactly one row is selected at a time (spec 2.4).
 enum SidebarSelection: Hashable {
-    case all, text, image, tag(String), settings
+    case all, text, image, pinned, tag(String), settings
+}
+
+/// A row of the filter popover's source list (spec 2.5, PLO-103).
+struct SourceCount: Equatable {
+    let key: SourceKey
+    let count: Int
+}
+
+/// The filter popover's source list, websites before apps.
+struct SourceGroups: Equatable {
+    var websites: [SourceCount] = []
+    var apps: [SourceCount] = []
 }
 
 @MainActor @Observable
@@ -14,21 +26,60 @@ final class LibraryModel {
     private(set) var drops: [Drop] = []
     /// Derived from `drops` and the filter inputs when they change, not on every view update (5,000-drop library, STA-80).
     private(set) var filtered: [Drop] = []
-    private(set) var groups: [(group: DateGroup, drops: [Drop])] = []
+    /// The Pinned section first, then the date groups (spec 1.6).
+    private(set) var sections: [(section: ListSection, drops: [Drop])] = []
     private(set) var allTags: [String] = []
-    private(set) var allApps: [String] = []
     private var typeCounts: (text: Int, image: Int) = (0, 0)
+    private var pinnedCount = 0
     private var tagCounts: [String: Int] = [:]
     private var searchIndex = SearchIndex()
     private(set) var warnings: [ScanWarning] = []
     private(set) var isLoading = false
     private(set) var loadError: String?
 
-    var collection: SidebarSelection = .all { didSet { if collection != oldValue { collectionChanged() } } }
+    /// The sidebar row. Switching away from unsaved content edits waits for "Discard changes?" (spec 2.6, E-10).
+    var collection: SidebarSelection {
+        get { currentCollection }
+        set {
+            guard newValue != currentCollection else { return }
+            editor.requestLeave { [weak self] in self?.currentCollection = newValue }
+            if currentCollection != newValue { echo(\.shownCollection, newValue) }
+        }
+    }
+    /// What the sidebar shows as selected. Equal to `collection` except for one turn after a held switch.
+    var sidebarSelection: SidebarSelection {
+        get { shownCollection ?? collection }
+        set { collection = newValue }
+    }
+    private var shownCollection: SidebarSelection?
+    private var currentCollection: SidebarSelection = .all { didSet { if currentCollection != oldValue { collectionChanged() } } }
     var search = "" { didSet { reselect() } }
-    var app: String? { didSet { reselect() } }
+    /// The selected sources; empty means no source filter (spec 1.6, PLO-103).
+    var sources: Set<SourceKey> = [] { didSet { if sources != oldValue { reselect() } } }
     var dateRange: DateRange = .all { didSet { reselect() } }
-    var selectedID: String? { didSet { editor.show(selectedDrop) } }
+    /// The selected drop. Picking another one away from unsaved content edits waits for "Discard changes?" (E-10).
+    var selectedID: String? {
+        get { currentSelection }
+        set {
+            guard newValue != currentSelection else { return }
+            editor.requestLeave { [weak self] in self?.currentSelection = newValue }
+            if currentSelection != newValue { echo(\.shownSelection, newValue) }
+        }
+    }
+    /// What the list shows as selected. Equal to `selectedID` except for one turn after a held move.
+    var listSelection: String? {
+        get { shownSelection ?? currentSelection }
+        set { selectedID = newValue }
+    }
+    private var shownSelection: String??
+
+    /// A held move leaves the clicked row highlighted, because the bound value never changed. Showing the clicked value
+    /// for one turn and then the kept one gives the list a real change to follow back (E-10).
+    private func echo<Value>(_ shown: ReferenceWritableKeyPath<LibraryModel, Value?>, _ value: Value) {
+        self[keyPath: shown] = value
+        Task { @MainActor [weak self] in self?[keyPath: shown] = nil }
+    }
+    private var currentSelection: String? { didSet { editor.show(selectedDrop) } }
 
     var sidebarVisible = true
     /// The user's choice for the inspector beside the body. Narrow windows show it as an overlay instead (spec 2.2).
@@ -42,6 +93,8 @@ final class LibraryModel {
 
     private let settings: SettingsStore?
     private let trash: TrashMover
+    /// The time stamped on saved drops; tests hold it to interleave writes.
+    private let clock: @Sendable () -> Date
     /// Edits of the selected drop live here, not in the views, so toggling the inspector never loses a draft (E-05).
     private(set) var editor: DropEditor!
     /// One-line confirmation (trash, export) shown briefly; `alertMessage` is an error the user must dismiss.
@@ -58,16 +111,17 @@ final class LibraryModel {
     init(
         storageRoot: @escaping @Sendable () throws -> URL = LibraryModel.defaultStorageRoot,
         settings: SettingsStore? = nil, trash: TrashMover = SystemTrashMover(),
+        clock: @escaping @Sendable () -> Date = { Date() },
         openURL: @escaping (URL) -> Void = { NSWorkspace.shared.open($0) }
     ) {
         self.openURL = openURL
         self.storageRoot = storageRoot
         self.settings = settings
         self.trash = trash
+        self.clock = clock
         paneWidths = (try? settings?.read().paneWidths) ?? .default
-        let trashMover = trash
         editor = DropEditor(
-            save: { id, update in try DropStore(root: try storageRoot(), trash: trashMover).update(id: id, update) },
+            save: { [store] id, update in try store().update(id: id, update) },
             onSaved: { [weak self] in self?.apply($0) },
             onBackgroundFailure: { [weak self] code in self?.showAlert(forCode: code, logged: false) })
     }
@@ -98,6 +152,17 @@ final class LibraryModel {
         return try resolveStorageRoot(settings: settingsStore(environment: environment), environment: environment)
     }
 
+    /// The store over the current storage folder; every read and write of the Library builds it here.
+    private var store: @Sendable () throws -> DropStore {
+        { [storageRoot, clock, trash] in DropStore(root: try storageRoot(), clock: clock, trash: trash) }
+    }
+
+    /// Runs `work` against the store off the main actor.
+    private func withStore<T: Sendable>(_ work: @escaping @Sendable (DropStore) throws -> T) async -> Result<T, Error> {
+        let store = store
+        return await Task.detached { Result { try work(try store()) } }.value
+    }
+
     // MARK: Derived state
 
     var filter: LibraryFilter {
@@ -107,19 +172,55 @@ final class LibraryModel {
         case .text: type = .text
         case .image: type = .image
         case .tag(let name): tag = name
-        case .all, .settings: break
+        case .all, .pinned, .settings: break
         }
-        return LibraryFilter(search: search, type: type, tag: tag, app: app, dateRange: dateRange)
+        var filter = LibraryFilter(search: search, type: type, tag: tag, sources: sources, dateRange: dateRange)
+        filter.pinnedOnly = collection == .pinned
+        return filter
     }
 
+    /// The Pinned collection lists drops by pin time without the "Pinned" header (spec 2.5).
+    var showsSectionHeaders: Bool { collection != .pinned }
+
     var selectedDrop: Drop? { drops.first { $0.id == selectedID } }
-    var hasRefiningFilters: Bool { app != nil || dateRange != .all }
+    var hasRefiningFilters: Bool { !sources.isEmpty || dateRange != .all }
+
+    /// Whether "Show Drops from This Source" can act on the drop.
+    static func hasSource(_ drop: Drop) -> Bool { SourceKey(drop.source) != nil }
+
+    /// The popover's sources with counts under every condition but the source filter (Collection, search, period).
+    /// A selected source stays listed even at 0 so it can be unchecked. Each group sorts by count, then name.
+    /// A non-blank `query` keeps the sources whose name contains it, ignoring case.
+    func sourceGroups(matching query: String) -> SourceGroups {
+        var unfiltered = filter
+        unfiltered.sources = []
+        var counts: [SourceKey: Int] = Dictionary(uniqueKeysWithValues: sources.map { ($0, 0) })
+        for drop in unfiltered.apply(drops, index: searchIndex) {
+            for key in SourceKey.all(drop.source) { counts[key, default: 0] += 1 }
+        }
+        let needle = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        let rows: [SourceCount] = counts
+            .map { SourceCount(key: $0.key, count: $0.value) }
+            .filter { needle.isEmpty || $0.key.name.localizedStandardContains(needle) }
+            .sorted(by: Self.listsBefore)
+        var groups = SourceGroups()
+        for row in rows {
+            if case .website = row.key { groups.websites.append(row) } else { groups.apps.append(row) }
+        }
+        return groups
+    }
+
+    private static func listsBefore(_ a: SourceCount, _ b: SourceCount) -> Bool {
+        if a.count != b.count { return a.count > b.count }
+        return a.key.name.localizedStandardCompare(b.key.name) == .orderedAscending
+    }
 
     func count(for collection: SidebarSelection) -> Int {
         switch collection {
         case .all: drops.count
         case .text: typeCounts.text
         case .image: typeCounts.image
+        case .pinned: pinnedCount
         case .tag(let name): tagCounts[name] ?? 0
         case .settings: 0
         }
@@ -130,6 +231,7 @@ final class LibraryModel {
         case .all, .settings: L10n.t("library")
         case .text: L10n.t("textDrops")
         case .image: L10n.t("imageDrops")
+        case .pinned: L10n.t("pinned")
         case .tag(let name): name
         }
     }
@@ -141,11 +243,7 @@ final class LibraryModel {
     func reload(selecting id: String? = nil) async {
         isLoading = true
         defer { isLoading = false }
-        let root = storageRoot
-        let result: Result<DropScan, Error> = await Task.detached {
-            Result { try DropStore(root: try root()).scan() }
-        }.value
-        switch result {
+        switch await withStore({ try $0.scan() }) {
         case .success(let scan):
             drops = scan.drops
             warnings = scan.warnings
@@ -159,7 +257,8 @@ final class LibraryModel {
             loadError = (error as? PlopcutError)?.code ?? error.localizedDescription
         }
         reselect()
-        if let id, drops.contains(where: { $0.id == id }) {
+        // An open content editor keeps its drop selected; the new drop is in the list for later (spec 2.6).
+        if let id, !editor.isEditingBody, drops.contains(where: { $0.id == id }) {
             if !filtered.contains(where: { $0.id == id }) {
                 search = ""
                 clearFilters()
@@ -205,13 +304,66 @@ final class LibraryModel {
         dropsChanged(rebuildIndex: false)
     }
 
+    /// Stores or clears the drop's format choice (spec 2.6, R-08). Not a content edit, so `updatedAt` stays.
+    /// On failure the drop keeps its old format and the error is shown as a status message, not an alert.
+    func setFormat(_ change: FormatUpdate, for id: String) async {
+        do {
+            _ = try await editor.queueChange(for: id) { DropUpdate(format: change) }
+        } catch {
+            let code = ErrorText.code(for: error)
+            AppLog.shared.log(.error(code: code))
+            notice = ErrorText.message(forCode: code)
+        }
+    }
+
+    // MARK: Content editing (spec 2.6 "본문 편집")
+
+    /// Whether Edit (button, context menu, Cmd+E) can start on the selected drop: a text drop, no editor open yet.
+    var canEditBody: Bool {
+        collection != .settings && !editor.isEditingBody && DropEditor.canEditBody(selectedDrop)
+    }
+
+    /// Opens the content editor on the selected drop. Returns false for an image drop or nothing selected.
+    @discardableResult
+    func beginBodyEdit() -> Bool {
+        guard collection != .settings, let drop = selectedDrop else { return false }
+        return editor.beginBodyEdit(drop)
+    }
+
+    /// Edit from the list's context menu: selects that drop first (which may ask to discard another edit).
+    func beginBodyEdit(id: String) {
+        selectedID = id
+        if selectedID == id { beginBodyEdit() }
+    }
+
+    /// Opens a link from a rendered body in the default browser. Only web and mail links open (spec 2.6, R-07).
+    func openLink(_ url: URL) {
+        guard Self.isOpenableLink(url) else { return }
+        openURL(url)
+    }
+
+    nonisolated static func isOpenableLink(_ url: URL) -> Bool {
+        ["http", "https", "mailto"].contains(url.scheme?.lowercased() ?? "")
+    }
+
+    /// Pins or unpins the drop (spec 2.5, 2.6). The selection stays on it while it is still listed; unpinning in the
+    /// Pinned collection removes it from the list, so the selection then follows spec 1.6.
+    /// The toggle reads the pin when its write's turn comes, so two quick toggles end where they started.
+    func togglePin(id: String) async {
+        do {
+            let saved = try await editor.queueChange(for: id) { [weak self] in
+                guard let drop = self?.drops.first(where: { $0.id == id }) else { return nil }
+                return DropUpdate(pinned: !drop.isPinned)
+            }
+            if saved != nil { reselect() }
+        } catch {
+            showAlert(forCode: ErrorText.code(for: error))
+        }
+    }
+
     /// Moves the drop's folder to the Trash (spec 2.6). The drop stays in the list when the move fails.
     func delete(id: String) async -> Bool {
-        let (root, trash) = (storageRoot, trash)
-        let result: Result<Void, Error> = await Task.detached {
-            Result { try DropStore(root: try root(), trash: trash).delete(id: id) }
-        }.value
-        switch result {
+        switch await withStore({ try $0.delete(id: id) }) {
         case .success:
             editor.forget(id)
             drops.removeAll { $0.id == id }
@@ -222,7 +374,7 @@ final class LibraryModel {
             notice = L10n.t("trashSuccess")
             return true
         case .failure(let error):
-            showAlert(forCode: (error as? PlopcutError)?.code ?? "")
+            showAlert(forCode: ErrorText.code(for: error))
             return false
         }
     }
@@ -258,39 +410,55 @@ final class LibraryModel {
         _ = try? settings?.update(SettingsUpdate(paneWidths: widths))
     }
 
+    /// Clears sources and period; the sidebar selection and the search stay (spec 2.5).
     func clearFilters() {
-        app = nil
+        sources = []
         dateRange = .all
+    }
+
+    /// The chip of one source removes only that source.
+    func removeSource(_ key: SourceKey) { sources.remove(key) }
+
+    /// "Show Drops from This Source": the Library Collection filtered to the drop's source alone; the period and the
+    /// search stay. A drop without source changes nothing (spec 2.5).
+    func showDropsFromSource(of drop: Drop) {
+        guard let key = SourceKey(drop.source) else { return }
+        editor.requestLeave { [weak self] in
+            self?.currentCollection = .all
+            self?.sources = [key]
+        }
     }
 
     /// Selecting a type row clears the tag filter and vice versa because `collection` holds only one of them.
     private func collectionChanged() { reselect() }
 
-    /// Recomputes everything derived from `drops`: counts, tag and app lists, the search index, and the filtered list.
+    /// Recomputes everything derived from `drops`: counts, the tag list, the search index, and the filtered list.
     private func dropsChanged(rebuildIndex: Bool) {
         if rebuildIndex { searchIndex = SearchIndex(drops) }
         var tags: [String: Int] = [:]
-        var apps = Set<String>()
-        var text = 0, image = 0
+        var text = 0, image = 0, pinned = 0
         for drop in drops {
             if drop.type == .text { text += 1 } else if drop.type == .image { image += 1 }
+            if drop.isPinned { pinned += 1 }
             for tag in drop.tags { tags[tag, default: 0] += 1 }
-            if let app = drop.source.appName { apps.insert(app) }
         }
         typeCounts = (text, image)
+        pinnedCount = pinned
         tagCounts = tags
         allTags = tags.keys.sorted()
-        allApps = apps.sorted()
         refilter()
     }
 
     private func refilter() {
         filtered = filter.apply(drops, index: searchIndex)
-        groups = DateGroup.group(filtered)
+        sections = ListSection.make(filtered)
     }
 
     private func reselect() {
         refilter()
-        selectedID = LibraryFilter.resolveSelection(selectedID, in: filtered)
+        // While the content editor is open its drop stays selected, even if the list no longer shows it (spec 2.6).
+        if editor.isEditingBody { return }
+        // "The first item" is the first row shown, so a pinned drop comes before the date groups (spec 1.6).
+        currentSelection = LibraryFilter.resolveSelection(currentSelection, in: sections.flatMap(\.drops))
     }
 }

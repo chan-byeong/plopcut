@@ -41,7 +41,7 @@ actor ManualClock {
 
 /// Records every save and lets a test hold a response until it chooses to release it.
 actor SaveRecorder {
-    struct Call: Equatable { var id: String; var title: String?; var note: String?; var tags: [String]? }
+    struct Call: Equatable { var id: String; var title: String?; var note: String?; var tags: [String]?; var text: String? = nil }
     private(set) var calls: [Call] = []
     var failure: PlopcutError?
     private var gates: [CheckedContinuation<Void, Never>] = []
@@ -52,13 +52,14 @@ actor SaveRecorder {
     func release() { let all = gates; gates.removeAll(); for gate in all { gate.resume() } }
 
     func save(_ id: String, _ update: DropUpdate, base: Drop) async throws -> Drop {
-        calls.append(Call(id: id, title: update.title, note: update.note, tags: update.tags))
+        calls.append(Call(id: id, title: update.title, note: update.note, tags: update.tags, text: update.text))
         if holdNext { await withCheckedContinuation { gates.append($0) } }
         if let failure { throw failure }
         var drop = base
         if let title = update.title { drop.title = title }
         if let note = update.note { drop.note = note }
         if let tags = update.tags { drop.tags = tags }
+        if let text = update.text { drop.text = text }
         return drop
     }
 }

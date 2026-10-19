@@ -33,8 +33,52 @@ private func drop(_ id: String, created: String, type: DropType = .text, title: 
         let all = [a, b]
         #expect(LibraryFilter(type: .image).apply(all, now: now, calendar: cal).map(\.id) == ["b"])
         #expect(LibraryFilter(tag: "x").apply(all, now: now, calendar: cal).count == 2)
-        #expect(LibraryFilter(tag: "x", app: "App1").apply(all, now: now, calendar: cal).map(\.id) == ["a"])
+        #expect(LibraryFilter(tag: "x", sources: [.app("App1")]).apply(all, now: now, calendar: cal).map(\.id) == ["a"])
         #expect(LibraryFilter(tag: "y").apply(all, now: now, calendar: cal).isEmpty)
+    }
+}
+
+/// Checklist L-17, spec 1.6: selected sources combine with OR, and with AND against everything else.
+@Suite struct SourceFilterTests {
+    private let github = drop("gh", created: "2026-03-10T01:00:00Z", text: "swift notes", tags: ["x"],
+                              source: DropSource(appName: "Google Chrome", url: "https://www.github.com/a"))
+    private let apple = drop("ap", created: "2026-01-01T00:00:00Z", text: "swift docs",
+                             source: DropSource(appName: "Google Chrome", url: "https://developer.apple.com/b"))
+    private let terminal = drop("tm", created: "2026-03-10T02:00:00Z", type: .text, text: "make app",
+                                source: DropSource(appName: "Terminal"))
+    private let image = drop("im", created: "2026-03-10T03:00:00Z", type: .image, tags: ["x"],
+                             source: DropSource(appName: "Terminal"))
+    private let sourceless = drop("no", created: "2026-03-10T04:00:00Z", text: "swift loose")
+    private var all: [Drop] { [github, apple, terminal, image, sourceless] }
+
+    private func ids(_ filter: LibraryFilter) -> Set<String> {
+        Set(filter.apply(all, now: now, calendar: cal).map(\.id))
+    }
+
+    @Test func noSourceFilterKeepsEveryDropIncludingSourceless() {
+        #expect(ids(LibraryFilter()) == ["gh", "ap", "tm", "im", "no"])
+    }
+
+    @Test func selectedSourcesCombineWithOr() {
+        #expect(ids(LibraryFilter(sources: [.website("github.com")])) == ["gh"])
+        #expect(ids(LibraryFilter(sources: [.website("github.com"), .app("Terminal")])) == ["gh", "tm", "im"])
+        // A web drop also belongs to its browser (PLO-100); an app key never matches a website of the same name.
+        #expect(ids(LibraryFilter(sources: [.app("Google Chrome")])) == ["gh", "ap"])
+        #expect(ids(LibraryFilter(sources: [.app("github.com")])).isEmpty)
+    }
+
+    @Test func sourcesCombineWithAndAgainstOtherConditions() {
+        let both: Set<SourceKey> = [.website("github.com"), .website("developer.apple.com"), .app("Terminal")]
+        #expect(ids(LibraryFilter(search: "swift", sources: both)) == ["gh", "ap"])
+        #expect(ids(LibraryFilter(type: .image, sources: both)) == ["im"])
+        #expect(ids(LibraryFilter(tag: "x", sources: both)) == ["gh", "im"])
+        #expect(ids(LibraryFilter(sources: both, dateRange: .today)) == ["gh", "tm", "im"])
+        #expect(Set(LibraryFilter(search: "swift", sources: both).apply(all, now: now, calendar: cal, index: SearchIndex(all)).map(\.id)) == ["gh", "ap"])
+    }
+
+    @Test func sourcelessDropsLeaveOnceASourceIsSelected() {
+        #expect(!ids(LibraryFilter(search: "swift", sources: [.website("github.com")])).contains("no"))
+        #expect(ids(LibraryFilter(search: "swift")).contains("no"))
     }
 }
 

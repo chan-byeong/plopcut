@@ -1,0 +1,19 @@
+{
+  "id": "2026-02-02_090000_000000002_markdown-choice",
+  "type": "text",
+  "title": "Markdown choice",
+  "text": null,
+  "imagePath": null,
+  "source": {
+    "appName": "Terminal",
+    "windowTitle": null,
+    "url": null,
+    "filePath": null
+  },
+  "note": null,
+  "tags": [],
+  "createdAt": "2026-02-02T09:00:00.000000002Z",
+  "updatedAt": "2026-02-02T09:00:00.000000002Z",
+  "format": "markdown",
+  "codeLanguage": null
+}
