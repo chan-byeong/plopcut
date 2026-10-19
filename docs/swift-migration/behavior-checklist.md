@@ -175,8 +175,8 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 | I-08 | 고치기 전에는 `mixed` Draft의 유형을 바꾸면 제목이 그 유형의 자동 제목으로 바뀌고, 고친 뒤에는 그대로다. `자동` 버튼은 입력값이 자동 제목과 다를 때만 활성이고 누르면 자동 제목으로 되돌린다. | 스펙 3.5(PLO-105) | 단위(`SavePopupModelTests`) + 수동 | ☐ |
 | I-09 | 입력란을 비우고(공백뿐 포함) 저장하면 명시한 제목 없이 보내 저장소가 자동 제목을 쓴다. 그 밖에는 앞뒤 공백을 지운 값을 명시한 제목으로 저장한다(80자 제한). 입력란 아래 문구가 자동 제목의 출처(윈도우 제목/앱 이름/본문 첫 줄/없음)와 비우면 자동 제목을 쓴다는 점을 알리고, 끝에 말줄임이 없다. | 스펙 1.4, 3.5(PLO-105) | 단위(`SavePopupModelTests`, `LocalizationTests`) + 수동 | ☑ |
 | I-10 | 제목 입력란에 포커스가 있어도 `Cmd+Enter`는 저장, Escape는 취소다. | 스펙 3.5(PLO-105) | 단위(`SavePopupWindowTests`) + 수동 | ☑ |
-| I-11 | `저장 후 고정` 체크박스: 기본 꺼짐, 팝업을 열 때마다 꺼짐. 켜고 저장하면 고정한 상태로 저장되어 Library `고정됨` 묶음에 나타난다. | 스펙 3.5(PLO-105) | 단위(`SavePopupModelTests`) + 수동 | ☑ |
-| I-12 | 제목 입력란과 체크박스가 들어가도 Save Popup이 내용을 자르지 않는다. 경고·태그가 없는 Draft의 최소 높이는 스펙 2.1의 값이다. | 스펙 2.1, 3.5(PLO-105) | 단위(`SavePopupWindowTests.Layout`) + 수동(시안 SavePopupTitle) | ☑ |
+| I-11 | (제거) `저장 후 고정` 체크박스는 PLO-100 수정(2026-10-19)에서 뺐다. Save Popup에 고정 옵션이 없다. | 스펙 3.5(PLO-100) | 수동 | ☐ |
+| I-12 | 제목 입력란이 들어가도 Save Popup이 내용을 자르지 않는다. 경고·태그가 없는 Draft의 최소 높이는 스펙 2.1의 값이다. | 스펙 2.1, 3.5(PLO-105) | 단위(`SavePopupWindowTests.Layout`) + 수동(시안 SavePopupTitle) | ☑ |
 
 ## T. 메뉴 막대
 
@@ -627,11 +627,19 @@ S·C 항목을 픽스처 **복사본**으로 다시 확인하고 항목마다 Sw
 
 ## PLO-105: Save Popup 제목과 저장 후 고정
 
-- 모델: `SavePopupModel.title`(고치기 전에는 `autoTitle`을 따라감), `autoTitle`(텍스트는 Draft 제목, 이미지는 `imageTitle`. 캡처가 1.4 순서로 이미 계산한 값), `canRestoreAutoTitle`, `restoreAutoTitle()`, `titleHint`, `pinAfterSave`. `SaveRequest.title`은 비면 `nil`, `SaveRequest.pinned`가 `saveText`/`saveImage(pinned:)`로 간다. 단위: `SavePopupTitleTests`(I-07~I-09, I-11), `SavePopupWindowTests.TitleKeys`(I-10), `SavePopupWindowTests.Layout.theTitleAndPinRowsFitTheCompactSize`(I-12).
-- 최소 높이: 최근 태그 3개인 텍스트 Draft의 자연 높이를 재어 487(창 519)로 정했다. 한국어·영어 모두 같다. `mixed`는 유형 선택 때문에 헤더가 조금 높아 그만큼 커진다.
+- 모델: `SavePopupModel.title`(고치기 전에는 `autoTitle`을 따라감), `autoTitle`(텍스트는 Draft 제목, 이미지는 `imageTitle`. 캡처가 1.4 순서로 이미 계산한 값), `canRestoreAutoTitle`, `restoreAutoTitle()`, `titleHint`. `SaveRequest.title`은 비면 `nil`. (`pinAfterSave`·`SaveRequest.pinned`는 PLO-100 수정에서 뺐다.) 단위: `SavePopupTitleTests`(I-07~I-09), `SavePopupWindowTests.TitleKeys`(I-10), `SavePopupWindowTests.Layout.theTitleAndTagRowsFitTheCompactSize`(I-12).
+- 최소 높이: 최근 태그 3개인 텍스트 Draft의 자연 높이를 재어 487(창 519)로 정했다. PLO-100 수정에서 체크박스를 빼고 빈 태그 칩 줄 자리를 두어 489(창 521)가 됐다. 한국어·영어 모두 같다. `mixed`는 유형 선택 때문에 헤더가 조금 높아 그만큼 커진다.
 - 실행 확인(2026-10-18, 라이트, 픽스처 복사본, 메뉴 막대 `클립보드 저장`): 제목 `Orca`(윈도우 제목)와 안내 문구가 미리 채워지고 `자동`은 비활성. 제목을 고치면 `자동`이 활성. 제목 입력란에 포커스를 둔 채 `저장 후 고정`을 켜고 `Cmd+Enter`로 저장하자 `Release checklist` 제목, `pinnedAt` = `createdAt`으로 저장되어 Library `고정됨` 묶음 맨 위에 선택되어 보였다. 다음 팝업에서 체크박스는 꺼져 있었고, 제목을 비우고 저장하자 자동 제목 `Orca`·고정 안 됨으로 저장됐다. 제목 입력란에서 Escape로 취소했다. 시안(SavePopupTitle)과 순서·문구가 같고, 다른 점은 `자동` 버튼이 입력란 안이 아니라 옆의 기본 버튼이고 제목 글꼴이 기본 크기다.
 
 수동 확인이 남음: 선택 텍스트 캡처(`Shift+Cmd+C`) 흐름, `mixed` Draft에서 유형을 바꿀 때 제목이 따라가는지, 다크 모드, 영어, VoiceOver(제목 입력란 이름 `드롭 제목`, `자동` 버튼 힌트). 노트에서 `Shift+Tab`으로 제목 입력란에 가는지는 확인하지 못했다(스펙에는 클릭만 적음).
+
+## PLO-100 수정 (2026-10-19)
+
+- 빈 상태 필터 칩: `LibraryListView`의 내용 영역이 창 높이를 채워, 드롭이 없거나 결과가 없을 때도 출처·기간 칩이 목록 위에 남는다. 단위 없음, 수동 확인 남음.
+- 동작 버튼: `DropActionButtonStyle`·`DropActionToggleStyle`로 시안 MainFeatures의 38×26 테두리 버튼을 그린다(스펙 2.6). 빌드만 확인, 라이트·다크 모양과 호버는 수동 확인 남음.
+- Save Popup: `저장 후 고정` 체크박스와 `pinAfterSave`·`SaveRequest.pinned`를 뺐다(I-11). 저장소의 `saveText`/`saveImage(pinned:)`는 남겨 두었다.
+- Save Popup 태그: 태그가 없을 때 숨긴 칩 하나로 한 줄 높이를 잡아, 첫 태그를 등록해도 창 높이가 그대로다. 최소 높이는 489(창 521). 단위: `SavePopupWindowTests.Layout.theFirstTagDoesNotGrowThePopup`, `theTitleAndTagRowsFitTheCompactSize`.
+- 출처 필터의 브라우저: `SourceKey.all`이 웹 Drop을 웹사이트와 앱 둘에 속하게 해 `Google Chrome`이 앱 묶음에 나타나고, 고르면 그 브라우저의 웹 Drop이 모두 보인다. `이 출처의 드롭 보기`는 대표 키(웹사이트)를 쓴다. 단위: `SourceKeyTests.aWebDropBelongsToItsWebsiteAndItsApp`, `SourceFilterTests.selectedSourcesCombineWithOr`, `SourceFilterModelTests`(팝오버 개수, `choosingTheBrowserShowsItsWebDrops`).
 
 ## PLO-104: Drop 본문 편집
 

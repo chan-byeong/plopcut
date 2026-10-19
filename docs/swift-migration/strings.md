@@ -8,7 +8,7 @@ Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA
 
 PLO-101에서 추가한 키(본문 렌더링과 형식 메뉴): `formatMenu`, `formatMenuHelp`, `formatAutomatic`, `formatPlain`, `formatMarkdown`, `formatCode`, `codeBlock`, `copyCode`, `markdownList`, `markdownQuote`.
 
-PLO-105에서 추가한 키(Save Popup 제목과 저장 후 고정): `titleField`, `autoTitle`, `autoTitleHelp`, `titleHintWindow`, `titleHintApp`, `titleHintFirstLine`, `titleHintDefault`, `pinAfterSave`.
+PLO-105에서 추가한 키(Save Popup 제목): `titleField`, `autoTitle`, `autoTitleHelp`, `titleHintWindow`, `titleHintApp`, `titleHintFirstLine`, `titleHintDefault`. 같이 넣은 `pinAfterSave`는 PLO-100 수정에서 체크박스와 함께 뺐습니다.
 
 PLO-104에서 추가한 키(본문 편집): `editBody`, `editingBody`, `bodyChanged`, `done`, `editBodyHint`, `editBodyShortcuts`, `editBodyField`, `emptyBody`, `discardChangesTitle`, `discardChangesBody`, `discardChanges`, `keepEditing`, `quitBodyDraftTitle`, `quitBodyDraftBody`, `dontSave`(종료할 때 본문 초안 저장 여부, 리뷰 수정).
 
@@ -239,7 +239,6 @@ PLO-104에서 추가한 키(본문 편집): `editBody`, `editingBody`, `bodyChan
 | `titleHintApp` | Taken from the app name. Leave empty to use the automatic title. | 앱 이름에서 가져왔습니다. 비우면 자동 제목을 씁니다. |
 | `titleHintFirstLine` | Taken from the first line of the text. Leave empty to use the automatic title. | 본문 첫 줄에서 가져왔습니다. 비우면 자동 제목을 씁니다. |
 | `titleHintDefault` | Nothing to take a title from, so this is the default. Leave empty to use the automatic title. | 가져올 곳이 없어 기본 제목입니다. 비우면 자동 제목을 씁니다. |
-| `pinAfterSave` | Pin after saving | 저장 후 고정 |
 
 ## 문구 점검 기록 (STA-80)
 
