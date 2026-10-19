@@ -12,8 +12,6 @@ struct SaveRequest: Equatable, Sendable {
     var note: String?
     var tags: [String]
     var imagePNG: Data?
-    /// Save the drop already pinned (spec 3.5 "Pin after saving", PLO-105).
-    var pinned = false
 }
 
 /// State of one Save Popup (spec 3.5). The popup never closes itself: the owner reacts to `onSaved` and `onCancel`.
@@ -28,8 +26,6 @@ final class SavePopupModel {
     var selectedType: DropType
     var note = ""
     var tagInput = ""
-    /// "Pin after saving". Off for every new popup (spec 3.5, PLO-105).
-    var pinAfterSave = false
     var tagMessage: String?
     private(set) var tags: [String]
     private(set) var isSaving = false
@@ -144,8 +140,7 @@ final class SavePopupModel {
         let saveImage = selectedType == .image
         let request = SaveRequest(
             text: saveImage ? "" : draft.text ?? "", title: title.trimmedOrNil, source: draft.source,
-            note: trimmedNote.isEmpty ? nil : note, tags: tags, imagePNG: saveImage ? draft.imagePNG : nil,
-            pinned: pinAfterSave)
+            note: trimmedNote.isEmpty ? nil : note, tags: tags, imagePNG: saveImage ? draft.imagePNG : nil)
         do {
             let drop = try await save(request)
             onSaved(drop)

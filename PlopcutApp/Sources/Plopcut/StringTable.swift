@@ -241,6 +241,5 @@ enum StringTable {
         "titleHintApp": (en: "Taken from the app name. Leave empty to use the automatic title.", ko: "앱 이름에서 가져왔습니다. 비우면 자동 제목을 씁니다."),
         "titleHintFirstLine": (en: "Taken from the first line of the text. Leave empty to use the automatic title.", ko: "본문 첫 줄에서 가져왔습니다. 비우면 자동 제목을 씁니다."),
         "titleHintDefault": (en: "Nothing to take a title from, so this is the default. Leave empty to use the automatic title.", ko: "가져올 곳이 없어 기본 제목입니다. 비우면 자동 제목을 씁니다."),
-        "pinAfterSave": (en: "Pin after saving", ko: "저장 후 고정"),
     ]
 }

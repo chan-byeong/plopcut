@@ -2,12 +2,12 @@ import AppKit
 import SwiftUI
 import PlopcutCore
 
-/// The Save Popup content (spec 3.5): title, preview, source, note, tags, "Pin after saving", Save and Cancel.
+/// The Save Popup content (spec 3.5): title, preview, source, note, tags, Save and Cancel.
 struct SavePopupView: View {
     /// The content below the window's title bar for a draft without warnings, tag chips or many recent tags.
     /// Content that needs more height (warnings, tag chips, recent tags, an error) makes the window taller instead
     /// of being cut off (STA-67), up to `maxHeight`; past that the fields scroll and the buttons stay at the bottom.
-    static let contentSize = CGSize(width: 430, height: 487)
+    static let contentSize = CGSize(width: 430, height: 489)
     private static let previewHeight: CGFloat = 96
     /// About two lines of body text: the popup note is for a quick remark.
     private static let noteHeight: CGFloat = 52
@@ -28,11 +28,7 @@ struct SavePopupView: View {
             .scrollBounceBehavior(.basedOnSize)
             .slimScrollers()
             .layoutPriority(1)
-            VStack(alignment: .leading, spacing: Spacing.s) {
-                pinToggle
-                buttons
-            }
-            .padding(.horizontal, Spacing.l)
+            buttons.padding(.horizontal, Spacing.l)
         }
         .padding(.bottom, Spacing.l)
         .frame(width: Self.contentSize.width)
@@ -87,13 +83,6 @@ struct SavePopupView: View {
             Text(model.titleHint).font(.caption).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
-    }
-
-    private var pinToggle: some View {
-        Toggle(isOn: $model.pinAfterSave) {
-            Label(L10n.t("pinAfterSave"), systemImage: "pin")
-        }
-        .toggleStyle(.checkbox)
     }
 
     private var typePicker: some View {
@@ -173,7 +162,7 @@ struct SavePopupView: View {
     private var tagField: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
             Text(L10n.t("tags")).font(.callout.weight(.semibold)).accessibilityHidden(true)
-            TagEntryField(model: model, focused: $tagFocused)
+            TagEntryField(model: model, focused: $tagFocused, reservesChipRow: true)
             let suggestions = model.recentTags.filter { !model.tags.contains($0) }
             if !suggestions.isEmpty {
                 VStack(alignment: .leading, spacing: Spacing.xs) {

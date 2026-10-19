@@ -28,6 +28,8 @@ struct TagEntryField<Model: TagEditing>: View {
     var focused: FocusState<Bool>.Binding
     /// Shown when there are no tags, or nothing when `nil`.
     var emptyText: String?
+    /// Without tags or `emptyText`, keep one chip row's height empty so the first tag does not push the content down.
+    var reservesChipRow = false
     /// Escape in the field; `nil` leaves Escape to the window (the Save Popup cancels).
     var onExit: (() -> Void)?
 
@@ -49,7 +51,12 @@ struct TagEntryField<Model: TagEditing>: View {
             }
             if let message = model.tagMessage { FeedbackText(message, kind: .warning) }
             if model.currentTags.isEmpty {
-                if let emptyText { Text(emptyText).foregroundStyle(.secondary) }
+                if let emptyText {
+                    Text(emptyText).foregroundStyle(.secondary)
+                } else if reservesChipRow {
+                    // A hidden chip measures the row, so the space follows the chip's font and control size.
+                    RemovableChip(text: "#", removeLabel: "") {}.hidden().accessibilityHidden(true)
+                }
             } else {
                 FlowLayout {
                     ForEach(model.currentTags, id: \.self) { tag in

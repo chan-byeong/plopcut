@@ -55,11 +55,11 @@ extension SavePopupWindowTests {
             #expect(contentHeight(window) < 560)
         }
 
-        // I-12: the title field and "Pin after saving" (PLO-105) fit the compact size: 487 below the title bar
+        // I-12: the title field (PLO-105) and the empty tag row (PLO-100) fit the compact size: 489 below the title bar
         // (spec 2.1) holds a plain text or image draft with three recent tags, and nothing in it scrolls.
         @Test(arguments: [DropType.text, .image, .mixed])
-        func theTitleAndPinRowsFitTheCompactSize(type: DropType) async throws {
-            #expect(SavePopupView.contentSize == CGSize(width: 430, height: 487))
+        func theTitleAndTagRowsFitTheCompactSize(type: DropType) async throws {
+            #expect(SavePopupView.contentSize == CGSize(width: 430, height: 489))
             let screen = NSRect(x: 0, y: 0, width: 1600, height: 1200)
             let controller = SavePopupWindowController(visibleFrame: { _ in screen })
             var draft = try Self.fullDraft(type)
@@ -94,6 +94,22 @@ extension SavePopupWindowTests {
             #expect(window.frame.maxY == top)
             // The window is as tall as the content asks for, so nothing is cut off.
             #expect(contentHeight(window) == (window.contentView?.fittingSize.height ?? 0))
+        }
+
+        // PLO-100: the empty tag list keeps one chip row, so the first tag does not move the content below it.
+        @Test(arguments: [DropType.text, .image, .mixed])
+        func theFirstTagDoesNotGrowThePopup(type: DropType) async throws {
+            let screen = NSRect(x: 0, y: 0, width: 1600, height: 1200)
+            let controller = SavePopupWindowController(visibleFrame: { _ in screen })
+            // The warnings make the content taller than the compact minimum, so its own height decides the window's.
+            let popup = model(try Self.fullDraft(type))
+            let window = try await show(popup, in: controller)
+            defer { controller.close() }
+            let before = contentHeight(window)
+            #expect(before > SavePopupView.contentSize.height + (window.contentView?.safeAreaInsets.top ?? 0))
+            addTags(1, to: popup)
+            await settle()
+            #expect(contentHeight(window) == before)
         }
 
         @Test(arguments: [DropType.text, .image, .mixed])

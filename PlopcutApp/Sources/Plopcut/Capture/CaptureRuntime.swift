@@ -180,12 +180,10 @@ final class CaptureRuntime {
             let store = DropStore(root: root)
             if let png = request.imagePNG {
                 return try store.saveImage(
-                    png, title: request.title, source: request.source, tags: request.tags, note: request.note,
-                    pinned: request.pinned)
+                    png, title: request.title, source: request.source, tags: request.tags, note: request.note)
             }
             return try store.saveText(
-                request.text, title: request.title, source: request.source, tags: request.tags, note: request.note,
-                pinned: request.pinned)
+                request.text, title: request.title, source: request.source, tags: request.tags, note: request.note)
         }.value
     }
 

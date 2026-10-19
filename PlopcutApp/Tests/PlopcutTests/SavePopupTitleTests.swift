@@ -4,7 +4,7 @@ import PlopcutCore
 import Testing
 @testable import Plopcut
 
-/// The Save Popup's title field and "Pin after saving" (spec 3.5, PLO-105).
+/// The Save Popup's title field (spec 3.5, PLO-105).
 @MainActor
 @Suite struct SavePopupTitleTests {
     private static let png = Data([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00])
@@ -99,23 +99,6 @@ import Testing
         m.selectedType = .image
         await m.submit()
         #expect(captured.request?.title == "Shot")
-    }
-
-    // I-11
-    @Test func pinAfterSavingStartsOffAndRidesOnTheRequest() async {
-        let off = Captured()
-        let first = model(Self.notes, captured: off)
-        #expect(!first.pinAfterSave)
-        await first.submit()
-        #expect(off.request?.pinned == false)
-
-        let on = Captured()
-        let second = model(Self.notes, captured: on)
-        second.pinAfterSave = true
-        await second.submit()
-        #expect(on.request?.pinned == true)
-        // A new popup starts unchecked again.
-        #expect(!model(Self.notes).pinAfterSave)
     }
 
     // I-09: the hint says where the automatic title came from, in spec 1.4's order.
