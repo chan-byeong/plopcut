@@ -21,6 +21,8 @@ cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 for bundle in ".build/$CONFIG"/*.bundle; do
   if [ -d "$bundle" ]; then cp -R "$bundle" "$APP/Contents/Resources/"; fi
 done
+# Licenses of the bundled open-source packages (PLO-106); their licenses require shipping these notices.
+cp ../THIRD_PARTY_NOTICES.md "$APP/Contents/Resources/THIRD_PARTY_NOTICES.md"
 # SwiftPM does not compile asset catalogs; actool builds Assets.car so NSAccentColorName finds AccentColor (spec 5).
 xcrun actool Resources/Assets.xcassets --compile "$APP/Contents/Resources" --platform macosx \
   --minimum-deployment-target "$MIN_MACOS" --accent-color AccentColor \

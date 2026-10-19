@@ -14,8 +14,11 @@ plopcut은 백그라운드에서 클립보드를 감시하지 않습니다. 사�
 
 - **선택한 텍스트 캡처**: 전역 단축키(기본값 `Shift`+`Command`+`C`)를 누릅니다. 단축키는 설정에서 바꿀 수 있습니다.
 - **클립보드 저장**: 메뉴 막대 항목의 `Save Clipboard`를 사용합니다.
-- **노트와 태그 추가**: 저장 팝업에서 입력합니다. 설정에서 텍스트를 팝업 없이 바로 저장하도록 고를 수도 있습니다.
-- **라이브러리 둘러보기**: 검색하고, 유형·태그·앱·기간으로 거르고, 드롭을 열어 제목, 노트, 태그를 편집합니다.
+- **제목, 노트, 태그 추가**: 저장 팝업에서 입력합니다. 제목은 자동으로 채워지며 고치거나 자동 제목으로 되돌릴 수 있습니다. 설정에서 텍스트를 팝업 없이 바로 저장하도록 고를 수도 있습니다.
+- **라이브러리 둘러보기**: 검색하고, 유형·태그로 거르고, 출처(`github.com` 같은 웹사이트나 Google Chrome·Terminal 같은 앱, 여러 개 함께 선택)와 기간으로 좁힙니다.
+- **서식대로 읽기**: Markdown은 제목·목록·코드 블록으로 보여 주고, 코드는 하이라이트와 복사 버튼이 붙습니다. 형식이 잘못 감지되면 형식 메뉴에서 바꿀 수 있습니다. 저장된 파일은 그대로입니다.
+- **드롭 편집**: 제목, 노트, 태그를 고치거나 `Command`+`E`로 본문을 직접 편집합니다. 편집을 저장하면 `content.md`를 덮어쓰고 이전 내용은 남지 않습니다.
+- **고정**: 자주 보는 드롭을 고정합니다(`Shift`+`Command`+`P`). 고정한 드롭은 목록 맨 위와 사이드바의 고정됨 Collection에 모입니다.
 - **출처 열기, 내용 복사, Markdown 내보내기, 휴지통 이동**: 드롭의 출처(예: Chrome 페이지 URL)를 열거나 내용을 복사할 수 있습니다.
 
 ## 설치
@@ -60,7 +63,7 @@ plopcut은 해당 기능이 필요할 때만 권한을 요청합니다. 설정 �
 
 ## 데이터 저장 위치
 
-- **드롭**: `~/Documents/plopcut/drops/<드롭 ID>/` 폴더 하나당 드롭 하나입니다. 안에는 `drop.json`(메타데이터),
+- **드롭**: `~/Documents/plopcut/drops/<드롭 ID>/` 폴더 하나당 드롭 하나입니다. 안에는 `drop.json`(메타데이터, 고정 시각과 고른 형식 포함),
   `content.md` 또는 `image.png`, `note.md`가 있습니다. 텍스트 편집기나 Finder로 열어 볼 수 있습니다.
 - **설정**: `~/Library/Application Support/plopcut/settings.json`
 
@@ -109,7 +112,8 @@ plopcut이 새로 만듭니다.
 
 ## 라이선스
 
-plopcut은 [MIT 라이선스](LICENSE)로 공개된 오픈소스입니다. 기여를 환영합니다. [CONTRIBUTING.md](CONTRIBUTING.md)를 읽어 주세요.
+plopcut은 [MIT 라이선스](LICENSE)로 공개된 오픈소스입니다. Markdown 렌더링과 코드 하이라이트에 오픈소스 패키지를 쓰며,
+그 라이선스는 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)와 앱 안(`plopcut.app/Contents/Resources`)에 있습니다. 기여를 환영합니다. [CONTRIBUTING.md](CONTRIBUTING.md)를 읽어 주세요.
 보안 문제는 [SECURITY.md](SECURITY.md)의 절차대로 비공개로 신고해 주세요.
 
 ---

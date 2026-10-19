@@ -37,7 +37,8 @@ never uploaded. Settings has a `Show Log in Finder` row.
 
 ## Basis for the claim: static check of the source
 
-Checked on branch `sta-81` at commit `0e8c2ac`. These are static checks of the
+Checked on branch `sta-81` at commit `0e8c2ac`, and again for 0.2.0 on
+`swift/main` at commit `dbab98a` (PLO-106). These are static checks of the
 tracked Swift, shell, and plist files. They are not a runtime network trace.
 
 Searched for network and telemetry APIs and SDKs (`URLSession`, `NSURLSession`,
@@ -52,8 +53,17 @@ metadata and is not requested at runtime.
 
 Other findings:
 
-- **No third-party dependencies.** `PlopcutApp/Package.swift` depends only on the
-  local package `../PlopcutCore`. `PlopcutCore/Package.swift` has no dependencies.
+- **Three open-source dependencies, no network code.** Since 0.2.0,
+  `PlopcutApp/Package.swift` depends on `swift-markdown` (which brings
+  `swift-cmark`) to render Markdown, and on `HighlighterSwift`, which runs the
+  bundled highlight.js in JavaScriptCore to color code blocks. The same search
+  over their sources (`.build/checkouts`) finds no network API, and
+  highlight.js has no `fetch` or `XMLHttpRequest` call. Their licenses are in
+  [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
+  `PlopcutCore/Package.swift` has no dependencies.
+- **Markdown never loads remote content.** Images in a drop's Markdown are
+  shown as text and never downloaded. A link opens in your browser only when
+  you click it (`http`, `https`, and `mailto` only).
 - **Local file access only.** Drops and settings are read and written with
   `FileManager`, `Data(contentsOf:)`, and `String(contentsOf:)` on local paths.
 - **Chrome URL read is local IPC.** The app runs an AppleScript (`NSAppleScript`)
@@ -79,4 +89,7 @@ git grep -n -E 'URLSession|NSURLSession|URLRequest|NWConnection|NWListener|CFNet
 ```
 
 Also confirm that `dependencies:` lists in every `Package.swift` contain only
-local packages, unless this document is updated.
+the local package and the three packages named above, unless this document is
+updated. When a dependency is added or its version changes, run the same
+search over `PlopcutApp/.build/checkouts` and update
+[THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).

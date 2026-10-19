@@ -12,7 +12,9 @@ Reasons:
 - It matches the privacy claim in [privacy.md](privacy.md). The app makes no
   network calls, so it needs no update server, no appcast, and no
   update-check telemetry.
-- It adds no dependency. The app has no third-party packages today.
+- It adds no dependency. The app's few open-source packages (Markdown
+  rendering and code highlighting, see [privacy.md](privacy.md)) make no
+  network calls, and an updater would be the first that does.
 - It needs no update signing keys to manage or lose.
 
 Trade-off: users must notice new versions themselves. There is no in-app prompt,
