@@ -636,7 +636,7 @@ S·C 항목을 픽스처 **복사본**으로 다시 확인하고 항목마다 Sw
 ## PLO-100 수정 (2026-10-19)
 
 - 빈 상태 필터 칩: `LibraryListView`의 내용 영역이 창 높이를 채워, 드롭이 없거나 결과가 없을 때도 출처·기간 칩이 목록 위에 남는다. 단위 없음, 수동 확인 남음.
-- 동작 버튼: `DropActionButtonStyle`·`DropActionToggleStyle`로 시안 MainFeatures의 38×26 테두리 버튼을 그린다(스펙 2.6). 빌드만 확인, 라이트·다크 모양과 호버는 수동 확인 남음. 사용자 확인에서 시스템 `.help` 툴팁이 뜨지 않아 시안의 말풍선(`dropActionTooltip`)으로 바꿨다.
+- 동작 버튼: `DropActionButtonStyle`·`DropActionToggleStyle`로 시안 MainFeatures의 38×26 테두리 버튼을 그린다(스펙 2.6). 빌드만 확인, 라이트·다크 모양과 호버는 수동 확인 남음. 사용자 확인에서 시스템 `.help` 툴팁이 뜨지 않아 시안의 말풍선(`dropActionTooltip`)으로 바꿨다. 말풍선 툴팁(0.3초 호버)은 실행 앱에서 사용자가 확인했다(2026-10-19).
 - Save Popup: `저장 후 고정` 체크박스와 `pinAfterSave`·`SaveRequest.pinned`를 뺐다(I-11). 저장소의 `saveText`/`saveImage(pinned:)`는 남겨 두었다.
 - Save Popup 태그: 태그가 없을 때 숨긴 칩 하나로 한 줄 높이를 잡아, 첫 태그를 등록해도 창 높이가 그대로다. 최소 높이는 489(창 521). 단위: `SavePopupWindowTests.Layout.theFirstTagDoesNotGrowThePopup`, `theTitleAndTagRowsFitTheCompactSize`.
 - 출처 필터의 브라우저: `SourceKey.all`이 웹 Drop을 웹사이트와 앱 둘에 속하게 해 `Google Chrome`이 앱 묶음에 나타나고, 고르면 그 브라우저의 웹 Drop이 모두 보인다. `이 출처의 드롭 보기`는 대표 키(웹사이트)를 쓴다. 단위: `SourceKeyTests.aWebDropBelongsToItsWebsiteAndItsApp`, `SourceFilterTests.selectedSourcesCombineWithOr`, `SourceFilterModelTests`(팝오버 개수, `choosingTheBrowserShowsItsWebDrops`).
