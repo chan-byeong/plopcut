@@ -196,7 +196,7 @@ final class LibraryModel {
         unfiltered.sources = []
         var counts: [SourceKey: Int] = Dictionary(uniqueKeysWithValues: sources.map { ($0, 0) })
         for drop in unfiltered.apply(drops, index: searchIndex) {
-            if let key = SourceKey(drop.source) { counts[key, default: 0] += 1 }
+            for key in SourceKey.all(drop.source) { counts[key, default: 0] += 1 }
         }
         let needle = query.trimmingCharacters(in: .whitespacesAndNewlines)
         let rows: [SourceCount] = counts

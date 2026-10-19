@@ -38,7 +38,7 @@ public struct LibraryFilter: Sendable {
 
     private func matchesIgnoringSearch(_ drop: Drop, now: Date, calendar: Calendar) -> Bool {
         matchesType(drop) && (tag.map { drop.tags.contains($0) } ?? true) && (!pinnedOnly || drop.isPinned)
-            && (sources.isEmpty || SourceKey(drop.source).map(sources.contains) == true)
+            && (sources.isEmpty || SourceKey.all(drop.source).contains(where: sources.contains))
             && matchesDate(drop, now: now, calendar: calendar)
     }
 

@@ -1,7 +1,7 @@
 import Foundation
 
 /// The unit the source filter groups drops by (spec 1.6, PLO-103): a website by its host, otherwise the app.
-/// A website and an app with the same name are different sources.
+/// A website and an app with the same name are different sources. A web drop also belongs to its app (`all`).
 public enum SourceKey: Hashable, Sendable {
     case website(String)
     case app(String)
@@ -16,6 +16,16 @@ public enum SourceKey: Hashable, Sendable {
         } else {
             return nil
         }
+    }
+
+    /// Every source the drop belongs to: its website, then its app (PLO-100), so a browser's web drops are also listed
+    /// and filtered under the browser. The first is the primary key, `init?(_:)`.
+    public static func all(_ source: DropSource) -> [SourceKey] {
+        guard let primary = SourceKey(source) else { return [] }
+        guard case .website = primary, let app = source.appName,
+              !app.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        else { return [primary] }
+        return [primary, .app(app)]
     }
 
     public var name: String {

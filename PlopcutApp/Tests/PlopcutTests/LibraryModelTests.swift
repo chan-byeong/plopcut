@@ -139,7 +139,14 @@ import Testing
         let model = try await library().model
         let groups = model.sourceGroups(matching: "")
         #expect(counts(groups.websites) == ["github.com 2", "developer.apple.com 1"])
-        #expect(counts(groups.apps) == ["Terminal 1"])
+        // Web drops are also counted under their browser (PLO-100).
+        #expect(counts(groups.apps) == ["Google Chrome 3", "Terminal 1"])
+    }
+
+    @Test func choosingTheBrowserShowsItsWebDrops() async throws {
+        let model = try await library().model
+        model.sources = [.app("Google Chrome")]
+        #expect(titles(model) == ["gh1", "gh2", "apple"])
     }
 
     @Test func popoverCountsIgnoreTheSourceFilterButFollowTheOtherConditions() async throws {
@@ -149,14 +156,14 @@ import Testing
         model.search = "swift"
         #expect(counts(model.sourceGroups(matching: "").websites) == ["developer.apple.com 1", "github.com 1"])
         // A selected source stays listed with 0 so it can still be unchecked; unselected empty sources are hidden.
-        #expect(counts(model.sourceGroups(matching: "").apps) == ["Terminal 0"])
+        #expect(counts(model.sourceGroups(matching: "").apps) == ["Google Chrome 2", "Terminal 0"])
         model.search = ""
         model.sources = []
         model.dateRange = .today
         #expect(counts(model.sourceGroups(matching: "").websites) == ["github.com 2"])
         model.collection = .tag("x")
         #expect(counts(model.sourceGroups(matching: "").websites) == ["github.com 1"])
-        #expect(counts(model.sourceGroups(matching: "").apps) == ["Terminal 1"])
+        #expect(counts(model.sourceGroups(matching: "").apps) == ["Google Chrome 1", "Terminal 1"])
     }
 
     @Test func popoverSearchKeepsMatchingSourceNames() async throws {

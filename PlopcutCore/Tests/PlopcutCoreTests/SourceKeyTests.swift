@@ -29,6 +29,16 @@ import Testing
         }
     }
 
+    // PLO-100: a web drop also belongs to the app it came from, so "Google Chrome" stays in the app list.
+    @Test func aWebDropBelongsToItsWebsiteAndItsApp() {
+        #expect(SourceKey.all(DropSource(appName: "Google Chrome", url: "https://www.github.com/x"))
+            == [.website("github.com"), .app("Google Chrome")])
+        #expect(SourceKey.all(DropSource(url: "https://github.com")) == [.website("github.com")])
+        #expect(SourceKey.all(DropSource(appName: "Finder", url: "file:///a")) == [.app("Finder")])
+        #expect(SourceKey.all(DropSource(appName: " ", url: "https://a.com")) == [.website("a.com")])
+        #expect(SourceKey.all(DropSource()).isEmpty)
+    }
+
     @Test func websiteAndAppWithTheSameNameAreDifferentSources() {
         #expect(SourceKey.website("github.com") != SourceKey.app("github.com"))
         #expect(SourceKey.website("github.com").name == "github.com" && SourceKey.app("메모").name == "메모")

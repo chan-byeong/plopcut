@@ -62,8 +62,8 @@ private func drop(_ id: String, created: String, type: DropType = .text, title: 
     @Test func selectedSourcesCombineWithOr() {
         #expect(ids(LibraryFilter(sources: [.website("github.com")])) == ["gh"])
         #expect(ids(LibraryFilter(sources: [.website("github.com"), .app("Terminal")])) == ["gh", "tm", "im"])
-        // The browser is not a source of its web drops, and an app key never matches a website of the same name.
-        #expect(ids(LibraryFilter(sources: [.app("Google Chrome")])).isEmpty)
+        // A web drop also belongs to its browser (PLO-100); an app key never matches a website of the same name.
+        #expect(ids(LibraryFilter(sources: [.app("Google Chrome")])) == ["gh", "ap"])
         #expect(ids(LibraryFilter(sources: [.app("github.com")])).isEmpty)
     }
 
