@@ -25,7 +25,8 @@ struct DropDetailView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: Spacing.l) {
                         header(for: drop, editing: false)
-                        actions(for: drop)
+                        // Above the body, so a button's tooltip is not drawn under it.
+                        actions(for: drop).zIndex(1)
                         Divider()
                         body(of: drop)
                     }
@@ -127,7 +128,7 @@ struct DropDetailView: View {
                 DropActionIcon(action: pin)
             }
             .toggleStyle(DropActionToggleStyle())
-            .help(pin.tooltip).accessibilityLabel(pin.title)
+            .dropActionTooltip(pin.tooltip).accessibilityLabel(pin.title)
             actionButton(.editBody) { model.beginBodyEdit() }
                 .disabled(!DropEditor.canEditBody(drop))
             actionButton(.openSource) { openSource(drop) }
@@ -142,7 +143,7 @@ struct DropDetailView: View {
     private func actionButton(_ action: DropAction, role: ButtonRole? = nil, perform: @escaping () -> Void) -> some View {
         Button(role: role, action: perform) { DropActionIcon(action: action) }
             .buttonStyle(DropActionButtonStyle())
-            .help(action.tooltip).accessibilityLabel(action.title)
+            .dropActionTooltip(action.tooltip).accessibilityLabel(action.title)
     }
 
     @ViewBuilder private func body(of drop: Drop) -> some View {
@@ -344,5 +345,52 @@ private struct DropActionCell: View {
     private var border: Color {
         if isOn { return Color.accentColor.opacity(0.35) }
         return Color.primary.opacity(hovering || configuration.isPressed ? 0.22 : 0.12)
+    }
+}
+
+extension View {
+    /// The MainFeatures tooltip: a small bubble centered under the button after a short hover. The system `.help`
+    /// tooltip does not appear on these custom-styled buttons, so the bubble is drawn here instead.
+    func dropActionTooltip(_ text: String) -> some View {
+        modifier(DropActionTooltip(text: text))
+    }
+}
+
+private struct DropActionTooltip: ViewModifier {
+    /// About the system tooltip delay.
+    static let delay: Duration = .milliseconds(600)
+    /// From the MainFeatures design: the bubble's top sits 6 pt under the 26 pt button.
+    static let offset = DropActionIcon.buttonSize.height + 6
+    let text: String
+    @State private var shown = false
+    @State private var pending: Task<Void, Never>?
+
+    func body(content: Content) -> some View {
+        content
+            .onHover { hovering in
+                pending?.cancel()
+                guard hovering else { shown = false; return }
+                pending = Task {
+                    try? await Task.sleep(for: Self.delay)
+                    if !Task.isCancelled { shown = true }
+                }
+            }
+            // A click hides it, as the system tooltip does.
+            .simultaneousGesture(TapGesture().onEnded { pending?.cancel(); shown = false })
+            .overlay(alignment: .top) {
+                if shown {
+                    Text(text)
+                        .font(.system(size: 11))
+                        .padding(.horizontal, 7).padding(.vertical, 3)
+                        .background(Color(nsColor: .windowBackgroundColor), in: RoundedRectangle(cornerRadius: 5))
+                        .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(Color.primary.opacity(0.16), lineWidth: 1))
+                        .shadow(color: .black.opacity(0.14), radius: 5, y: 3)
+                        .fixedSize()
+                        .offset(y: Self.offset)
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+                }
+            }
+            .onDisappear { pending?.cancel() }
     }
 }
