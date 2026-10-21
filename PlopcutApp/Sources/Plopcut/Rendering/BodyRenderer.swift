@@ -21,6 +21,16 @@ struct RenderedList: Equatable, Hashable, Sendable {
     var items: [Item]
 }
 
+/// A GFM table: every row has as many cells as the header (PLO-107).
+struct RenderedTable: Equatable, Hashable, Sendable {
+    enum Alignment: Equatable, Hashable, Sendable { case leading, center, trailing }
+
+    var header: [AttributedString]
+    var rows: [[AttributedString]]
+    /// One per column; `nil` when the delimiter row sets none.
+    var alignments: [Alignment?]
+}
+
 /// A body ready to draw: our own Sendable value, because swift-markdown's nodes are not Sendable (spec 2.6, PLO-101).
 indirect enum RenderedBlock: Equatable, Hashable, Sendable {
     /// The plain-text format: the original text, untouched.
@@ -31,7 +41,8 @@ indirect enum RenderedBlock: Equatable, Hashable, Sendable {
     case quote([RenderedBlock])
     case code(CodeBlockContent)
     case rule
-    /// Tables and HTML, shown as their Markdown source.
+    case table(RenderedTable)
+    /// HTML and anything else not drawn, shown as its Markdown source.
     case source(String)
 }
 
@@ -73,8 +84,10 @@ private struct Converter {
             return .code(CodeBlockContent(language: code.language?.trimmedNonEmpty, code: Self.dropTrailingNewlines(code.code)))
         case let html as HTMLBlock:
             return .source(Self.dropTrailingNewlines(html.rawHTML))
+        case let table as Markdown.Table:
+            return .table(self.table(table))
         default:
-            // Tables and anything else this renderer does not draw keep their Markdown source.
+            // Anything else this renderer does not draw keeps its Markdown source.
             return .source(sourceLines(of: markup) ?? Self.dropTrailingNewlines(markup.format()))
         }
     }
@@ -94,6 +107,24 @@ private struct Converter {
         case nil: marker
         }
         return RenderedList.Item(marker: shown, blocks: item.children.compactMap { block($0, depth: depth + 1) })
+    }
+
+    private func table(_ table: Markdown.Table) -> RenderedTable {
+        let header = Array(table.head.cells.map { inlines($0.children) })
+        let columns = max(header.count, table.columnAlignments.count)
+        func padded(_ cells: [AttributedString]) -> [AttributedString] {
+            Array(cells.prefix(columns)) + Array(repeating: AttributedString(), count: max(0, columns - cells.count))
+        }
+        let alignments = (0..<columns).map { column -> RenderedTable.Alignment? in
+            switch column < table.columnAlignments.count ? table.columnAlignments[column] : nil {
+            case .left: .leading
+            case .center: .center
+            case .right: .trailing
+            case nil: nil
+            }
+        }
+        return RenderedTable(
+            header: padded(header), rows: table.body.rows.map { padded(Array($0.cells.map { inlines($0.children) })) }, alignments: alignments)
     }
 
     private func inlines(_ children: MarkupChildren) -> AttributedString {

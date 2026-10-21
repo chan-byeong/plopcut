@@ -6,7 +6,7 @@ Linear: STA-39
 
 Swift 구현에서만 추가한 키는 레거시 사전에 없다: `appLogo`(STA-72, 로고 접근성 라벨), `settingsFailure`·`deleteFailed`·`dropNotFound`·`exportFailed`(STA-78, 알려진 오류 코드의 문구), `dropCountOne`(영어 단수형), `dropTitle`(제목 입력란 접근성 라벨), `ok`(알림 단추), `unreadableDrops`(읽지 못한 드롭 경고, STA-80), `showLogInFinder`(Settings의 로그 파일 보기 단추, STA-80), `menuBarSaved`·`menuBarFailed`(메뉴 막대 저장 피드백의 접근성 이름·툴팁, PLO-93), `noDropsTitle`·`noDropsShortcutHint`·`noDropsClipboardHint`(빈 Library, 레거시 `noDrops`를 대체), `aboutVersion`(정보 섹션, 레거시 `appVersion`을 대체), `popupShortcutHint`(Save Popup 단축키 힌트, PLO-94), `pin`·`unpin`·`pinned`(Drop 고정 동작, 고정됨 Collection·묶음 제목·행 접근성, PLO-102).
 
-PLO-101에서 추가한 키(본문 렌더링과 형식 메뉴): `formatMenu`, `formatMenuHelp`, `formatAutomatic`, `formatPlain`, `formatMarkdown`, `formatCode`, `codeBlock`, `copyCode`, `markdownList`, `markdownQuote`.
+PLO-101에서 추가한 키(본문 렌더링과 형식 메뉴): `formatMenu`, `formatMenuHelp`, `formatAutomatic`, `formatPlain`, `formatMarkdown`, `formatCode`, `codeBlock`, `copyCode`, `markdownList`, `markdownQuote`. PLO-107에서 `markdownTable`을 추가했습니다.
 
 PLO-105에서 추가한 키(Save Popup 제목): `titleField`, `autoTitle`, `autoTitleHelp`, `titleHintWindow`, `titleHintApp`, `titleHintFirstLine`, `titleHintDefault`. 같이 넣은 `pinAfterSave`는 PLO-100 수정에서 체크박스와 함께 뺐습니다.
 
@@ -56,6 +56,7 @@ PLO-104에서 추가한 키(본문 편집): `editBody`, `editingBody`, `bodyChan
 | `copyCode` | Copy code | 코드 복사 |
 | `markdownList` | List | 목록 |
 | `markdownQuote` | Quote | 인용 |
+| `markdownTable` | Table | 표 |
 | `editBody` | Edit | 편집 |
 | `editingBody` | Editing | 편집 중 |
 | `bodyChanged` | Changed | 변경됨 |

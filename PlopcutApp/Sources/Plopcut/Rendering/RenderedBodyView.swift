@@ -77,6 +77,8 @@ private struct BlockView: View {
             CodeBlockView(content: content)
         case .rule:
             Divider()
+        case .table(let table):
+            TableBlockView(table: table)
         case .source(let text):
             Text(text).font(.body.monospaced())
         }
@@ -119,6 +121,71 @@ private struct ListBlockView: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel(L10n.t("markdownList"))
+    }
+}
+
+/// A GFM table: a bold header row over the body rows, columns aligned as the delimiter row says. Wide tables scroll
+/// sideways like code blocks (PLO-107).
+private struct TableBlockView: View {
+    let table: RenderedTable
+
+    var body: some View {
+        // The border hugs a table that fits; only a wider one gets the scroll view.
+        ViewThatFits(in: .horizontal) {
+            framed(grid)
+            framed(ScrollView(.horizontal) { grid }.slimScrollers())
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(L10n.t("markdownTable"))
+    }
+
+    private var grid: some View {
+        Grid(alignment: .topLeading, horizontalSpacing: 0, verticalSpacing: 0) {
+            GridRow {
+                ForEach(Array(table.header.enumerated()), id: \.offset) { column, text in
+                    cell(text, column: column).fontWeight(.semibold)
+                }
+            }
+            .background(.quaternary.opacity(0.4))
+            ForEach(Array(table.rows.enumerated()), id: \.offset) { _, row in
+                Divider()
+                GridRow {
+                    ForEach(Array(row.enumerated()), id: \.offset) { column, text in cell(text, column: column) }
+                }
+            }
+        }
+        .fixedSize()
+    }
+
+    private func framed(_ content: some View) -> some View {
+        content
+            .clipShape(RoundedRectangle(cornerRadius: Radius.field, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: Radius.field, style: .continuous).stroke(.separator, lineWidth: 1))
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private func cell(_ text: AttributedString, column: Int) -> some View {
+        Text(text).font(.body)
+            .multilineTextAlignment(Self.textAlignment(table.alignments[column]))
+            .padding(.horizontal, Spacing.s).padding(.vertical, Spacing.xs)
+            // Fills the column, so the header shading and the alignment span its full width.
+            .frame(maxWidth: .infinity, alignment: Alignment(horizontal: Self.alignment(table.alignments[column]), vertical: .top))
+    }
+
+    private static func alignment(_ alignment: RenderedTable.Alignment?) -> HorizontalAlignment {
+        switch alignment {
+        case .center: .center
+        case .trailing: .trailing
+        case .leading, nil: .leading
+        }
+    }
+
+    private static func textAlignment(_ alignment: RenderedTable.Alignment?) -> TextAlignment {
+        switch alignment {
+        case .center: .center
+        case .trailing: .trailing
+        case .leading, nil: .leading
+        }
     }
 }
 

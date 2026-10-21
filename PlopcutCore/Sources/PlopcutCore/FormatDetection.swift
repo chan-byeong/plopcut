@@ -61,7 +61,7 @@ public enum FormatDetection {
 
     private static func hasClearMarkdownSignals(_ text: String) -> Bool {
         let lines = text.split(separator: "\n", omittingEmptySubsequences: false).map { $0.hasSuffix("\r") ? $0.dropLast() : $0 }
-        if hasClosedFence(lines) { return true }
+        if hasClosedFence(lines) || hasTable(lines) { return true }
         if text.contains(/\[[^\]\n]+\]\([^)\s]+\)/) { return true }
 
         var signals = Set<Signal>()
@@ -73,6 +73,23 @@ public enum FormatDetection {
         if text.contains(/\*\*[^*\n]+\*\*|__[^_\n]+__/) { signals.insert(.strong) }
         if text.contains(/`[^`\n]+`/) { signals.insert(.inlineCode) }
         return signals.count >= 2
+    }
+
+    /// A header row with a `|` directly followed by a delimiter row (`| --- | :-: |`) with as many cells (GFM table, PLO-107).
+    private static func hasTable(_ lines: [Substring]) -> Bool {
+        zip(lines, lines.dropFirst()).contains { header, delimiter in
+            header.contains("|") && delimiter.contains("|")
+                && delimiter.wholeMatch(of: /[ \t]{0,3}\|?([ \t]*:?-+:?[ \t]*\|)*[ \t]*:?-+:?[ \t]*\|?[ \t]*/) != nil
+                && tableCells(header) == tableCells(delimiter)
+        }
+    }
+
+    /// Cells of a table row: `|`-separated, ignoring one leading and one trailing `|`.
+    private static func tableCells(_ line: Substring) -> Int {
+        var row = line.trimmingCharacters(in: .whitespaces)[...]
+        if row.hasPrefix("|") { row = row.dropFirst() }
+        if row.hasSuffix("|") { row = row.dropLast() }
+        return row.split(separator: "|", omittingEmptySubsequences: false).count
     }
 
     /// A ``` or ~~~ line followed later by a closing line with the same fence.

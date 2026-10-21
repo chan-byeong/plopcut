@@ -48,6 +48,7 @@ enum StringTable {
         "copyCode": (en: "Copy code", ko: "코드 복사"),
         "markdownList": (en: "List", ko: "목록"),
         "markdownQuote": (en: "Quote", ko: "인용"),
+        "markdownTable": (en: "Table", ko: "표"),
         "editBody": (en: "Edit", ko: "편집"),
         "editingBody": (en: "Editing", ko: "편집 중"),
         "bodyChanged": (en: "Changed", ko: "변경됨"),
