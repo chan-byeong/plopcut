@@ -59,7 +59,7 @@ import Testing
         #expect(h.shown.last == MenuBarAppearance(accent: .check, motion: nil, tooltip: L10n.t("menuBarSaved")))
         h.fire(.milliseconds(1100))
         #expect(h.shown.last == .idle)
-        #expect(h.shown.last?.tooltip == "plopcut")
+        #expect(h.shown.last?.tooltip == "Plopcut")
     }
 
     // T-03: the mark shakes and the exclamation mark stays; nothing is scheduled to clear it.

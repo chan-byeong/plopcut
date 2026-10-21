@@ -1,6 +1,6 @@
-# plopcut
+# Plopcut
 
-plopcut is a local-first macOS clipboard app built with Swift (SwiftUI and
+Plopcut is a local-first macOS clipboard app built with Swift (SwiftUI and
 AppKit). Users deliberately capture text or images, add notes and tags, and
 find saved drops in the Library.
 

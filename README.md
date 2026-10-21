@@ -1,15 +1,15 @@
-# plopcut
+# Plopcut
 
 [한국어 안내 (README.ko.md)](README.ko.md)
 
-plopcut is a local-first macOS clipboard app. You deliberately capture
+Plopcut is a local-first macOS clipboard app. You deliberately capture
 selected text or a clipboard image, add a note and tags, and find it later
 in the Library. Every drop is stored as ordinary readable files on your Mac.
 
-plopcut does not watch your clipboard in the background. It reads the
+Plopcut does not watch your clipboard in the background. It reads the
 clipboard or the selected text only when you ask it to capture.
 
-> **Beta.** plopcut is in beta. The beta build is **not signed or notarized by
+> **Beta.** Plopcut is in beta. The beta build is **not signed or notarized by
 > Apple**, so macOS blocks it the first time you open it (see
 > [Install](#install)). An official signed release will follow after testing.
 > Please report problems in [GitHub Issues](https://github.com/chan-byeong/plopcut/issues).
@@ -40,30 +40,30 @@ clipboard or the selected text only when you ask it to capture.
 
 Requirements: a Mac running macOS. The minimum supported macOS version is 14.
 
-1. Download the latest `plopcut-<version>-beta.<n>.dmg` from the
+1. Download the latest `Plopcut-<version>-beta.<n>.dmg` from the
    [Releases page](https://github.com/chan-byeong/plopcut/releases) (beta builds are marked Pre-release).
    *Added with the first beta.*
-2. Open the disk image and drag **plopcut** into **Applications**.
-3. Try to open plopcut. macOS refuses because the beta is not notarized. Allow it once:
+2. Open the disk image and drag **Plopcut** into **Applications**.
+3. Try to open Plopcut. macOS refuses because the beta is not notarized. Allow it once:
    - Open **System Settings › Privacy & Security**, scroll to the message about
-     plopcut, and choose **Open Anyway**. (On macOS 15 and later, right-click › Open
+     Plopcut, and choose **Open Anyway**. (On macOS 15 and later, right-click › Open
      no longer works.)
-   - Or, in Terminal: `xattr -dr com.apple.quarantine /Applications/plopcut.app`
-4. Allow **Accessibility** and **Automation** when plopcut asks (see Permissions below).
+   - Or, in Terminal: `xattr -dr com.apple.quarantine /Applications/Plopcut.app`
+4. Allow **Accessibility** and **Automation** when Plopcut asks (see Permissions below).
 
 You can also build it yourself: `sh scripts/make-app.sh release`, then open
-`PlopcutApp/.build/plopcut.app`. This needs Xcode and the Swift 6 toolchain.
+`PlopcutApp/.build/Plopcut.app`. This needs Xcode and the Swift 6 toolchain.
 
 **Permissions after an update.** Beta builds are signed ad hoc, so the signature
 changes with every build and macOS may forget the Accessibility or Automation
 permission. If capture stops working after an update, run
-`tccutil reset Accessibility com.plopcut.app` and allow plopcut again. You will
+`tccutil reset Accessibility com.plopcut.app` and allow Plopcut again. You will
 need to allow it once more when the signed official release replaces the beta.
 Your drops and settings are not affected.
 
 ## First run
 
-On first launch plopcut asks where to keep your drops:
+On first launch Plopcut asks where to keep your drops:
 
 - **Use the default folder** `~/Documents/plopcut`, or
 - **Choose another folder.**
@@ -73,14 +73,14 @@ Settings only affects new drops. Existing drops are not moved or copied.
 
 ## Permissions
 
-plopcut asks for these only when a feature needs them. You can review their
+Plopcut asks for these only when a feature needs them. You can review their
 status in Settings.
 
-| Permission | Where to allow it | Why plopcut needs it |
+| Permission | Where to allow it | Why Plopcut needs it |
 | --- | --- | --- |
 | Accessibility | System Settings › Privacy & Security › Accessibility | Reads the selected text in the app you are using and, as a fallback, sends `Command`+`C` to copy it. Selected-text capture does not work without it. |
 | Automation (Google Chrome) | System Settings › Privacy & Security › Automation | Reads the URL of Chrome's active tab so the drop can keep its source link. macOS asks the first time. Without it, capture still works but the URL is not saved. |
-| Clipboard | No plopcut setting. Recent macOS versions may show their own prompt when an app reads the clipboard. | Reads the clipboard only when you run `Save Clipboard`. |
+| Clipboard | No Plopcut setting. Recent macOS versions may show their own prompt when an app reads the clipboard. | Reads the clipboard only when you run `Save Clipboard`. |
 
 ## Where your data is stored
 
@@ -90,32 +90,32 @@ status in Settings.
   You can open these files with any text editor or Finder.
 - **Settings:** `~/Library/Application Support/plopcut/settings.json`.
 
-plopcut does not use a database and does not send these files anywhere.
+Plopcut does not use a database and does not send these files anywhere.
 See [docs/privacy.md](docs/privacy.md).
 
 ## Uninstall
 
-1. Quit plopcut.
-2. Move **plopcut.app** from Applications to the Trash.
+1. Quit Plopcut.
+2. Move **Plopcut.app** from Applications to the Trash.
 3. Optional: remove the settings folder `~/Library/Application Support/plopcut`
 
 4. Optional: remove your saved drops in `~/Documents/plopcut`. **This deletes
    your drops.** Copy the folder somewhere safe first if you want to keep them.
    Uninstalling the app does not delete them.
-5. Optional: remove plopcut from **Accessibility** and **Automation** under
+5. Optional: remove Plopcut from **Accessibility** and **Automation** under
    System Settings › Privacy & Security.
 
 ## Privacy
 
-All drops and settings stay on your Mac. plopcut does not send data
+All drops and settings stay on your Mac. Plopcut does not send data
 externally and contains no telemetry. Details and the basis for this claim:
 [docs/privacy.md](docs/privacy.md).
 
 ## Log file and reporting a problem
 
-plopcut keeps a small local log to help with support. It is a plain text file at
+Plopcut keeps a small local log to help with support. It is a plain text file at
 `~/Library/Logs/plopcut/plopcut.log` (the previous one is `plopcut.log.1`;
-each file is at most about 1 MB). In plopcut, open **Settings** and choose
+each file is at most about 1 MB). In Plopcut, open **Settings** and choose
 **Show Log in Finder**.
 
 - **It stays on your Mac.** Nothing is uploaded or sent automatically.
@@ -129,7 +129,7 @@ each file is at most about 1 MB). In plopcut, open **Settings** and choose
 
 To report a problem, attach `plopcut.log` (and `plopcut.log.1` if it exists)
 to your message yourself, with a short description of what you did. You can
-open the file first to check it. Deleting the files is safe; plopcut creates a
+open the file first to check it. Deleting the files is safe; Plopcut creates a
 new one.
 
 ## Features not in this release
@@ -142,14 +142,14 @@ See [docs/release-scope.md](docs/release-scope.md).
 ## Updates
 
 This release has no automatic update check. Download new versions manually.
-See [docs/update-method.md](docs/update-method.md). plopcut is distributed as a downloadable DMG, not through the Mac App Store.
+See [docs/update-method.md](docs/update-method.md). Plopcut is distributed as a downloadable DMG, not through the Mac App Store.
 
 ## License
 
-plopcut is open source under the [MIT License](LICENSE). It includes
+Plopcut is open source under the [MIT License](LICENSE). It includes
 open-source packages for Markdown rendering and code highlighting; their
 licenses are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), which is also
-inside the app (`plopcut.app/Contents/Resources`). Contributions are
+inside the app (`Plopcut.app/Contents/Resources`). Contributions are
 welcome: see [CONTRIBUTING.md](CONTRIBUTING.md). Report security problems
 privately as described in [SECURITY.md](SECURITY.md).
 
@@ -164,4 +164,4 @@ behavior checklist record the behavior you need.
 Start with [`AGENTS.md`](AGENTS.md), then the
 [implementation spec](docs/swift-migration/spec.md) and the
 [behavior checklist](docs/swift-migration/behavior-checklist.md).
-`scripts/make-app.sh` builds a local `plopcut.app` bundle for development.
+`scripts/make-app.sh` builds a local `Plopcut.app` bundle for development.

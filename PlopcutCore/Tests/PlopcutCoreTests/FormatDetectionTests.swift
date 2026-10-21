@@ -43,6 +43,9 @@ private func detect(_ text: String, app: String? = nil) -> ResolvedFormat {
         "> quoted\n\n- a list item",
         "Use `git status` and **commit** often.",
         "1. first\n2. second\n\n**Note:** done",
+        // PLO-107: a table header with its delimiter row is enough on its own.
+        "| Name | Qty |\n| --- | --: |\n| apple | 3 |",
+        "Name | Qty\n:--|:-:\napple | 3",
     ])
     func clearMarkdownSignalsAreMarkdown(text: String) {
         #expect(detect(text, app: "Notes") == .markdown)
@@ -57,6 +60,9 @@ private func detect(_ text: String, app: String? = nil) -> ResolvedFormat {
         "Ordinary sentence.\nAnother line of prose.",
         "",
         "```\nunclosed fence",
+        "a | b | c\nno delimiter row here",
+        "| --- |",
+        "Totals\n---|---",
     ])
     func proseWithStraySymbolsStaysPlain(text: String) {
         #expect(detect(text, app: "Safari") == .plain)

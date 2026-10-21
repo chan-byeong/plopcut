@@ -1,6 +1,6 @@
 # Privacy
 
-plopcut keeps everything on your Mac.
+Plopcut keeps everything on your Mac.
 
 - **All data stays local.** Drops, notes, tags, and settings are files in your
   storage folder (default `~/Documents/plopcut`) and in
@@ -11,7 +11,7 @@ plopcut keeps everything on your Mac.
 
 ## Support log (local only)
 
-plopcut writes a small log to `~/Library/Logs/plopcut/plopcut.log` (one
+Plopcut writes a small log to `~/Library/Logs/plopcut/plopcut.log` (one
 previous file, `plopcut.log.1`; about 1 MB each). It stays on your Mac and is
 never uploaded. Settings has a `Show Log in Finder` row.
 
@@ -25,11 +25,11 @@ never uploaded. Settings has a `Show Log in Finder` row.
 - **Reporting a problem:** attach the log file to your message yourself. There
   is no automatic report.
 
-## What plopcut reads, and when
+## What Plopcut reads, and when
 
 - The **selected text** of the frontmost app, only when you press the capture
   shortcut or choose a capture command.
-- The **clipboard**, only when you run `Save Clipboard`. plopcut does not
+- The **clipboard**, only when you run `Save Clipboard`. Plopcut does not
   monitor the clipboard in the background.
 - The **frontmost app name, window title**, and, for Google Chrome only, the
   **URL of the active tab**, at the moment of capture. macOS asks for Automation
@@ -72,7 +72,7 @@ Other findings:
 - **User-initiated URL opening.** `NSWorkspace.shared.open` opens a stored
   source URL when you click `Open Source`, and opens System Settings when you
   choose to review permissions. The browser that opens makes its own network
-  requests. That traffic is the browser's, not plopcut's.
+  requests. That traffic is the browser's, not Plopcut's.
 
 ## What this does not cover
 

@@ -34,7 +34,7 @@ struct MenuBarAppearance: Equatable {
 /// The status item, the timer and the Reduce Motion setting are injected so the states and timing can be tested.
 @MainActor
 final class MenuBarFeedback {
-    nonisolated static let idleTooltip = "plopcut"
+    nonisolated static let idleTooltip = "Plopcut"
     static let dropDuration: Duration = .milliseconds(200)
     static let shakeDuration: Duration = .milliseconds(240)
     /// From the start of the drop until the dot is back.

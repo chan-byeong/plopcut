@@ -1,6 +1,6 @@
 #!/bin/sh
-# Wraps the SwiftPM executable in a minimal plopcut.app so macOS grants permissions to a stable bundle ID.
-# Usage: scripts/make-app.sh [debug|release]   ->   PlopcutApp/.build/plopcut.app
+# Wraps the SwiftPM executable in a minimal Plopcut.app so macOS grants permissions to a stable bundle ID.
+# Usage: scripts/make-app.sh [debug|release]   ->   PlopcutApp/.build/Plopcut.app
 # Env: SIGN_IDENTITY (default "-" = ad-hoc). When set to a real identity, signs with Hardened Runtime,
 #      entitlements and a secure timestamp. Identity/version come from scripts/app-config.sh.
 set -eu
@@ -10,7 +10,7 @@ SCRIPTS="$(cd "$(dirname "$0")" && pwd)"
 SIGN_IDENTITY="${SIGN_IDENTITY:--}"
 cd "$SCRIPTS/../PlopcutApp"
 swift build -c "$CONFIG"
-APP=.build/plopcut.app
+APP=.build/$APP_NAME.app
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp ".build/$CONFIG/Plopcut" "$APP/Contents/MacOS/plopcut"
@@ -47,7 +47,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleVersion</key><string>$APP_BUILD</string>
   <key>LSMinimumSystemVersion</key><string>$MIN_MACOS</string>
   <key>NSHighResolutionCapable</key><true/>
-  <key>NSAppleEventsUsageDescription</key><string>plopcut reads the browser URL of the page you capture from.</string>
+  <key>NSAppleEventsUsageDescription</key><string>Plopcut reads the browser URL of the page you capture from.</string>
 </dict></plist>
 PLIST
 if [ "$SIGN_IDENTITY" = "-" ]; then

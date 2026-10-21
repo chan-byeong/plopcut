@@ -4,8 +4,8 @@ Status: **decided — manual download (owner, STA-75).**
 
 ## Decision: manual download
 
-plopcut checks for updates **never**. Users download the new `plopcut.dmg`
-from the Releases page of the plopcut repository (`github.com/chan-byeong/plopcut`) and replace the app.
+Plopcut checks for updates **never**. Users download the new `Plopcut.dmg`
+from the Releases page of the Plopcut repository (`github.com/chan-byeong/plopcut`) and replace the app.
 
 Reasons:
 
@@ -59,6 +59,6 @@ Each item below needs an owner decision. Items struck through are decided.
    macOS, and published is not decided on this branch. It will be described in
    `docs/release.md` (coming). The README does not claim anything about it.
 5. ~~**Where the user docs are published.**~~ Decided (owner, STA-85, replacing the STA-75
-   plan of a separate release repository): plopcut is open source, so the source repository
+   plan of a separate release repository): Plopcut is open source, so the source repository
    `github.com/chan-byeong/plopcut` is the public home. Its README and `docs/` hold the user
    docs, and the DMGs are in its GitHub Releases. It goes public after STA-86.

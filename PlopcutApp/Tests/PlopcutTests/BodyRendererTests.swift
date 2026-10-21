@@ -76,14 +76,35 @@ import Testing
         #expect(plain(text) == "web and file")
     }
 
-    @Test func imagesTablesAndHTMLStayAsSourceText() {
-        let blocks = markdown("![logo](https://example.com/logo.png)\n\n| a | b |\n| - | - |\n| 1 | 2 |\n\n<div>hi</div>")
-        guard blocks.count == 3, case .paragraph(let image) = blocks[0] else { Issue.record("\(blocks)"); return }
+    @Test func imagesAndHTMLStayAsSourceText() {
+        let blocks = markdown("![logo](https://example.com/logo.png)\n\n<div>hi</div>")
+        guard blocks.count == 2, case .paragraph(let image) = blocks[0] else { Issue.record("\(blocks)"); return }
         #expect(plain(image) == "![logo](https://example.com/logo.png)")
         #expect(image.runs.allSatisfy { $0.link == nil })
-        guard case .source(let table) = blocks[1] else { Issue.record("table: \(blocks[1])"); return }
-        #expect(table.contains("| a") && table.contains("1"))
-        #expect(blocks[2] == .source("<div>hi</div>"))
+        #expect(blocks[1] == .source("<div>hi</div>"))
+    }
+
+    // PLO-107: GFM tables become rows and columns instead of their source.
+    @Test func tablesKeepHeaderRowsAndAlignments() {
+        let blocks = markdown("Intro\n\n| Name | Qty | Note |\n| :--- | ---: | :-: |\n| apple | 3 | ok |\n| pear | 10 | |")
+        guard blocks.count == 2, case .table(let table) = blocks[1] else { Issue.record("\(blocks)"); return }
+        #expect(table.header.map(plain) == ["Name", "Qty", "Note"])
+        #expect(table.rows.map { $0.map(plain) } == [["apple", "3", "ok"], ["pear", "10", ""]])
+        #expect(table.alignments == [.leading, .trailing, .center])
+    }
+
+    @Test func tableCellsKeepInlineStylesAndLinks() {
+        guard case .table(let table) = markdown("| a | b |\n| - | - |\n| **bold** `code` | [web](https://example.com) |").first,
+              let row = table.rows.first, row.count == 2 else { Issue.record("no table"); return }
+        #expect(plain(row[0]) == "bold code")
+        #expect(row[0].runs.contains { $0.inlinePresentationIntent?.contains(.stronglyEmphasized) == true })
+        #expect(row[1].runs.compactMap(\.link) == [URL(string: "https://example.com")!])
+        #expect(table.alignments == [nil, nil])
+    }
+
+    @Test func shortTableRowsArePaddedToTheHeader() {
+        guard case .table(let table) = markdown("| a | b | c |\n| - | - | - |\n| 1 |").first else { Issue.record("no table"); return }
+        #expect(table.rows.map { $0.map(plain) } == [["1", "", ""]])
     }
 
     @Test func singleLineBreaksAreKept() {

@@ -92,7 +92,7 @@ public struct SelectedTextCapture: Sendable {
         } catch let error as PlopcutError where error.code.hasPrefix("automation_") {
             throw PlopcutError(
                 "permission_missing",
-                detail: "Allow plopcut in System Settings > Privacy & Security > Accessibility.")
+                detail: "Allow Plopcut in System Settings > Privacy & Security > Accessibility.")
         }
 
         var changed = hasChanged(since: changeCountBefore, backup: backup)

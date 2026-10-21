@@ -1,6 +1,6 @@
 # Third-party notices
 
-plopcut includes the following open-source software. Each section reproduces
+Plopcut includes the following open-source software. Each section reproduces
 the component's license and notice files unchanged. Versions are pinned in
 `PlopcutApp/Package.resolved`.
 

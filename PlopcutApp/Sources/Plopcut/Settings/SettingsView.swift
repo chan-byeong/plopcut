@@ -31,7 +31,7 @@ struct SettingsView: View {
                 HStack(spacing: Spacing.s) {
                     Image(nsImage: NSImage(named: NSImage.applicationIconName) ?? NSImage()).resizable().frame(width: 32, height: 32)
                         .accessibilityHidden(true)
-                    Text("plopcut").font(.headline)
+                    Text("Plopcut").font(.headline)
                     Text(L10n.t("aboutVersion", ["version": model.appVersion])).foregroundStyle(.secondary)
                 }
                 .accessibilityElement(children: .combine)
