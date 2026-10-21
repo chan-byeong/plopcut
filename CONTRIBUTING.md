@@ -1,6 +1,6 @@
-# Contributing to plopcut
+# Contributing to Plopcut
 
-Thanks for helping. plopcut is a small local-first macOS app, so changes are
+Thanks for helping. Plopcut is a small local-first macOS app, so changes are
 reviewed against a short list of product rules. Read this page before you open
 a pull request.
 
@@ -13,7 +13,7 @@ a pull request.
 
 ## What fits the project
 
-plopcut stores what you deliberately capture as readable local files. These are
+Plopcut stores what you deliberately capture as readable local files. These are
 **out of scope** unless a maintainer asks for them: database storage, cloud sync,
 OCR, AI features, collaboration, mobile apps, continuous clipboard monitoring,
 full-screen recording, permanent highlight overlays, and exact source-position
@@ -31,12 +31,12 @@ You need macOS 14 or later and a Swift 6 toolchain (Xcode).
 ```sh
 cd PlopcutCore && swift build && swift test
 cd ../PlopcutApp && swift build && swift test
-sh scripts/make-app.sh debug      # builds PlopcutApp/.build/plopcut.app
-open PlopcutApp/.build/plopcut.app
+sh scripts/make-app.sh debug      # builds PlopcutApp/.build/Plopcut.app
+open PlopcutApp/.build/Plopcut.app
 ```
 
 Running the packaged app **moves** a pre-rebrand `~/Documents/Notedrop`, the
-settings folder, and the log folder to their plopcut names (see spec section 1.9). Back
+settings folder, and the log folder to their Plopcut names (see spec section 1.9). Back
 those up first if you used an older build. `swift test` and `swift run` never touch your
 real folders. The app asks for Accessibility and Automation permission when you capture.
 
@@ -58,7 +58,7 @@ test, chore, perf, ci.
 ## Issues
 
 Use GitHub Issues for bugs and ideas. For a bug, include your macOS version, the
-plopcut version, what you did, and what happened. Attach `plopcut.log` if it
+Plopcut version, what you did, and what happened. Attach `plopcut.log` if it
 helps (Settings → Show Log in Finder); it holds no drop text, notes, or paths.
 Maintainers track accepted work internally as `PLO-<number>` (older work as `STA-<number>`); you do not need an account for that.
 

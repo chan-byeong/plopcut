@@ -1,11 +1,11 @@
-# plopcut (한국어)
+# Plopcut (한국어)
 
 [English README](README.md)
 
-plopcut은 로컬 우선(local-first) macOS 클립보드 앱입니다. 선택한 텍스트나 클립보드 이미지를 사용자가 직접 캡처하고,
+Plopcut은 로컬 우선(local-first) macOS 클립보드 앱입니다. 선택한 텍스트나 클립보드 이미지를 사용자가 직접 캡처하고,
 노트와 태그를 붙여 라이브러리에서 다시 찾습니다. 모든 드롭은 Mac에 일반적인 읽을 수 있는 파일로 저장됩니다.
 
-plopcut은 백그라운드에서 클립보드를 감시하지 않습니다. 사용자가 캡처를 요청할 때만 클립보드나 선택한 텍스트를 읽습니다.
+Plopcut은 백그라운드에서 클립보드를 감시하지 않습니다. 사용자가 캡처를 요청할 때만 클립보드나 선택한 텍스트를 읽습니다.
 
 > **베타 버전입니다.** 베타 빌드는 Apple의 서명·공증을 받지 않아서, 처음 열 때 macOS가 막습니다([설치](#설치) 참고).
 > 테스트가 끝나면 서명된 정식 버전을 배포할 예정입니다. 문제는 [GitHub Issues](https://github.com/chan-byeong/plopcut/issues)로 알려 주세요.
@@ -25,16 +25,16 @@ plopcut은 백그라운드에서 클립보드를 감시하지 않습니다. 사�
 
 요구 사항: macOS 14 이상이 설치된 Mac.
 
-1. [Releases 페이지](https://github.com/chan-byeong/plopcut/releases)에서 최신 `plopcut-<버전>-beta.<n>.dmg`를 내려받습니다
+1. [Releases 페이지](https://github.com/chan-byeong/plopcut/releases)에서 최신 `Plopcut-<버전>-beta.<n>.dmg`를 내려받습니다
    (베타는 Pre-release로 표시됩니다). *첫 베타와 함께 추가합니다.*
-2. 디스크 이미지를 열고 **plopcut**을 **응용 프로그램(Applications)** 폴더로 끌어 놓습니다.
-3. plopcut을 열어 봅니다. 베타는 공증되지 않아 macOS가 막습니다. 한 번만 허용하면 됩니다.
-   - **시스템 설정 › 개인정보 보호 및 보안**을 열어 plopcut에 관한 안내가 보이면 **그래도 열기**를 누릅니다.
+2. 디스크 이미지를 열고 **Plopcut**을 **응용 프로그램(Applications)** 폴더로 끌어 놓습니다.
+3. Plopcut을 열어 봅니다. 베타는 공증되지 않아 macOS가 막습니다. 한 번만 허용하면 됩니다.
+   - **시스템 설정 › 개인정보 보호 및 보안**을 열어 Plopcut에 관한 안내가 보이면 **그래도 열기**를 누릅니다.
      (macOS 15 이상에서는 우클릭 › 열기가 통하지 않습니다.)
-   - 또는 터미널에서 `xattr -dr com.apple.quarantine /Applications/plopcut.app`을 실행합니다.
-4. plopcut이 요청하면 **손쉬운 사용**과 **자동화**를 허용합니다(아래 권한 참고).
+   - 또는 터미널에서 `xattr -dr com.apple.quarantine /Applications/Plopcut.app`을 실행합니다.
+4. Plopcut이 요청하면 **손쉬운 사용**과 **자동화**를 허용합니다(아래 권한 참고).
 
-직접 빌드할 수도 있습니다. `sh scripts/make-app.sh release` 후 `PlopcutApp/.build/plopcut.app`을 엽니다. Xcode와 Swift 6
+직접 빌드할 수도 있습니다. `sh scripts/make-app.sh release` 후 `PlopcutApp/.build/Plopcut.app`을 엽니다. Xcode와 Swift 6
 툴체인이 필요합니다.
 
 **업데이트 후 권한.** 베타 빌드는 ad-hoc 서명이라 빌드마다 서명이 달라져서 macOS가 손쉬운 사용·자동화 권한을 잊을 수 있습니다.
@@ -53,13 +53,13 @@ plopcut은 백그라운드에서 클립보드를 감시하지 않습니다. 사�
 
 ## 권한
 
-plopcut은 해당 기능이 필요할 때만 권한을 요청합니다. 설정 화면에서 권한 상태를 확인할 수 있습니다.
+Plopcut은 해당 기능이 필요할 때만 권한을 요청합니다. 설정 화면에서 권한 상태를 확인할 수 있습니다.
 
 | 권한 | 허용 위치 | 필요한 이유 |
 | --- | --- | --- |
 | 손쉬운 사용(Accessibility) | 시스템 설정 › 개인정보 보호 및 보안 › 손쉬운 사용 | 사용 중인 앱에서 선택한 텍스트를 읽고, 직접 읽기가 안 될 때 대신 `Command`+`C`를 보내 복사합니다. 이 권한이 없으면 선택 텍스트 캡처가 동작하지 않습니다. |
 | 자동화(Google Chrome) | 시스템 설정 › 개인정보 보호 및 보안 › 자동화 | Chrome 활성 탭의 URL을 읽어 드롭의 출처 링크를 남깁니다. macOS가 처음 한 번 묻습니다. 허용하지 않아도 캡처는 되지만 URL은 저장되지 않습니다. |
-| 클립보드 | plopcut 설정 항목 없음. 최근 macOS는 앱이 클립보드를 읽을 때 자체 확인 창을 띄울 수 있습니다. | `Save Clipboard`를 실행할 때만 클립보드를 읽습니다. |
+| 클립보드 | Plopcut 설정 항목 없음. 최근 macOS는 앱이 클립보드를 읽을 때 자체 확인 창을 띄울 수 있습니다. | `Save Clipboard`를 실행할 때만 클립보드를 읽습니다. |
 
 ## 데이터 저장 위치
 
@@ -67,27 +67,27 @@ plopcut은 해당 기능이 필요할 때만 권한을 요청합니다. 설정 �
   `content.md` 또는 `image.png`, `note.md`가 있습니다. 텍스트 편집기나 Finder로 열어 볼 수 있습니다.
 - **설정**: `~/Library/Application Support/plopcut/settings.json`
 
-plopcut은 데이터베이스를 사용하지 않으며, 이 파일을 외부로 보내지 않습니다. 자세한 내용은 [docs/privacy.md](docs/privacy.md)를 참고하세요.
+Plopcut은 데이터베이스를 사용하지 않으며, 이 파일을 외부로 보내지 않습니다. 자세한 내용은 [docs/privacy.md](docs/privacy.md)를 참고하세요.
 
 ## 삭제(제거) 방법
 
-1. plopcut을 종료합니다.
-2. 응용 프로그램의 **plopcut.app**을 휴지통으로 옮깁니다.
+1. Plopcut을 종료합니다.
+2. 응용 프로그램의 **Plopcut.app**을 휴지통으로 옮깁니다.
 3. 선택 사항: 설정 폴더 `~/Library/Application Support/plopcut`을 삭제합니다.
 4. 선택 사항: `~/Documents/plopcut`의 저장된 드롭을 삭제합니다. **드롭이 모두 삭제됩니다.** 보관하려면 먼저 다른 곳에 복사하세요.
    앱을 삭제해도 드롭은 자동으로 지워지지 않습니다.
-5. 선택 사항: 시스템 설정 › 개인정보 보호 및 보안의 **손쉬운 사용**과 **자동화**에서 plopcut 항목을 지웁니다.
+5. 선택 사항: 시스템 설정 › 개인정보 보호 및 보안의 **손쉬운 사용**과 **자동화**에서 Plopcut 항목을 지웁니다.
 
 ## 개인정보
 
-모든 드롭과 설정은 사용자의 Mac에만 남습니다. plopcut은 데이터를 외부로 보내지 않으며 원격 측정(telemetry)을 포함하지 않습니다.
+모든 드롭과 설정은 사용자의 Mac에만 남습니다. Plopcut은 데이터를 외부로 보내지 않으며 원격 측정(telemetry)을 포함하지 않습니다.
 근거와 세부 내용은 [docs/privacy.md](docs/privacy.md)를 참고하세요.
 
 ## 로그 파일과 문제 신고
 
-plopcut은 문제 확인에 쓰는 작은 로그를 이 Mac에만 남깁니다. 위치는
+Plopcut은 문제 확인에 쓰는 작은 로그를 이 Mac에만 남깁니다. 위치는
 `~/Library/Logs/plopcut/plopcut.log`이고 일반 텍스트 파일입니다(이전 파일은
-`plopcut.log.1`, 파일당 최대 약 1MB). plopcut의 **설정**에서
+`plopcut.log.1`, 파일당 최대 약 1MB). Plopcut의 **설정**에서
 **Finder에서 로그 보기**를 누르면 열립니다.
 
 - **이 Mac 밖으로 나가지 않습니다.** 자동으로 업로드하거나 전송하지 않습니다.
@@ -97,7 +97,7 @@ plopcut은 문제 확인에 쓰는 작은 로그를 이 Mac에만 남깁니다. 
 
 문제를 신고할 때는 무엇을 했는지 짧게 적고 `plopcut.log`(있으면 `plopcut.log.1`도)를
 직접 첨부하세요. 먼저 파일을 열어 내용을 확인할 수 있습니다. 파일을 지워도 되며,
-plopcut이 새로 만듭니다.
+Plopcut이 새로 만듭니다.
 
 ## 이번 릴리스에서 제외된 기능
 
@@ -112,8 +112,8 @@ plopcut이 새로 만듭니다.
 
 ## 라이선스
 
-plopcut은 [MIT 라이선스](LICENSE)로 공개된 오픈소스입니다. Markdown 렌더링과 코드 하이라이트에 오픈소스 패키지를 쓰며,
-그 라이선스는 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)와 앱 안(`plopcut.app/Contents/Resources`)에 있습니다. 기여를 환영합니다. [CONTRIBUTING.md](CONTRIBUTING.md)를 읽어 주세요.
+Plopcut은 [MIT 라이선스](LICENSE)로 공개된 오픈소스입니다. Markdown 렌더링과 코드 하이라이트에 오픈소스 패키지를 쓰며,
+그 라이선스는 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)와 앱 안(`Plopcut.app/Contents/Resources`)에 있습니다. 기여를 환영합니다. [CONTRIBUTING.md](CONTRIBUTING.md)를 읽어 주세요.
 보안 문제는 [SECURITY.md](SECURITY.md)의 절차대로 비공개로 신고해 주세요.
 
 ---
@@ -124,4 +124,4 @@ Swift(SwiftUI, AppKit)로 새로 구현한 버전입니다. 이전 Tauri + React
 필요한 동작은 사양과 동작 체크리스트에 기록되어 있습니다.
 
 먼저 [`AGENTS.md`](AGENTS.md)를 읽고, [구현 사양](docs/swift-migration/spec.md)과
-[동작 체크리스트](docs/swift-migration/behavior-checklist.md)를 확인하세요. `scripts/make-app.sh`로 개발용 `plopcut.app`을 만들 수 있습니다.
+[동작 체크리스트](docs/swift-migration/behavior-checklist.md)를 확인하세요. `scripts/make-app.sh`로 개발용 `Plopcut.app`을 만들 수 있습니다.

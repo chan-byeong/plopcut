@@ -79,7 +79,7 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 | P-14 | 별도 팝업 창이 이미 열려 있으면 단축키는 새 캡처를 하지 않고 열린 팝업을 앞으로 가져온다(결정 STA-47). 팝업이 열려 있으면 키보드가 팝업에 있어 선택 텍스트 캡처가 팝업 자신을 읽기 때문이다(PLO-96부터 팝업은 앱을 활성화하지 않지만 키보드는 가져간다). 레거시의 "새 Draft로 교체"와 다르다. | `open_capture_window` | 수동: 팝업을 연 채 단축키 재입력 | ☑ |
 | P-15 | 레거시는 클립보드 접근을 `swift -e` 서브프로세스로 했다. Swift 앱은 `NSPasteboard`를 직접 쓰므로 이 구조는 이어받지 않는다(같은 시맨틱만 유지). | `capture.rs` | — | ☑ |
 | P-16 | 접근성 읽기(`AXUIElementCreateApplication(최전면 앱)` → 포커스 요소 → `AXSelectedText`)가 비어 있지 않은 값을 주면 클립보드를 읽거나 쓰지 않고, `Cmd+C`도 보내지 않는다. 시스템 전역 요소는 쓰지 않는다(Chrome에서 실패). | [ax-probe.md](ax-probe.md) | 단위(가짜 호출 기록) + 수동: 메모·Chrome에서 캡처 전후 클립보드 `changeCount` 동일 | ☑ |
-| P-17 | 접근성 읽기가 실패하거나 값이 비거나 공백뿐이면 클립보드 폴백(P-02~P-09)으로 넘어가며, 그 자체로 `no_selected_text`로 보지 않는다. 최전면 앱이 plopcut이면 접근성 읽기를 건너뛴다. | [ax-probe.md](ax-probe.md) | 단위 + 수동: Safari·터미널(Hyper)에서 폴백으로 저장 | ☑ |
+| P-17 | 접근성 읽기가 실패하거나 값이 비거나 공백뿐이면 클립보드 폴백(P-02~P-09)으로 넘어가며, 그 자체로 `no_selected_text`로 보지 않는다. 최전면 앱이 Plopcut이면 접근성 읽기를 건너뛴다. | [ax-probe.md](ax-probe.md) | 단위 + 수동: Safari·터미널(Hyper)에서 폴백으로 저장 | ☑ |
 
 ## K. 클립보드 캡처 (메뉴 막대 `Save Clipboard`)
 
@@ -89,7 +89,7 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 | K-02 | 분류: 텍스트만 `text`, 이미지만 `image`, 둘 다 `mixed`, 둘 다 없으면 `clipboard_empty`. | 테스트: `textOnlyBecomesATextDraft`, `mixedContentKeepsBothForThePopupToChooseFrom`, `imageOnlyBecomesAnImageDraft`, `imageFromPlopcutHasNoSourceAndTheFallbackTitle`, `emptyOrBlankClipboardFailsAsEmpty`; 팝업에서 고른 유형만 저장: `SavePopupImageTests` | 단위 | ☑ |
 | K-03 | 이미지 디코딩 실패 시 텍스트가 있으면 텍스트로 진행하고 경고 `clipboard_image_unavailable`. 텍스트도 없으면 그 오류로 실패. | 테스트: `undecodableImageFallsBackToTextWithAWarning`, `undecodableImageWithoutTextFails`, `readFailureIsReportedAsUnavailable` | 단위 | ☑ |
 | K-04 | 이미지는 PNG가 있으면 PNG, 없으면 TIFF를 PNG로 변환해 사용. | `read_clipboard_snapshot` | 수동: 스크린샷(PNG)과 TIFF를 내는 앱 | ☑ |
-| K-05 | 최전면 앱이 plopcut이면 출처를 비우고 제목을 다시 추론. 다른 앱이면 출처 유지. | 테스트: `omitsPlopcutAsSourceAndReinfersTheTitle`, `keepsTheSourceOfAnotherApp` | 단위 | ☑ |
+| K-05 | 최전면 앱이 Plopcut이면 출처를 비우고 제목을 다시 추론. 다른 앱이면 출처 유지. | 테스트: `omitsPlopcutAsSourceAndReinfersTheTitle`, `keepsTheSourceOfAnotherApp` | 단위 | ☑ |
 | K-06 | 클립보드 캡처 실패는 오류 보관 + 메뉴 막대 실패 표시(T-03)만(메인 창을 띄우지 않음). | `CaptureRuntime.reportQuietly`(Error만 표시하고 오류를 보관, 메인 창은 띄우지 않음) | 수동 | ☑ |
 
 ## M. 출처 수집
@@ -182,7 +182,7 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 
 | ID | 동작 | 근거 | 확인 방법 | ☐ |
 | --- | --- | --- | --- | --- |
-| T-01 | 템플릿 아이콘, 툴팁 `plopcut`. 좌클릭과 우클릭 모두 같은 메뉴를 열고, 메뉴를 열어도 앱이 활성화되거나 메인 창이 앞으로 오지 않는다(PLO-96에서 변경, 이전에는 좌클릭이 메인 창 열기). 메인 창은 메뉴의 `Open Library`로 연다. 아이콘은 "p." 마크의 단색 템플릿 이미지([구현 명세 5.1](spec.md#51-브랜드-마크와-앱-아이콘), PLO-89에서 변경, PLO-90에서 구현). | `MenuBarController`(`NSMenuDelegate`), PLO-89, PLO-96 | 수동 | ☐ |
+| T-01 | 템플릿 아이콘, 툴팁 `Plopcut`. 좌클릭과 우클릭 모두 같은 메뉴를 열고, 메뉴를 열어도 앱이 활성화되거나 메인 창이 앞으로 오지 않는다(PLO-96에서 변경, 이전에는 좌클릭이 메인 창 열기). 메인 창은 메뉴의 `Open Library`로 연다. 아이콘은 "p." 마크의 단색 템플릿 이미지([구현 명세 5.1](spec.md#51-브랜드-마크와-앱-아이콘), PLO-89에서 변경, PLO-90에서 구현). | `MenuBarController`(`NSMenuDelegate`), PLO-89, PLO-96 | 수동 | ☐ |
 | T-02 | 메뉴 항목 ID는 `save-clipboard`, `open-library`. 알 수 없는 ID는 무시. | 테스트: `routes_stable_tray_menu_ids`, `save_clipboard_menu_action_starts_clipboard_capture` | 단위 | ☑ |
 | T-03 | 제목 문구 없이 점 자리 기호로 알린다(스펙 2.1). 성공: 점이 떨어져 앉고(200 ms) 체크로 바뀐 뒤 약 1.1초 뒤 점으로 복원. 실패: 240 ms 흔들림 후 느낌표가 메뉴를 열 때까지 남고, 메뉴를 열면 점으로 복원. 실패 중 성공이 오면 성공 표시로 바뀐다. '동작 줄이기'에서는 움직임 없이 기호만 바뀐다. 접근성 이름·툴팁이 상태(`menuBarSaved`, `menuBarFailed`)를 알린다. 성공 표시는 팝업 저장과 instant 저장 모두에 나온다(PLO-98). (레거시와 PLO-89 이전 Swift는 `Saved`/`Error`를 900 ms 제목으로 표시했다.) | `show_feedback`, PLO-89 | 단위: 상태 전환과 시간(가짜 시계), 메뉴 열기 시 복원 + 수동: 동작 줄이기, VoiceOver | ☐ |
 | T-04 | 메인 창을 열 때 보관된 캡처 오류를 확인하도록 신호를 보낸다. 캡처 실패 자체는 메인 창을 열지 않는다(`permission_missing` 제외, PLO-96). | `show_main_window` | 수동 | ☑ |
@@ -209,7 +209,7 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 | U-03 | Library 도구 막대가 [필터 · 필터 지우기(`xmark.circle`, 필터가 있을 때만)] [인스펙터 토글] [검색(macOS가 맨 오른쪽에 둠)]뿐이다(PLO-92). 새로고침은 메뉴 `Cmd+R`, 설정 전환 버튼은 없다. Settings 도구 막대는 제목만 있다. | 스펙 2.3 | 단위(메뉴 명령) + 수동 | ☐ |
 | U-04 | 태그 아이콘이 `number`이고 목록 행, 인스펙터·팝업 칩, 최근 태그가 `#design`처럼 표시된다. 저장 값에는 `#`이 없다. | 스펙 1.5, 2.4, 2.5, 5장 | 단위(저장 값) + 수동 | ☐ |
 | U-05 | 빈 Library에 컬러 마크, `noDropsTitle`, `noDropsShortcutHint`, 현재 단축키 키캡(기본 ⇧ ⌘ C), `noDropsClipboardHint`가 보이고 키캡 묶음이 단축키를 하나의 접근성 이름으로 읽는다. | 스펙 2.5 | 수동 + VoiceOver | ☐ |
-| U-06 | Settings 정보 섹션에 앱 아이콘, `plopcut`, `aboutVersion`이 한 줄로 있다. Save Popup 제목 앞에 작은 마크, 출처 앞에 출처 앱 아이콘, 하단에 `popupShortcutHint`가 있다. | 스펙 3.5, 4장 | 수동(한국어·영어) | ☐ |
+| U-06 | Settings 정보 섹션에 앱 아이콘, `Plopcut`, `aboutVersion`이 한 줄로 있다. Save Popup 제목 앞에 작은 마크, 출처 앞에 출처 앱 아이콘, 하단에 `popupShortcutHint`가 있다. | 스펙 3.5, 4장 | 수동(한국어·영어) | ☐ |
 
 ## R. 본문 렌더링과 형식 (PLO-101)
 
@@ -239,7 +239,7 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 | D-02 | 타입에 `mixed`가 있지만 **저장되는 Drop은 `text` 또는 `image`뿐**이다(`mixed` Draft는 팝업에서 하나를 고른다). 레거시는 `mixed` Drop을 목록에는 보여 주지만 본문과 이미지를 읽지 않는다(픽스처로 확인). | 최소한 레거시와 같게(깨지지 않고 목록에 표시). 본문·이미지 표시는 별도 결정. | | ☑ |
 | D-03 | 레거시 단축키 문자열은 Tauri 문법이다. 전체 허용 범위(예: 방향키, 펑션키, `CmdOrCtrl`)는 문서화되어 있지 않다. | 최소 `Shift/Cmd/Ctrl/Alt` + 문자·숫자·펑션키를 지원하고 나머지는 거부. | | ☑ |
 | D-04 | 이미지 Drop의 `image.png`가 아닌 다른 `imagePath`를 읽는 경로는 있으나(`drop.imagePath`) 쓰는 경로는 항상 `image.png`다. | 읽기는 `imagePath` 우선, 쓰기는 `image.png`. | | ☑ |
-| D-05 | 도구 막대 `선택한 텍스트 캡처`는 plopcut이 최전면일 때 plopcut 안의 선택 텍스트만 캡처한다(다른 앱의 선택을 가져오지 못한다). | 기능을 만들지 않는다. | **결정(STA-47): 제거.** 트리거는 전역 단축키뿐. 문구 `captureSelected`도 제거. | ☑ |
+| D-05 | 도구 막대 `선택한 텍스트 캡처`는 Plopcut이 최전면일 때 Plopcut 안의 선택 텍스트만 캡처한다(다른 앱의 선택을 가져오지 못한다). | 기능을 만들지 않는다. | **결정(STA-47): 제거.** 트리거는 전역 단축키뿐. 문구 `captureSelected`도 제거. | ☑ |
 | D-06 | 이름 바꾼 단축키가 다른 앱과 충돌해 등록에 실패할 때의 사용자 메시지(`shortcut_registration_failed`)가 레거시에서는 영어 원문이다. | 한국어 문구 추가. | **결정(STA-55): 한국어·영어 문구 `shortcutRegistrationFailed` 추가.** | ☑ |
 | D-07 | 메인 창을 닫았을 때 앱이 종료되는지, 메뉴 막대에 남는지가 레거시에서 확인되지 않았다. 메뉴 막대와 전역 단축키의 목적상 남는 편이 자연스럽다. | 메뉴 막대에 남는다. 마지막 창을 닫아도 종료하지 않고 전역 단축키와 메뉴 막대 항목을 유지한다. 종료는 Cmd+Q. (STA-52) | | ✔ |
 | D-08 | 로그인 시 자동 실행, Dock 아이콘 표시 여부는 정의되어 있지 않다. | 범위 밖. 필요하면 새 이슈. | | ☑ |
@@ -333,7 +333,7 @@ Linear: STA-39 · 사양: [spec.md](spec.md) · 픽스처: [fixtures/](fixtures/
 
 메뉴 막대 `Save Clipboard`로 텍스트 클립보드를 캡처한다. K-01, K-02, K-03, K-05는 단위 테스트(`ClipboardCaptureTests`)로 확인함. 이미지와 `mixed` 저장은 STA-57에서 들어왔다(아래 기록).
 
-수동 확인이 남음(실제 앱): K-06(실패 시 `Error`만 보이고 메인 창이 뜨지 않음), 메뉴 항목에서 팝업이 열리고 저장되는지, plopcut이 앞일 때 출처가 비는지.
+수동 확인이 남음(실제 앱): K-06(실패 시 `Error`만 보이고 메인 창이 뜨지 않음), 메뉴 항목에서 팝업이 열리고 저장되는지, Plopcut이 앞일 때 출처가 비는지.
 
 ## 5단계 저장 폴더와 첫 실행 기록 (STA-53)
 
@@ -391,7 +391,7 @@ STA-70 원인: 단축키 입력란 `TextField`에 `.onSubmit { model.apply() }`�
 7. 조합을 고른 뒤 저장하지 않고 사이드바에서 Library로 갔다가 설정으로 돌아오면 필드가 이전 단축키이고, 이전 단축키로 캡처된다. `취소` 버튼도 같다.
 8. 다른 앱이 쓰는 조합을 녹화하고 저장하면 `shortcutRegistrationFailed` 문구, 필드는 이전 값, 이전 단축키 동작.
 9. 한글 입력 상태에서 녹화해도 영문 키 이름(예: `Shift+Cmd+K`)으로 기록된다.
-10. 녹화 중 다른 plopcut 창이나 다른 앱 창을 클릭하거나 키 창을 바꾸면 녹화가 끝나고, 그 창에서 키 입력(Library 목록 이동, 노트 입력)과 전역 단축키 캡처가 정상 동작한다.
+10. 녹화 중 다른 Plopcut 창이나 다른 앱 창을 클릭하거나 키 창을 바꾸면 녹화가 끝나고, 그 창에서 키 입력(Library 목록 이동, 노트 입력)과 전역 단축키 캡처가 정상 동작한다.
 
 ## 5단계 이미지와 mixed 저장 기록 (STA-57)
 
@@ -604,8 +604,8 @@ S·C 항목을 픽스처 **복사본**으로 다시 확인하고 항목마다 Sw
 
 - 문구: 메뉴 항목, 플레이스홀더, 진행 상태 문구에서 `...`/`…`를 지웠다(`Save Clipboard`, `클립보드 저장`, `저장 중` 등). 단위: `LocalizationTests.noPhraseUsesAnEllipsis`.
 - 메뉴 막대(T-01): 상태 항목에 메뉴를 늘 붙여 두고 열 때마다 `menuNeedsUpdate`에서 다시 만든다. 좌클릭·우클릭 모두 메뉴를 열고 앱을 활성화하지 않는다.
-- Save Popup: `.nonactivatingPanel`로 만들고 `NSApp.activate`를 뺐다. 팝업이 키보드를 받지만 plopcut은 활성화되지 않아 메인 창이 앞으로 오지 않고, 저장·취소 뒤 사용자가 쓰던 앱에 포커스가 남는다. 단위: `SavePopupWindowTests.Layout.thePopupDoesNotActivateTheApp`.
-- Save Popup 키: plopcut이 비활성이면 AppKit이 단축키(key equivalent)를 앱에 주지 않아 `Cmd+Enter`, Escape, 편집 메뉴(`Cmd+V` 등)가 듣지 않았다. `SavePopupPanel.sendEvent`가 처리되지 않은 명령 키와 Escape를 창의 단추 단축키로, 그다음 편집 명령(잘라내기, 복사, 붙여넣기, 전체 선택, 실행 취소, 실행 복귀)으로 보낸다. 한국어 자판처럼 라틴 문자가 없는 자판은 키 위치로 판단한다. 단위: `SavePopupWindowTests.KeyRouting`, `NoteEditor.editShortcutsReachTheNoteWithoutTheEditMenu`.
+- Save Popup: `.nonactivatingPanel`로 만들고 `NSApp.activate`를 뺐다. 팝업이 키보드를 받지만 Plopcut은 활성화되지 않아 메인 창이 앞으로 오지 않고, 저장·취소 뒤 사용자가 쓰던 앱에 포커스가 남는다. 단위: `SavePopupWindowTests.Layout.thePopupDoesNotActivateTheApp`.
+- Save Popup 키: Plopcut이 비활성이면 AppKit이 단축키(key equivalent)를 앱에 주지 않아 `Cmd+Enter`, Escape, 편집 메뉴(`Cmd+V` 등)가 듣지 않았다. `SavePopupPanel.sendEvent`가 처리되지 않은 명령 키와 Escape를 창의 단추 단축키로, 그다음 편집 명령(잘라내기, 복사, 붙여넣기, 전체 선택, 실행 취소, 실행 복귀)으로 보낸다. 한국어 자판처럼 라틴 문자가 없는 자판은 키 위치로 판단한다. 단위: `SavePopupWindowTests.KeyRouting`, `NoteEditor.editShortcutsReachTheNoteWithoutTheEditMenu`.
 - 실패(P-13, T-04): 선택 텍스트 캡처 실패도 메뉴 막대 실패 표시와 오류 보관만 한다. `permission_missing`만 예외로 메인 창을 연다(소유자 결정).
 
 ## PLO-102: Drop 고정과 아이콘 동작 버튼
