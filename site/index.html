@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Plopcut — Save what you select, find it when you need it</title>
+<meta name="description" content="Plopcut is a free, open-source clipboard app for macOS. Keep only what you choose, add a note and tags, and store it as plain files on your Mac.">
+<meta name="color-scheme" content="light dark">
+<link rel="canonical" href="https://plopcut.com/">
+<link rel="alternate" hreflang="en" href="https://plopcut.com/">
+<link rel="alternate" hreflang="ko" href="https://plopcut.com/ko/">
+<link rel="alternate" hreflang="x-default" href="https://plopcut.com/">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="mark" viewBox="0 0 100 100">
+    <g transform="translate(-5 -6)">
+      <path d="M23 25H35V88H23Z" fill="currentColor"/>
+      <circle cx="44" cy="46" r="15" fill="none" stroke="currentColor" stroke-width="12"/>
+      <circle cx="80" cy="59.5" r="7.5" fill="#4f8cff"/>
+    </g>
+  </symbol>
+  <symbol id="mark-mono" viewBox="0 0 100 100">
+    <g transform="translate(-5 -6)" fill="currentColor">
+      <path d="M23 25H35V88H23Z"/>
+      <circle cx="44" cy="46" r="15" fill="none" stroke="currentColor" stroke-width="12"/>
+      <circle cx="80" cy="59.5" r="7.5"/>
+    </g>
+  </symbol>
+  <symbol id="appicon" viewBox="0 0 100 100">
+    <rect width="100" height="100" rx="22.5" fill="#26282c"/>
+    <g transform="translate(19.5 18.6) scale(0.61) translate(-5 -6)">
+      <path d="M23 25H35V88H23Z" fill="#fff"/>
+      <circle cx="44" cy="46" r="15" fill="none" stroke="#fff" stroke-width="12"/>
+      <circle cx="80" cy="59.5" r="7.5" fill="#4f8cff"/>
+    </g>
+  </symbol>
+  <symbol id="check" viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 20 20"><path d="M7 2h6l-1 5 3 3H5l3-3-1-5zM10 10v8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+  <symbol id="i-pin-fill" viewBox="0 0 20 20"><path d="M7 2h6l-1 5 3 3H5l3-3-1-5z" fill="currentColor"/><path d="M10 10v8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 20 20"><path d="M13.5 3.5l3 3L7 16H4v-3z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+  <symbol id="i-open" viewBox="0 0 20 20"><path d="M11 3h6v6M17 3l-8 8M14 12v4H4V6h4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-export" viewBox="0 0 20 20"><path d="M10 3v9M6 8l4 4 4-4M4 15h12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 20 20"><path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 20 20"><path d="M2 5.5A1.5 1.5 0 013.5 4H8l2 2h6.5A1.5 1.5 0 0118 7.5v7a1.5 1.5 0 01-1.5 1.5h-13A1.5 1.5 0 012 14.5z" fill="#6aa5f8"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 20 20"><path d="M5 2h7l4 4v12H5z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M12 2v4h4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></symbol>
+</svg>
+
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="#top" aria-label="Plopcut">
+      <svg aria-hidden="true"><use href="#mark"/></svg>
+      <span class="wordmark">plopcut</span>
+    </a>
+    <div class="nav">
+      <a class="sec" href="#features">Features</a>
+      <a class="sec" href="#privacy">Privacy</a>
+      <a class="sec" href="#install">Install</a>
+      <a href="https://github.com/chan-byeong/plopcut">GitHub</a>
+      <nav class="lang" aria-label="Language"><a href="./" aria-current="page">EN</a><a href="ko/" lang="ko" hreflang="ko">한국어</a></nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <div class="hero">
+      <svg class="icon" viewBox="0 0 100 100" role="img" aria-label="Plopcut app icon">
+        <rect width="100" height="100" rx="22.5" fill="#26282c"/>
+        <g transform="translate(19.5 18.6) scale(0.61) translate(-5 -6)">
+          <path d="M23 25H35V88H23Z" fill="#fff"/>
+          <circle cx="44" cy="46" r="15" fill="none" stroke="#fff" stroke-width="12"/>
+          <circle class="dot" cx="80" cy="59.5" r="7.5" fill="#4f8cff"/>
+        </g>
+      </svg>
+      <h1><span class="line">Save what you select.</span><span class="line">Find it when you need it<span class="dotmark">.</span></span></h1>
+      <p class="lede">Plopcut is a clipboard app for macOS. Keep only what you choose, add a note and tags, and store it as plain files on your Mac.</p>
+      <a class="btn" href="https://github.com/chan-byeong/plopcut/releases/latest/download/Plopcut.dmg">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v10m0 0l-4-4m4 4l4-4M4 16h12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Download for macOS</span>
+      </a>
+      <p class="meta">Free · Version 1.0.0 · macOS 14 or later · Apple Silicon and Intel · <a href="https://github.com/chan-byeong/plopcut">Open source</a></p>
+    </div>
+
+    <div class="panel tall">
+      <img class="shot hero-shot" src="assets/img/lib-en.jpg" alt="The Plopcut Library window: collections and tags in the sidebar, a list of drops with pinned drops on top, and a Markdown drop with its note and tags">
+    </div>
+
+    <section id="features">
+      <div class="sec-head">
+        <h2>The quickest way to keep what you read</h2>
+        <p>Plopcut does not watch your clipboard. It reads the selection or the clipboard only when you ask it to save.</p>
+      </div>
+
+      <div class="feats">
+        <article class="feat">
+          <div class="panel media">
+            <img class="shot s-textedit lone" src="assets/img/textedit-en.png" alt="Text selected in TextEdit" loading="lazy" decoding="async">
+            <img class="shot s-popup lone" src="assets/img/popup-en.png" alt="The Save Text Drop popup with a title, a Markdown preview, the source, a note, and tags" loading="lazy" decoding="async">
+            <div class="float f-keys" aria-hidden="true">
+              <div class="keys"><span class="kbd">⇧</span><span class="kbd">⌘</span><span class="kbd">C</span></div>
+              <span class="muted">Capture selected text</span>
+            </div>
+          </div>
+          <div class="copy">
+            <h3>Select in any app, press one shortcut</h3>
+            <p>Select text and press <kbd>⇧⌘C</kbd>. Plopcut reads the selection directly when it can, without touching your clipboard, and keeps the app, window title, and Chrome tab URL as the source.</p>
+            <p>The save popup fills in a title, so add a note and tags and press <kbd>⌘↩</kbd>. To keep text or an image you just copied, choose Save Clipboard from the menu bar.</p>
+          </div>
+        </article>
+
+        <article class="feat">
+          <div class="panel media">
+            <img class="shot s-filter" src="assets/img/filter-en.jpg" alt="The Library filtered to github.com and Terminal over the last 7 days, with the source filter open" loading="lazy" decoding="async">
+          </div>
+          <div class="copy">
+            <h3>Find it again in seconds</h3>
+            <p>Search titles, text, notes, tags, and sources at once. Narrow by website, such as github.com, or by app, such as Terminal, then by tag and date.</p>
+          </div>
+        </article>
+
+        <article class="feat">
+          <div class="panel media">
+            <img class="shot s-fmt" src="assets/img/fmt-en.jpg" alt="A Markdown drop with a list, a table, and a code block, with the format menu open" loading="lazy" decoding="async">
+          </div>
+          <div class="copy">
+            <h3>Read it the way it was written</h3>
+            <p>Markdown shows its headings, lists, tables, and code blocks. Code is highlighted and has a copy button. If the format is guessed wrong, change it from the format menu. The saved file stays as it was.</p>
+          </div>
+        </article>
+
+        <article class="feat">
+          <div class="panel media">
+            <img class="shot s-edit" src="assets/img/edit-en.jpg" alt="Pinned drops at the top of the list and a drop open for editing" loading="lazy" decoding="async">
+          </div>
+          <div class="copy">
+            <h3>Pin what you reuse, edit what changes</h3>
+            <p>Pinned drops stay at the top of the list and in the Pinned collection. Pin with <kbd>⇧⌘P</kbd>. Edit the text with <kbd>⌘E</kbd>, and change the title, note, and tags in place; they save automatically.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="privacy">
+      <div class="split">
+        <div class="panel square" role="img" aria-label="A drop folder in Finder with drop.json, content.md, and note.md">
+          <div class="win finder">
+            <div class="bar"><span class="lights"><i></i><i></i><i></i></span><span class="muted" style="margin-left:1em">drops</span></div>
+            <div class="cols">
+              <div><div class="f sel"><svg><use href="#i-folder"/></svg><span class="ell">drops</span></div><div class="f"><svg><use href="#i-folder"/></svg>exports</div></div>
+              <div><div class="f sel"><svg><use href="#i-folder"/></svg><span class="ell">2026-10-21_141502_…_release-checklist</span></div><div class="f"><svg><use href="#i-folder"/></svg><span class="ell">2026-10-21_130245_…_notarytool</span></div><div class="f"><svg><use href="#i-folder"/></svg><span class="ell">2026-10-20_164811_…_design-review</span></div></div>
+              <div><div class="f"><svg><use href="#i-doc"/></svg>drop.json</div><div class="f sel"><svg><use href="#i-doc"/></svg>content.md</div><div class="f"><svg><use href="#i-doc"/></svg>note.md</div></div>
+            </div>
+          </div>
+          <div class="float f-json">{
+  <span class="j-k">"title"</span>: "Release checklist",
+  <span class="j-k">"tags"</span>: ["release", "mac"],
+  <span class="j-k">"appName"</span>: "Google Chrome",
+  <span class="j-k">"url"</span>: "https://github.com/…"
+}</div>
+        </div>
+        <div>
+          <h2>Your drops are files, and they stay on your Mac</h2>
+          <p style="color:var(--muted);margin:0;font-size:17px">No database and no special format. Each drop is a folder you can read in any editor and back up with Time Machine.</p>
+          <ul class="checks">
+            <li><svg aria-hidden="true"><use href="#check"/></svg><div><b>No background monitoring</b><span>The clipboard and selection are read only when you save.</span></div></li>
+            <li><svg aria-hidden="true"><use href="#check"/></svg><div><b>No network code</b><span>Nothing is uploaded or synced, and there is no update check.</span></div></li>
+            <li><svg aria-hidden="true"><use href="#check"/></svg><div><b>No account, no analytics</b><span>No sign-in, crash reports, or usage tracking. This website has no analytics or cookies either.</span></div></li>
+            <li><svg aria-hidden="true"><use href="#check"/></svg><div><b>MIT open source</b><span>Check the code yourself. <a href="https://github.com/chan-byeong/plopcut/blob/swift/main/docs/privacy.md">See how the privacy claim is checked</a></span></div></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="permissions">
+      <div class="sec-head">
+        <h2>What Plopcut asks for, and why</h2>
+        <p>macOS asks the first time a feature needs a permission. You can check each one in Plopcut's Settings.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Permission</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>Accessibility</td><td><span>Reads the text you selected in the app you are using. If that fails, it sends <code>⌘C</code> and restores your clipboard afterward. Selected-text capture needs it.</span><div class="where">System Settings › Privacy &amp; Security › Accessibility</div></td></tr>
+            <tr><td>Automation (Chrome)</td><td><span>Reads the URL of Chrome's active tab so the drop keeps its source link. Capture still works without it.</span><div class="where">System Settings › Privacy &amp; Security › Automation</div></td></tr>
+            <tr><td>Clipboard</td><td>Read only when you choose Save Clipboard. Recent macOS versions may show their own prompt.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="install">
+      <div class="sec-head">
+        <h2>Up and running in a minute</h2>
+        <p>Plopcut is signed with an Apple Developer ID and notarized by Apple, so it opens like any other app.</p>
+      </div>
+      <ol class="steps">
+        <li><b>Download</b><span>Get <code>Plopcut.dmg</code>.</span></li>
+        <li><b>Drag to Applications</b><span>Open the disk image and drag Plopcut into Applications.</span></li>
+        <li><b>Choose a folder</b><span>On first launch, keep <code>~/Documents/plopcut</code> or pick another folder.</span></li>
+        <li><b>Allow permissions</b><span>Allow Accessibility and Automation when macOS asks.</span></li>
+      </ol>
+      <div class="note">
+        <div><b>Updates.</b> <span>Plopcut never checks for updates. Download the new version here and replace the app. Your drops and settings stay where they are.</span></div>
+        <div><b>Verify the download.</b> <span>Each release lists its SHA-256 checksum. Compare it with <code>shasum -a 256 Plopcut.dmg</code>.</span></div>
+      </div>
+    </section>
+
+    <div class="closing">
+      <svg class="icon" aria-hidden="true"><use href="#appicon"/></svg>
+      <h2>Start keeping what matters</h2>
+      <p class="lede" style="margin-bottom:28px">Free, open source, and everything stays on your Mac.</p>
+      <a class="btn" href="https://github.com/chan-byeong/plopcut/releases/latest/download/Plopcut.dmg">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v10m0 0l-4-4m4 4l4-4M4 16h12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Download for macOS</span>
+      </a>
+    </div>
+  </main>
+
+  <footer>
+    <div class="row2">
+      <span>© 2026 Plopcut · <span>MIT License</span></span>
+      <nav>
+        <a href="https://github.com/chan-byeong/plopcut/releases">Release notes</a>
+        <a href="https://github.com/chan-byeong/plopcut">GitHub</a>
+        <a href="https://github.com/chan-byeong/plopcut/issues">Report a problem</a>
+      </nav>
+    </div>
+  </footer>
+</div>
+</body>
+</html>
