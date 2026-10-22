@@ -1,8 +1,15 @@
 name: CI
 
+# Site-only changes (site/, its Pages workflow) do not touch the app, so they skip the macOS build.
 on:
   push:
+    paths-ignore:
+      - "site/**"
+      - ".github/workflows/pages.yml"
   pull_request:
+    paths-ignore:
+      - "site/**"
+      - ".github/workflows/pages.yml"
 
 permissions:
   contents: read
