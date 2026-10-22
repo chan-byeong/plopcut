@@ -75,6 +75,9 @@ if [ "$MODE" = release ]; then
   echo "==> verify"
   spctl --assess --type open --context context:primary-signature -vv "$DMG"
   spctl --assess --type execute -vv "$APP"
+  # Fixed-name copy for the GitHub Release: the site links to releases/latest/download/Plopcut.dmg.
+  cp "$DMG" "$OUT/$APP_NAME.dmg"
+  echo "release asset: $OUT/$APP_NAME.dmg"
 else
   echo "ad-hoc beta build: skipped notarize/staple/spctl (Gatekeeper rejects it; testers use Open Anyway)"
   hdiutil verify "$DMG" >/dev/null && echo "dmg verifies"
