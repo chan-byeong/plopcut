@@ -41,6 +41,10 @@ Preserve compatibility with saved drop folders and `settings.json`. Use the
 and run read/write experiments on copies, never on the user's real folder.
 Avoid unrelated refactors.
 
+`site/` is the static download site (plopcut.com, deployed by
+`.github/workflows/pages.yml`). It is not part of the app: app changes do not
+need site changes, and the site loads nothing from outside `site/`.
+
 ### Legacy reference
 
 Do not read or copy the legacy implementation by default. When the spec or
