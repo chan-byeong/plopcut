@@ -137,6 +137,70 @@ import Testing
         #expect(items.map(\.title) == [L10n.t("saveClipboard"), L10n.t("openLibrary")])
     }
 
+    // F-11: the Floating Drops section, only while a panel floats (spec 2.8).
+    private static let floating = [
+        MenuBarController.FloatingEntry(id: "a", title: "First"),
+        MenuBarController.FloatingEntry(id: "b", title: "Second"),
+    ]
+
+    @Test func withoutFloatingPanelsTheSectionIsLeftOut() {
+        let items = MenuBarController.menuItems(failure: nil, floating: [], hasHidden: false)
+        #expect(items.map(\.title) == [L10n.t("saveClipboard"), L10n.t("openLibrary")])
+        #expect(!items.contains { $0.isSeparatorItem })
+    }
+
+    @Test func oneFloatingPanelGetsTheWholeSection() {
+        let items = MenuBarController.menuItems(failure: nil, floating: [Self.floating[0]])
+        #expect(items.map(\.title) == [
+            L10n.t("saveClipboard"), L10n.t("openLibrary"), "", L10n.t("floatingDrops"), "First", "",
+            L10n.t("hideAllFloating"), L10n.t("closeAllFloating"),
+        ])
+        #expect(items[2].isSeparatorItem && items[5].isSeparatorItem)
+        #expect(items[3].isSectionHeader)
+        #expect(items[4].representedObject as? String == "a")
+        #expect(items[6].representedObject as? String == MenuBarAction.hideAllFloating.rawValue)
+        #expect(items[7].representedObject as? String == MenuBarAction.closeAllFloating.rawValue)
+    }
+
+    @Test func floatingDropsAreListedInFloatOrder() {
+        let items = MenuBarController.menuItems(failure: nil, floating: Self.floating)
+        #expect(items.compactMap { $0.representedObject as? String }.filter { ["a", "b"].contains($0) } == ["a", "b"])
+        #expect(items.map(\.title).contains("Second"))
+    }
+
+    @Test func anyHiddenPanelTurnsHideAllIntoShowAll() {
+        let items = MenuBarController.menuItems(failure: nil, floating: Self.floating, hasHidden: true)
+        #expect(items.map(\.title).suffix(2) == [L10n.t("showAllFloating"), L10n.t("closeAllFloating")])
+        #expect(!items.map(\.title).contains(L10n.t("hideAllFloating")))
+        #expect(items[items.count - 2].representedObject as? String == MenuBarAction.showAllFloating.rawValue)
+    }
+
+    @Test func theFailureStaysOnTopAboveTheFloatingSection() {
+        let items = MenuBarController.menuItems(failure: "Boom", floating: [Self.floating[0]])
+        #expect(items.first?.title == L10n.t("pendingFailed"))
+        #expect(items.map(\.title).suffix(6) == [
+            "", L10n.t("floatingDrops"), "First", "", L10n.t("hideAllFloating"), L10n.t("closeAllFloating"),
+        ])
+    }
+
+    // The registry answers hasHidden for the menu: one panel shown again from the list still leaves Show All.
+    @Test func showingOnePanelFromTheListStillOffersShowAll() {
+        let floating = FloatingDrops { _, _, _ in FloatingDropsTests.FakePanel(id: "", cascade: 0) }
+        floating.float("a")
+        floating.float("b")
+        floating.hideAll()
+        floating.show("a")
+        #expect(floating.hasHidden)
+        floating.show("b")
+        #expect(!floating.hasHidden)
+    }
+
+    @Test func floatingActionIdsAreRouted() {
+        #expect(MenuBarAction(id: "hide-all-floating") == .hideAllFloating)
+        #expect(MenuBarAction(id: "show-all-floating") == .showAllFloating)
+        #expect(MenuBarAction(id: "close-all-floating") == .closeAllFloating)
+    }
+
     @Test func motionFramesSettleOnTheRestingMark() {
         #expect(MenuBarController.frames(.drop).first?.lift ?? 0 > 0)
         #expect(MenuBarController.frames(.drop).allSatisfy { $0.shift == 0 })
