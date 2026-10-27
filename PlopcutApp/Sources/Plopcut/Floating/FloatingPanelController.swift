@@ -140,15 +140,16 @@ final class FloatingPanelController: NSObject, NSWindowDelegate, FloatingPanel {
         return FloatingPanelLayout.openingFrame(size: NSSize(width: width, height: height), cascade: cascade, in: visible)
     }
 
-    /// Width stays within 240–420; the height locks to the title bar while collapsed.
+    /// Width is at least 240 with no upper limit; the height locks to the title bar while collapsed.
     private func updateSizeLimits() {
-        let range = FloatingPanelLayout.widthRange
+        let minWidth = FloatingPanelLayout.minWidth
+        let widest = CGFloat.greatestFiniteMagnitude
         if expandedHeight != nil {
-            panel.minSize = NSSize(width: range.lowerBound, height: titleBarHeight)
-            panel.maxSize = NSSize(width: range.upperBound, height: titleBarHeight)
+            panel.minSize = NSSize(width: minWidth, height: titleBarHeight)
+            panel.maxSize = NSSize(width: widest, height: titleBarHeight)
         } else {
-            panel.minSize = NSSize(width: range.lowerBound, height: titleBarHeight + FloatingPanelLayout.minContentHeight)
-            panel.maxSize = NSSize(width: range.upperBound, height: .greatestFiniteMagnitude)
+            panel.minSize = NSSize(width: minWidth, height: titleBarHeight + FloatingPanelLayout.minContentHeight)
+            panel.maxSize = NSSize(width: widest, height: widest)
         }
     }
 

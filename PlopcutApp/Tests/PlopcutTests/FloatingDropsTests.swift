@@ -240,7 +240,7 @@ import Testing
         #expect(window.collectionBehavior.contains(.managed))
         #expect(window.title == drop.title)
         #expect(window.frame.width == FloatingPanelLayout.defaultWidth)
-        #expect(window.minSize.width == 240 && window.maxSize.width == 420)
+        #expect(window.minSize.width == 240 && window.maxSize.width == .greatestFiniteMagnitude)
     }
 
     @Test func collapsingKeepsTheTopEdgeAndExpandingRestoresTheHeight() async throws {
@@ -255,6 +255,7 @@ import Testing
         #expect(window.frame.maxY == before.maxY)
         #expect(window.frame.height < before.height)
         #expect(window.minSize.height == window.maxSize.height)
+        #expect(window.minSize.width == 240 && window.maxSize.width == .greatestFiniteMagnitude)
         controller.toggleCollapse()
         #expect(!controller.isCollapsed)
         #expect(window.frame == before)

@@ -4,7 +4,8 @@ import AppKit
 /// Pure functions over plain rectangles, so the rules are tested without a window or a screen.
 enum FloatingPanelLayout {
     static let defaultWidth: CGFloat = 300
-    static let widthRange: ClosedRange<CGFloat> = 240...420
+    /// The narrowest the user can drag to. There is no widest; the screen bounds it (PLO-117).
+    static let minWidth: CGFloat = 240
     /// The smallest content height the user can drag to, below the title bar.
     static let minContentHeight: CGFloat = 120
     /// A panel opens no taller than this share of the screen's visible height; longer content scrolls.
