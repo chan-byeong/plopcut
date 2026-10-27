@@ -8,6 +8,8 @@ struct DropDetailView: View {
     @Bindable var model: LibraryModel
     var listFocused: FocusState<Bool>.Binding
     @FocusState private var titleFocused: Bool
+    /// The floating panels; `nil` where no app runs them (tests), and then the Float button is left out.
+    @Environment(FloatingDrops.self) private var floating: FloatingDrops?
 
     private var editor: DropEditor { model.editor }
 
@@ -120,7 +122,7 @@ struct DropDetailView: View {
         listFocused.wrappedValue = true
     }
 
-    /// Icon-only buttons: Pin · Edit · Open Source · Export Markdown | Move to Trash (spec 2.6).
+    /// Icon-only buttons: Pin · Edit · Float on Screen · Open Source · Export Markdown | Move to Trash (spec 2.6).
     private func actions(for drop: Drop) -> some View {
         HStack(spacing: DropActionIcon.gap) {
             let pin = DropAction.pin(pinned: drop.isPinned)
@@ -131,6 +133,7 @@ struct DropDetailView: View {
             .dropActionTooltip(pin.tooltip).accessibilityLabel(pin.title)
             actionButton(.editBody) { model.beginBodyEdit() }
                 .disabled(!DropEditor.canEditBody(drop))
+            if let floating { floatToggle(for: drop, in: floating) }
             actionButton(.openSource) { openSource(drop) }
                 .disabled(URL(string: drop.source.url ?? "") == nil || drop.source.url?.isEmpty != false)
             actionButton(.exportMarkdown) { Task { await model.exportWithPanel(id: drop.id) } }
@@ -138,6 +141,17 @@ struct DropDetailView: View {
                 .padding(.horizontal, Spacing.xxs).accessibilityHidden(true)
             actionButton(.moveTrash, role: .destructive) { model.pendingDeleteID = drop.id }
         }
+    }
+
+    /// On while the drop floats, hidden or not, so VoiceOver reads the state as well as the name.
+    private func floatToggle(for drop: Drop, in floating: FloatingDrops) -> some View {
+        let isFloating = floating.state(of: drop.id) != .none
+        let action = DropAction.float(floating: isFloating)
+        return Toggle(isOn: Binding(get: { isFloating }, set: { _ in floating.toggle(drop.id) })) {
+            DropActionIcon(action: action)
+        }
+        .toggleStyle(DropActionToggleStyle())
+        .dropActionTooltip(action.tooltip).accessibilityLabel(action.title)
     }
 
     private func actionButton(_ action: DropAction, role: ButtonRole? = nil, perform: @escaping () -> Void) -> some View {

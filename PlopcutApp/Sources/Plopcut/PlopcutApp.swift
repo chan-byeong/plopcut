@@ -7,6 +7,7 @@ struct PlopcutApp: App {
     @State private var capture: CaptureRuntime
     @State private var appearance: SettingsModel
     @State private var folder: StorageFolderModel
+    @State private var floating: FloatingDrops
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 
     init() {
@@ -17,11 +18,18 @@ struct PlopcutApp: App {
         _model = State(initialValue: model)
         let appearance = SettingsModel(store: settings)
         _appearance = State(initialValue: appearance)
+        let floating = FloatingDrops()
+        _floating = State(initialValue: floating)
         _folder = State(initialValue: StorageFolderModel(
             store: settings, picker: OpenPanelFolderPicker(),
             prepare: { [model] in await model.editor.drain() },
-            onChanged: { [model] in Task { await model.reload() } }))
-        _capture = State(initialValue: CaptureRuntime(model: model, settings: settings, appearance: appearance))
+            onChanged: { [model, floating] in
+                floating.closeAll()
+                Task { await model.reload() }
+            }))
+        let capture = CaptureRuntime(model: model, settings: settings, appearance: appearance)
+        _capture = State(initialValue: capture)
+        Self.connect(floating, to: model, capture: capture)
         // settings.json owns the column widths (spec L-15). AppKit's own split autosave would restore widths that a
         // narrow window squeezed, so drop it before the window is built.
         let defaults = UserDefaults.standard
@@ -30,9 +38,26 @@ struct PlopcutApp: App {
         }
     }
 
+    /// Floating panels show Library drops and close when their drop leaves the Library (spec 2.8).
+    private static func connect(_ floating: FloatingDrops, to model: LibraryModel, capture: CaptureRuntime) {
+        floating.makePanel = { [model, weak capture] registry, id, cascade in
+            FloatingPanelController(
+                id: id, model: model, cascade: cascade,
+                openInLibrary: {
+                    capture?.showMainWindow()
+                    model.reveal(id)
+                },
+                didClose: { [weak registry] in registry?.panelDidClose(id) })
+        }
+        model.onDropsChanged = { [weak floating] drops in
+            floating?.closeAll { id in drops.contains { $0.id == id } }
+        }
+    }
+
     var body: some Scene {
         WindowGroup(id: "main") {
             MainWindow(model: model, settings: appearance)
+                .environment(floating)
                 .environment(capture.shortcutModel)
                 .modifier(OpenMainWindowBinding(runtime: capture))
                 .environment(folder)

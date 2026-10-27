@@ -50,15 +50,21 @@ private struct BlockStack: View {
     }
 }
 
+extension EnvironmentValues {
+    /// Headings one size smaller, for a narrow floating panel (spec 2.8).
+    @Entry var compactHeadings = false
+}
+
 private struct BlockView: View {
     let block: RenderedBlock
+    @Environment(\.compactHeadings) private var compactHeadings
 
     var body: some View {
         switch block {
         case .plainText(let text):
             Text(text).font(.body)
         case .heading(let level, let text):
-            Text(text).font(Self.headingFont(level))
+            Text(text).font(Self.headingFont(compactHeadings ? level + 1 : level))
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityHeading(Self.headingLevel(level))
         case .paragraph(let text):
