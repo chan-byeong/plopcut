@@ -8,13 +8,21 @@ final class MenuBarController: NSObject, NSMenuDelegate {
     private let openMainWindow: () -> Void
     private let openSettings: () -> Void
     private let saveClipboard: () -> Void
+    private let floating: FloatingDrops
+    /// The drop's current title, for the Floating Drops list.
+    private let dropTitle: (String) -> String
     private var feedback: MenuBarFeedback?
     private var animation: Task<Void, Never>?
 
-    init(openMainWindow: @escaping () -> Void, openSettings: @escaping () -> Void, saveClipboard: @escaping () -> Void) {
+    init(
+        openMainWindow: @escaping () -> Void, openSettings: @escaping () -> Void, saveClipboard: @escaping () -> Void,
+        floating: FloatingDrops, dropTitle: @escaping (String) -> String
+    ) {
         self.openMainWindow = openMainWindow
         self.openSettings = openSettings
         self.saveClipboard = saveClipboard
+        self.floating = floating
+        self.dropTitle = dropTitle
         super.init()
         feedback = MenuBarFeedback(
             apply: { [weak self] in self?.show($0) },
@@ -36,8 +44,15 @@ final class MenuBarController: NSObject, NSMenuDelegate {
     func showError(reason: String) { feedback?.showError(reason: reason) }
     func showSaved() { feedback?.showSaved() }
 
-    /// The menu, with the failure on top while the exclamation mark is up (checklist T-05).
-    static func menuItems(failure: String?) -> [NSMenuItem] {
+    /// A floating drop as the menu lists it.
+    struct FloatingEntry: Equatable {
+        let id: String
+        let title: String
+    }
+
+    /// The menu, with the failure on top while the exclamation mark is up (checklist T-05), and the Floating Drops
+    /// section last while any panel floats (spec 2.8).
+    static func menuItems(failure: String?, floating: [FloatingEntry] = [], hasHidden: Bool = false) -> [NSMenuItem] {
         var items: [NSMenuItem] = []
         if let failure {
             items.append(NSMenuItem.sectionHeader(title: L10n.t("pendingFailed")))
@@ -49,6 +64,17 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         }
         items.append(item(.saveClipboard, "saveClipboard"))
         items.append(item(.openLibrary, "openLibrary"))
+        guard !floating.isEmpty else { return items }
+        items.append(.separator())
+        items.append(NSMenuItem.sectionHeader(title: L10n.t("floatingDrops")))
+        for entry in floating {
+            let item = NSMenuItem(title: entry.title, action: #selector(floatingSelected(_:)), keyEquivalent: "")
+            item.representedObject = entry.id
+            items.append(item)
+        }
+        items.append(.separator())
+        items.append(hasHidden ? item(.showAllFloating, "showAllFloating") : item(.hideAllFloating, "hideAllFloating"))
+        items.append(item(.closeAllFloating, "closeAllFloating"))
         return items
     }
 
@@ -101,7 +127,8 @@ final class MenuBarController: NSObject, NSMenuDelegate {
     /// Runs as the menu opens; the failure item needs `menuWillOpen()`'s answer, which also clears the exclamation mark.
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
-        for item in Self.menuItems(failure: feedback?.menuWillOpen()) {
+        let entries = floating.ids.map { FloatingEntry(id: $0, title: dropTitle($0)) }
+        for item in Self.menuItems(failure: feedback?.menuWillOpen(), floating: entries, hasHidden: floating.hasHidden) {
             if item.action != nil { item.target = self }
             menu.addItem(item)
         }
@@ -113,6 +140,15 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         case .saveClipboard: saveClipboard()
         case .openLibrary: openMainWindow()
         case .openSettings: openSettings()
+        case .hideAllFloating: floating.hideAll()
+        case .showAllFloating: floating.showAll()
+        case .closeAllFloating: floating.closeAll()
         }
+    }
+
+    /// Shows that one panel in front; the app stays inactive.
+    @objc private func floatingSelected(_ item: NSMenuItem) {
+        guard let id = item.representedObject as? String else { return }
+        floating.show(id)
     }
 }

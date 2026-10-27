@@ -15,13 +15,15 @@ final class CaptureRuntime {
     private var started = false
     private var didPromptForAccessibility = false
     private var menuBar: MenuBarController?
+    private let floating: FloatingDrops
 
     /// Set by the main window when it appears; opens the window again after it was closed.
     var openMainWindow: (() -> Void)?
 
-    init(model: LibraryModel, settings: SettingsStore, appearance: SettingsModel) {
+    init(model: LibraryModel, settings: SettingsStore, appearance: SettingsModel, floating: FloatingDrops) {
         self.model = model
         self.settings = settings
+        self.floating = floating
         self.popup = SavePopupWindowController()
     }
 
@@ -34,7 +36,9 @@ final class CaptureRuntime {
                 self?.model.collection = .settings
                 self?.showMainWindow()
             },
-            saveClipboard: { [weak self] in self?.saveClipboard() })
+            saveClipboard: { [weak self] in self?.saveClipboard() },
+            floating: floating,
+            dropTitle: { [model] id in model.drops.first { $0.id == id }?.title ?? "" })
 
         let gate = CaptureGate()
         coordinator = CaptureCoordinator(

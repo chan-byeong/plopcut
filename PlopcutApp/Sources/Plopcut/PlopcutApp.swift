@@ -27,7 +27,7 @@ struct PlopcutApp: App {
                 floating.closeAll()
                 Task { await model.reload() }
             }))
-        let capture = CaptureRuntime(model: model, settings: settings, appearance: appearance)
+        let capture = CaptureRuntime(model: model, settings: settings, appearance: appearance, floating: floating)
         _capture = State(initialValue: capture)
         Self.connect(floating, to: model, capture: capture)
         // settings.json owns the column widths (spec L-15). AppKit's own split autosave would restore widths that a

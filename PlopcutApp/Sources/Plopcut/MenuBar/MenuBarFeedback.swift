@@ -6,6 +6,10 @@ enum MenuBarAction: String {
     case openLibrary = "open-library"
     /// Shown only under a save failure (checklist T-05).
     case openSettings = "open-settings"
+    /// The Floating Drops section, shown only while a panel is floating (spec 2.8).
+    case hideAllFloating = "hide-all-floating"
+    case showAllFloating = "show-all-floating"
+    case closeAllFloating = "close-all-floating"
 
     init?(id: String) { self.init(rawValue: id) }
 }
