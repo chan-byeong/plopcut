@@ -294,6 +294,34 @@ import Testing
         #expect(controller.window.title == "Floating title")
     }
 
+    // F-09: closing the panel right after typing leaves the note on disk.
+    @Test func closingThePanelWritesTheTypedNote() async throws {
+        let (model, root) = try await writableModel()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let drop = try #require(model.drops.first { $0.type == .text && $0.id != model.selectedID })
+        let controller = FloatingPanelController(id: drop.id, model: model, cascade: 0, openInLibrary: {}, didClose: {})
+        model.editor.setNote("typed in the panel", of: drop)
+        controller.window.performClose(nil)
+        let file = root.appendingPathComponent("drops/\(drop.id)/note.md")
+        // The file lands before the editor settles its state, so wait for both.
+        for _ in 0..<50
+        where (try? String(contentsOf: file, encoding: .utf8)) != "typed in the panel" || model.editor.hasUnsavedEdits {
+            try? await Task.sleep(for: .milliseconds(20))
+        }
+        #expect(try String(contentsOf: file, encoding: .utf8) == "typed in the panel")
+        #expect(!model.editor.hasUnsavedEdits)
+    }
+
+    @Test func onlyAPlainEscapeHandsTheKeyboardBack() throws {
+        func key(_ flags: NSEvent.ModifierFlags) throws -> NSEvent {
+            try #require(NSEvent.keyEvent(
+                with: .keyDown, location: .zero, modifierFlags: flags, timestamp: 0, windowNumber: 0, context: nil,
+                characters: "\u{1b}", charactersIgnoringModifiers: "\u{1b}", isARepeat: false, keyCode: 53))
+        }
+        #expect(FloatingPanelWindow.isPlainEscape(try key([])))
+        #expect(!FloatingPanelWindow.isPlainEscape(try key([.command])))
+    }
+
     // F-06
     @Test func openInLibrarySelectsTheDropAndClearsHidingFilters() async throws {
         let model = await loadedModel()

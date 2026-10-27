@@ -224,7 +224,7 @@ struct InspectorView: View {
             HStack {
                 Text(L10n.t("note")).font(.headline)
                 Spacer()
-                saveStatus
+                SaveStatusView(state: editor.state) { Task { await editor.retry() } }
             }
             TextEditor(text: Binding(get: { editor.draft.note }, set: { editor.setNote($0) }))
                 .font(.body).scrollContentBackground(.hidden).slimScrollers()
@@ -238,22 +238,6 @@ struct InspectorView: View {
                 .onExitCommand { noteFocused = false }
                 .onChange(of: noteFocused) { _, focused in if !focused { Task { await editor.flush() } } }
         }
-    }
-
-    @ViewBuilder private var saveStatus: some View {
-        HStack(spacing: Spacing.s) {
-            switch editor.state {
-            case .idle: Text(L10n.t("automaticSave"))
-            case .pending: Text(L10n.t("changesPending"))
-            case .saving: Text(L10n.t("saving"))
-            case .saved: Text(L10n.t("saved"))
-            case .failed(let code):
-                Text(code == "blankTitle" ? ErrorText.message(forCode: code) : L10n.t("saveFailed")).foregroundStyle(.red)
-                Button(L10n.t("retrySave")) { Task { await editor.retry() } }.controlSize(.small)
-            }
-        }
-        .font(.caption).foregroundStyle(.secondary)
-        .accessibilityElement(children: .combine)
     }
 
     // MARK: Tags
@@ -406,5 +390,27 @@ private struct DropActionTooltip: ViewModifier {
                 }
             }
             .onDisappear { pending?.cancel() }
+    }
+}
+
+/// The autosave status next to a note (spec 2.7), in the inspector and in floating panels.
+struct SaveStatusView: View {
+    let state: SaveState
+    let retry: () -> Void
+
+    var body: some View {
+        HStack(spacing: Spacing.s) {
+            switch state {
+            case .idle: Text(L10n.t("automaticSave"))
+            case .pending: Text(L10n.t("changesPending"))
+            case .saving: Text(L10n.t("saving"))
+            case .saved: Text(L10n.t("saved"))
+            case .failed(let code):
+                Text(code == "blankTitle" ? ErrorText.message(forCode: code) : L10n.t("saveFailed")).foregroundStyle(.red)
+                Button(L10n.t("retrySave"), action: retry).controlSize(.small)
+            }
+        }
+        .font(.caption).foregroundStyle(.secondary)
+        .accessibilityElement(children: .combine)
     }
 }

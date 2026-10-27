@@ -36,6 +36,7 @@ final class FloatingPanelController: NSObject, NSWindowDelegate, FloatingPanel {
         installTitleBarButtons(openInLibrary: openInLibrary)
         panel.setFrame(openingFrame(cascade: cascade), display: false)
         trackTitle()
+        model.editor.attachPanel(id)
         accessibilityObserver = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification, object: nil, queue: .main
         ) { [weak self] _ in MainActor.assumeIsolated { self?.updateOpacity() } }
@@ -183,15 +184,24 @@ final class FloatingPanelController: NSObject, NSWindowDelegate, FloatingPanel {
         collapseButton.setAccessibilityLabel(label)
     }
 
-    /// Esc keeps the panel and hands the keyboard back: to the app the user was typing in, or to plopcut's own window
-    /// when plopcut is active (spec 2.8). PLO-114 saves the note first.
+    /// Esc keeps the panel, saves the note at once, and hands the keyboard back: to the app the user was typing in,
+    /// or to plopcut's own window when plopcut is active (spec 2.8).
     private func giveUpKeyboard() {
         guard panel.isKeyWindow else { return }
-        if NSApp.isActive {
-            NSApp.windows.first { $0 !== panel && $0.isVisible && $0.canBecomeMain }?.makeKeyAndOrderFront(nil)
-        } else {
-            NSWorkspace.shared.frontmostApplication?.activate()
+        let editor: DropEditor = model.editor
+        Task { [id] in await editor.flushNote(of: id) }
+        panel.makeFirstResponder(nil)
+        if NSApp.isActive,
+            let window = NSApp.windows.first(where: { $0 !== panel && $0.isVisible && $0.canBecomeMain })
+        {
+            window.makeKeyAndOrderFront(nil)
+            return
         }
+        // A nonactivating panel takes the keyboard without making plopcut active, so the other app is still the
+        // active one and activating it again does nothing. Taking the panel off screen for a moment drops its key
+        // status, and the window server hands the keyboard back to that app's window.
+        panel.orderOut(nil)
+        panel.orderFrontRegardless()
     }
 
     // MARK: Opacity
@@ -220,6 +230,9 @@ final class FloatingPanelController: NSObject, NSWindowDelegate, FloatingPanel {
     func windowWillClose(_ notification: Notification) {
         if let accessibilityObserver { NSWorkspace.shared.notificationCenter.removeObserver(accessibilityObserver) }
         accessibilityObserver = nil
+        // Whatever was typed is written now instead of waiting for the debounce.
+        let editor: DropEditor = model.editor
+        Task { [id] in await editor.detachPanel(id) }
         didClose()
     }
 }
@@ -234,6 +247,10 @@ final class FloatingPanelWindow: NSPanel {
 
     override func sendEvent(_ event: NSEvent) {
         if event.type == .keyDown, handleKey(event) { return }
+        if event.type == .keyDown, Self.isPlainEscape(event), !isComposing {
+            onEscape?()
+            return
+        }
         if event.type == .leftMouseDown || event.type == .leftMouseUp, event.clickCount == 2,
            isTitleBarBackground(event.locationInWindow) {
             if event.type == .leftMouseDown { toggleCollapse?() }
@@ -260,6 +277,13 @@ final class FloatingPanelWindow: NSPanel {
         }
         return false
     }
+
+    static func isPlainEscape(_ event: NSEvent) -> Bool {
+        event.keyCode == UInt16(kVK_Escape) && event.modifierFlags.intersection([.command, .shift, .option, .control]).isEmpty
+    }
+
+    /// An input method composition is open in the note; Escape then only ends it (checklist F-09).
+    private var isComposing: Bool { (firstResponder as? NSTextView)?.hasMarkedText() == true }
 
     /// Cmd+W, by key position so a Korean layout works too.
     static func closesWindow(_ event: NSEvent) -> Bool {
