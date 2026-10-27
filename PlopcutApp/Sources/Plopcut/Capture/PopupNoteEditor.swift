@@ -14,6 +14,8 @@ struct PopupNoteEditor: NSViewRepresentable {
     let accessibilityLabel: String
     /// Lets the popup close an open composition before it saves.
     var control: PopupNoteEditorControl? = nil
+    /// The Save Popup opens on the note; a floating panel must not take the keyboard when it appears.
+    var focusOnAppear = true
     var onFocusChange: @MainActor (Bool) -> Void = { _ in }
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
@@ -34,6 +36,7 @@ struct PopupNoteEditor: NSViewRepresentable {
         textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: .greatestFiniteMagnitude)
         textView.string = text
         textView.placeholder = placeholder
+        textView.focusOnFirstWindow = focusOnAppear
         textView.setAccessibilityLabel(accessibilityLabel)
         textView.delegate = context.coordinator
         textView.onEdit = { [weak coordinator = context.coordinator] in coordinator?.publish($0) }

@@ -33,7 +33,8 @@ struct BodyEdit: Equatable {
 ///
 /// Each drop with unsaved or in-flight work owns a `Slot`. The selected drop's slot lives in the observable
 /// properties below; the others wait in `slots` until their save finishes, so switching drops never loses,
-/// duplicates or resurrects an edit. All writes of the Library (autosave, Done, pin, format) go through one chain,
+/// duplicates or resurrects an edit. A floating panel edits its drop's note in the same slot, so the inspector and
+/// the panel share one draft and one autosave (spec 2.8). All writes of the Library (autosave, Done, pin, format) go through one chain,
 /// reach the disk in order, and hand their result to `onSaved` in that order.
 @MainActor @Observable
 final class DropEditor {
@@ -80,7 +81,10 @@ final class DropEditor {
     private var base = Draft()
     private var revision = 0
     private var slots: [String: Slot] = [:]
-    private var debounceTask: Task<Void, Never>?
+    /// The pending autosave of each drop being typed in.
+    private var debounces: [String: Task<Void, Never>] = [:]
+    /// Drops with an open floating panel. Their slot stays after a save, so the panel keeps showing its state.
+    private var panelIDs: Set<String> = []
     /// Every write is queued behind this task.
     private var tail: Task<Void, Never>?
     private var queued = 0
@@ -160,7 +164,9 @@ final class DropEditor {
 
     /// Removes a finished slot of a drop that is no longer selected.
     private func dropIdleSlot(_ id: String) {
-        if id != dropID, slots[id]?.needsWork == false, (writing[id] ?? 0) == 0 { slots[id] = nil }
+        guard id != dropID, !panelIDs.contains(id), slots[id]?.needsWork == false, (writing[id] ?? 0) == 0 else { return }
+        slots[id] = nil
+        debounces[id] = nil
     }
 
     // MARK: Showing a drop
@@ -173,11 +179,11 @@ final class DropEditor {
             return
         }
         if bodyEdit != nil, bodyEdit?.dropID != drop?.id { closeBodyEdit() }
-        debounceTask?.cancel()
+        cancelAutosave(dropID)
         // A title typed but not committed yet belongs to the drop being left.
-        if titleEditing, dropID != nil, titleText != draft.title { setTitle(titleText); debounceTask?.cancel() }
+        if titleEditing, dropID != nil, titleText != draft.title { setTitle(titleText); cancelAutosave(dropID) }
         if let old = dropID, let current = slot(old) {
-            if current.needsWork || (writing[old] ?? 0) > 0 { slots[old] = current }
+            if current.needsWork || (writing[old] ?? 0) > 0 || panelIDs.contains(old) { slots[old] = current }
             if current.isDirty { _ = enqueue(old, retry: true) }
         }
         titleEditing = false
@@ -189,7 +195,9 @@ final class DropEditor {
         dropID = drop.id
         if let kept = slots.removeValue(forKey: drop.id) {
             store(kept, for: drop.id)
-            titleText = kept.draft.title
+            // A slot kept only for a panel has nothing unsaved: follow the disk, keep the save state.
+            if !kept.needsWork { adopt(drop) }
+            titleText = draft.title
         } else {
             revision = 0
             adopt(drop)
@@ -200,9 +208,9 @@ final class DropEditor {
     /// The drop is gone (moved to the Trash): drop its draft without saving anything.
     func forget(_ id: String) {
         slots[id] = nil
+        cancelAutosave(id)
         if bodyEdit?.dropID == id { closeBodyEdit() }
         guard dropID == id else { return }
-        debounceTask?.cancel()
         dropID = nil; draft = Draft(); base = Draft(); revision = 0
         titleText = ""; tagInput = ""; tagMessage = nil; titleEditing = false; state = .idle
     }
@@ -241,21 +249,27 @@ final class DropEditor {
     }
 
     private func edit(_ change: (inout Draft) -> Void) {
-        guard dropID != nil else { return }
-        change(&draft)
-        revision += 1
-        state = .pending
-        debounceTask?.cancel()
+        guard let id = dropID else { return }
+        edit(id, change)
+    }
+
+    private func edit(_ id: String, _ change: (inout Draft) -> Void) {
+        guard var slot = slot(id) else { return }
+        change(&slot.draft)
+        slot.revision += 1
+        slot.state = .pending
+        store(slot, for: id)
+        cancelAutosave(id)
         let sleep = sleep
-        debounceTask = Task { [weak self] in
+        debounces[id] = Task { [weak self] in
             do { try await sleep(Self.debounce) } catch { return }
-            await self?.autosave()
+            _ = await self?.enqueue(id, retry: false).value
         }
     }
 
-    private func autosave() async {
-        guard let id = dropID else { return }
-        _ = await enqueue(id, retry: false).value
+    private func cancelAutosave(_ id: String?) {
+        guard let id else { return }
+        debounces[id]?.cancel()
     }
 
     // Title: Return commits, Escape reverts to the title when editing began.
@@ -432,23 +446,20 @@ final class DropEditor {
 
     /// Called when a field is left. A failed save waits for `retry` instead.
     func flush() async {
-        if case .failed = state { return }
         guard let id = dropID else { return }
-        debounceTask?.cancel()
-        _ = await enqueue(id, retry: false).value
+        await flushNote(of: id)
     }
 
     func retry() async {
         guard let id = dropID else { return }
-        debounceTask?.cancel()
-        _ = await enqueue(id, retry: true).value
+        await retryNote(of: id)
     }
 
     /// Writes everything that is pending, for every drop, and waits for it. Returns false if anything stayed unsaved.
     /// Used before the app quits and before an export.
     func drain() async -> Bool {
         if titleEditing { await commitTitleForDrain() }
-        debounceTask?.cancel()
+        debounces.values.forEach { $0.cancel() }
         var ids = Array(slots.keys)
         if let id = dropID { ids.append(id) }
         var ok = true
@@ -470,7 +481,10 @@ final class DropEditor {
         run { [weak self] in
             guard let self else { return false }
             let ok = await self.writeNow(id, retry: retry)
-            if !ok, id != self.dropID, case .failed(let code)? = self.slots[id]?.state { self.onBackgroundFailure(code) }
+            // A panel shows its own failure with Retry; only a drop nobody shows any more raises an alert.
+            if !ok, id != self.dropID, !self.panelIDs.contains(id), case .failed(let code)? = self.slots[id]?.state {
+                self.onBackgroundFailure(code)
+            }
             return ok
         }
     }
@@ -512,10 +526,11 @@ final class DropEditor {
             }
             store(latest, for: id)
             onSaved(saved)
-            // A drop that is no longer selected has no debounce: write what was typed since.
-            if id != dropID, latest.isDirty { return await writeNow(id) }
+            // A drop nobody is typing in has no debounce: write what was typed since.
+            let shown = id == dropID || panelIDs.contains(id)
+            if !shown, latest.isDirty { return await writeNow(id) }
             dropIdleSlot(id)
-            return !latest.isDirty || id == dropID
+            return !latest.isDirty || shown
         } catch {
             writing[id, default: 1] -= 1
             let code = ErrorText.code(for: error)
@@ -533,6 +548,51 @@ final class DropEditor {
         if draft.note != base.note { update.note = draft.note }
         if draft.tags != base.tags { update.tags = draft.tags }
         return update
+    }
+}
+
+// MARK: Floating panels (spec 2.8)
+
+extension DropEditor {
+    /// A panel opened on the drop: its note edits share the drop's slot with the inspector.
+    func attachPanel(_ id: String) { panelIDs.insert(id) }
+
+    /// The panel closed: what was typed is written now, and a failure is reported like any background save.
+    func detachPanel(_ id: String) async {
+        panelIDs.remove(id)
+        cancelAutosave(id)
+        _ = await enqueue(id, retry: true).value
+    }
+
+    /// The note as the panel shows it: the shared draft while anything is unsaved, otherwise the drop on disk.
+    func note(of drop: Drop) -> String {
+        guard let slot = slot(drop.id), slot.needsWork else { return drop.note ?? "" }
+        return slot.draft.note
+    }
+
+    func saveState(of id: String) -> SaveState { slot(id)?.state ?? .idle }
+
+    /// Typing in a panel. A drop the inspector does not show gets a slot from the drop as it is on disk.
+    func setNote(_ value: String, of drop: Drop) {
+        if drop.id != dropID, slots[drop.id]?.needsWork != true {
+            var fresh = Slot(draft: Draft(drop), base: Draft(drop))
+            fresh.state = slots[drop.id]?.state ?? .idle
+            slots[drop.id] = fresh
+        }
+        guard note(of: drop) != value else { return }
+        edit(drop.id) { $0.note = value }
+    }
+
+    /// Leaving the note (blur or Escape). A failed save waits for `retryNote`.
+    func flushNote(of id: String) async {
+        if case .failed = saveState(of: id) { return }
+        cancelAutosave(id)
+        _ = await enqueue(id, retry: false).value
+    }
+
+    func retryNote(of id: String) async {
+        cancelAutosave(id)
+        _ = await enqueue(id, retry: true).value
     }
 }
 
