@@ -20,6 +20,8 @@ struct PinCommand: View {
 enum DropAction: Equatable {
     case pin(pinned: Bool)
     case editBody
+    /// Float on Screen, or Close Floating Window once the drop floats, hidden or not (spec 2.8).
+    case float(floating: Bool)
     case openSource
     case exportMarkdown
     case moveTrash
@@ -28,6 +30,7 @@ enum DropAction: Equatable {
         switch self {
         case .pin(let pinned): L10n.t(pinned ? "unpin" : "pin")
         case .editBody: L10n.t("editBody")
+        case .float(let floating): L10n.t(floating ? "closeFloating" : "floatDrop")
         case .openSource: L10n.t("openSource")
         case .exportMarkdown: L10n.t("exportMarkdown")
         case .moveTrash: L10n.t("moveTrash")
@@ -38,6 +41,7 @@ enum DropAction: Equatable {
         switch self {
         case .pin(let pinned): pinned ? "pin.fill" : "pin"
         case .editBody: "pencil"
+        case .float: "macwindow.on.rectangle"
         case .openSource: "arrow.up.right.square"
         case .exportMarkdown: "square.and.arrow.down"
         case .moveTrash: "trash"
@@ -49,7 +53,7 @@ enum DropAction: Equatable {
         case .pin: PinCommand.shortcut
         case .editBody: EditBodyCommand.shortcut
         case .moveTrash: KeyboardShortcut(.delete, modifiers: .command)
-        case .openSource, .exportMarkdown: nil
+        case .float, .openSource, .exportMarkdown: nil
         }
     }
 

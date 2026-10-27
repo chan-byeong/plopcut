@@ -24,6 +24,8 @@ struct SourceGroups: Equatable {
 @MainActor @Observable
 final class LibraryModel {
     private(set) var drops: [Drop] = []
+    /// Told the new list after every load, edit, and move to the Trash; floating panels close for drops that are gone.
+    @ObservationIgnored var onDropsChanged: (([Drop]) -> Void)?
     /// Derived from `drops` and the filter inputs when they change, not on every view update (5,000-drop library, STA-80).
     private(set) var filtered: [Drop] = []
     /// The Pinned section first, then the date groups (spec 1.6).
@@ -257,16 +259,20 @@ final class LibraryModel {
             loadError = (error as? PlopcutError)?.code ?? error.localizedDescription
         }
         reselect()
-        // An open content editor keeps its drop selected; the new drop is in the list for later (spec 2.6).
-        if let id, !editor.isEditingBody, drops.contains(where: { $0.id == id }) {
-            if !filtered.contains(where: { $0.id == id }) {
-                search = ""
-                clearFilters()
-                collection = .all
-            }
-            selectedID = id
-        }
+        if let id { reveal(id) }
         editor.show(selectedDrop)
+    }
+
+    /// Selects the drop, clearing the search and filters when they hide it (checklist L-10, F-06).
+    /// An open content editor keeps its drop selected; the drop stays in the list for later (spec 2.6).
+    func reveal(_ id: String) {
+        guard !editor.isEditingBody, drops.contains(where: { $0.id == id }) else { return }
+        if !filtered.contains(where: { $0.id == id }) {
+            search = ""
+            clearFilters()
+            collection = .all
+        }
+        selectedID = id
     }
 
     /// Shows the stored capture failure, once, as `{pendingFailed}: {message}`.
@@ -447,6 +453,7 @@ final class LibraryModel {
         tagCounts = tags
         allTags = tags.keys.sorted()
         refilter()
+        onDropsChanged?(drops)
     }
 
     private func refilter() {

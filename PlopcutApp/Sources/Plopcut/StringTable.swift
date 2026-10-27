@@ -242,5 +242,15 @@ enum StringTable {
         "titleHintApp": (en: "Taken from the app name. Leave empty to use the automatic title.", ko: "앱 이름에서 가져왔습니다. 비우면 자동 제목을 씁니다."),
         "titleHintFirstLine": (en: "Taken from the first line of the text. Leave empty to use the automatic title.", ko: "본문 첫 줄에서 가져왔습니다. 비우면 자동 제목을 씁니다."),
         "titleHintDefault": (en: "Nothing to take a title from, so this is the default. Leave empty to use the automatic title.", ko: "가져올 곳이 없어 기본 제목입니다. 비우면 자동 제목을 씁니다."),
+        "floatingPanel": (en: "Floating drop", ko: "띄운 드롭"),
+        "openInLibrary": (en: "Open in Library", ko: "라이브러리에서 열기"),
+        "collapsePanel": (en: "Collapse", ko: "접기"),
+        "expandPanel": (en: "Expand", ko: "펼치기"),
+        "floatDrop": (en: "Float on Screen", ko: "화면에 띄우기"),
+        "closeFloating": (en: "Close Floating Window", ko: "띄운 창 닫기"),
+        "floatingDrops": (en: "Floating Drops", ko: "띄워 둔 드롭"),
+        "hideAllFloating": (en: "Hide All", ko: "모두 숨기기"),
+        "showAllFloating": (en: "Show All", ko: "모두 보이기"),
+        "closeAllFloating": (en: "Close All", ko: "모두 닫기"),
     ]
 }

@@ -12,6 +12,8 @@ PLO-105에서 추가한 키(Save Popup 제목): `titleField`, `autoTitle`, `auto
 
 PLO-104에서 추가한 키(본문 편집): `editBody`, `editingBody`, `bodyChanged`, `done`, `editBodyHint`, `editBodyShortcuts`, `editBodyField`, `emptyBody`, `discardChangesTitle`, `discardChangesBody`, `discardChanges`, `keepEditing`, `quitBodyDraftTitle`, `quitBodyDraftBody`, `dontSave`(종료할 때 본문 초안 저장 여부, 리뷰 수정).
 
+PLO-113에서 추가한 키(띄운 드롭, PLO-112 전체): `floatingPanel`(패널 접근성 이름), `openInLibrary`, `collapsePanel`, `expandPanel`(패널 제목 막대 버튼), `floatDrop`, `closeFloating`(드롭 화면 버튼, PLO-115), `floatingDrops`, `hideAllFloating`, `showAllFloating`, `closeAllFloating`(메뉴 막대 묶음, PLO-116).
+
 | 키 | en | ko |
 | --- | --- | --- |
 | `collections` | Collections | 보관함 |
@@ -240,6 +242,16 @@ PLO-104에서 추가한 키(본문 편집): `editBody`, `editingBody`, `bodyChan
 | `titleHintApp` | Taken from the app name. Leave empty to use the automatic title. | 앱 이름에서 가져왔습니다. 비우면 자동 제목을 씁니다. |
 | `titleHintFirstLine` | Taken from the first line of the text. Leave empty to use the automatic title. | 본문 첫 줄에서 가져왔습니다. 비우면 자동 제목을 씁니다. |
 | `titleHintDefault` | Nothing to take a title from, so this is the default. Leave empty to use the automatic title. | 가져올 곳이 없어 기본 제목입니다. 비우면 자동 제목을 씁니다. |
+| `floatingPanel` | Floating drop | 띄운 드롭 |
+| `openInLibrary` | Open in Library | 라이브러리에서 열기 |
+| `collapsePanel` | Collapse | 접기 |
+| `expandPanel` | Expand | 펼치기 |
+| `floatDrop` | Float on Screen | 화면에 띄우기 |
+| `closeFloating` | Close Floating Window | 띄운 창 닫기 |
+| `floatingDrops` | Floating Drops | 띄워 둔 드롭 |
+| `hideAllFloating` | Hide All | 모두 숨기기 |
+| `showAllFloating` | Show All | 모두 보이기 |
+| `closeAllFloating` | Close All | 모두 닫기 |
 
 ## 문구 점검 기록 (STA-80)
 
