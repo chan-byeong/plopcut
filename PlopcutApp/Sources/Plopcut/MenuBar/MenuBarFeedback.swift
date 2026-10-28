@@ -10,6 +10,8 @@ enum MenuBarAction: String {
     case hideAllFloating = "hide-all-floating"
     case showAllFloating = "show-all-floating"
     case closeAllFloating = "close-all-floating"
+    /// Shown only when the build has an updater (PLO-118).
+    case checkForUpdates = "check-for-updates"
 
     init?(id: String) { self.init(rawValue: id) }
 }

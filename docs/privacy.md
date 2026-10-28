@@ -6,6 +6,10 @@ Plopcut keeps everything on your Mac.
   storage folder (default `~/Documents/plopcut`) and in
   `~/Library/Application Support/plopcut/`.
 - **Nothing is sent externally.** The app has no code that uploads or syncs data.
+- **One kind of network request: the update check.** Since PLO-118 the app asks
+  `https://plopcut.com/appcast.xml` whether a new version exists, and downloads
+  the new DMG from GitHub Releases when you install it. See
+  [Update checks](#update-checks) for exactly what is sent.
 - **No telemetry.** The app contains no analytics, crash reporting, or usage tracking.
 - **No accounts, no cloud, no database.**
 
@@ -24,6 +28,32 @@ never uploaded. Settings has a `Show Log in Finder` row.
   details are dropped, so only the code is written (covered by unit tests).
 - **Reporting a problem:** attach the log file to your message yourself. There
   is no automatic report.
+
+## Update checks
+
+Plopcut uses [Sparkle](https://sparkle-project.org/) to check for and install
+updates (PLO-118, [update-method.md](update-method.md)).
+
+- **When.** Automatic checks are **on by default** (`SUEnableAutomaticChecks`
+  in `Info.plist`): about once a day, without asking first. Turn them off with
+  the `Check for updates automatically` switch in Settings › About; then no
+  request is made unless you choose `Check for Updates` in the app menu, the
+  menu bar menu, or Settings.
+- **What is sent.** A plain HTTPS `GET` for the appcast. Like any web request it
+  carries your IP address and a User-Agent with the app and Sparkle version
+  (for example `Plopcut/1.0.0 Sparkle/2.10.0`). System profiling is turned off
+  in `Info.plist` (`SUEnableSystemProfiling`), so no Mac model, macOS version,
+  or other system details are added. No drops, notes, tags, settings, or
+  identifiers are sent.
+- **Where.** The appcast is a static file on plopcut.com (GitHub Pages). The
+  update itself is downloaded from `github.com/chan-byeong/plopcut` Releases.
+  Both hosts keep their own server logs; Plopcut runs no server of its own.
+- **Integrity.** Every update must carry an EdDSA signature that matches the
+  public key in the app (`SUPublicEDKey`), and a valid Developer ID signature
+  from the same team. Sparkle refuses anything else.
+- **Where the choice is stored.** Sparkle keeps its own preferences (automatic
+  checks, last check time) in the app's user defaults
+  (`~/Library/Preferences/com.plopcut.app.plist`), not in `settings.json`.
 
 ## What Plopcut reads, and when
 
@@ -53,7 +83,11 @@ metadata and is not requested at runtime.
 
 Other findings:
 
-- **Three open-source dependencies, no network code.** Since 0.2.0,
+- **One dependency with network code: Sparkle** (PLO-118). It is the only code
+  in the app that makes network requests, as described in
+  [Update checks](#update-checks). Its XPC services are removed from the
+  bundle because the app is not sandboxed.
+- **Three rendering dependencies, no network code.** Since 0.2.0,
   `PlopcutApp/Package.swift` depends on `swift-markdown` (which brings
   `swift-cmark`) to render Markdown, and on `HighlighterSwift`, which runs the
   bundled highlight.js in JavaScriptCore to color code blocks. The same search
@@ -80,7 +114,7 @@ Other findings:
 - Network activity that does not come from the app's code (for example, the
   system's own services).
 - Future code. Repeat the check before each release, and update this document
-  if a network API or SDK is added.
+  if another network API or SDK is added.
 
 ## Re-check before each release
 
@@ -88,8 +122,15 @@ Other findings:
 git grep -n -E 'URLSession|NSURLSession|URLRequest|NWConnection|NWListener|CFNetwork|import Network|WKWebView|WebKit|dataTask|downloadTask|Sparkle|Analytics|Telemetry|Crashlytics|Sentry|Firebase|https?://' -- '*.swift' '*.sh' '*.plist' 'Package.swift'
 ```
 
+Expected matches outside tests (checked for PLO-118): the package URLs in
+`PlopcutApp/Package.swift`; `Sparkle` in `PlopcutApp/Sources/Plopcut/Updates/`
+(`import Sparkle` only in `SparkleUpdater.swift`), in `PlopcutApp.swift`, and in a
+comment in `SettingsView.swift`; the appcast URL in `scripts/app-config.sh`; the
+framework steps and the plist DTD URL in `scripts/make-app.sh`; and the download
+URL in `scripts/release.sh`. Anything else needs this document updated.
+
 Also confirm that `dependencies:` lists in every `Package.swift` contain only
-the local package and the three packages named above, unless this document is
-updated. When a dependency is added or its version changes, run the same
+the local package, Sparkle, and the three rendering packages named above, unless
+this document is updated. When a dependency is added or its version changes, run the same
 search over `PlopcutApp/.build/checkouts` and update
 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).

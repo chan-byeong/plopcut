@@ -4,6 +4,7 @@ import SwiftUI
 /// The Settings screen (spec 2.6). Storage folder, permissions and the shortcut join it in later tickets.
 struct SettingsView: View {
     @Bindable var model: SettingsModel
+    @Environment(UpdateModel.self) private var updates
 
     var body: some View {
         Form {
@@ -35,6 +36,15 @@ struct SettingsView: View {
                     Text(L10n.t("aboutVersion", ["version": model.appVersion])).foregroundStyle(.secondary)
                 }
                 .accessibilityElement(children: .combine)
+                if updates.isAvailable {
+                    // Sparkle keeps this choice in the app's defaults; settings.json does not change (PLO-118).
+                    Toggle(isOn: Binding(get: { updates.automaticChecks }, set: { updates.setAutomaticChecks($0) })) {
+                        Text(L10n.t("checkUpdatesAutomatically"))
+                        Text(L10n.t("checkUpdatesAutomaticallyHelp"))
+                    }
+                    Button(L10n.t("checkForUpdates")) { updates.check() }
+                        .disabled(!updates.canCheck)
+                }
                 Button(L10n.t("showLogInFinder")) { AppLog.revealInFinder() }
             }
             if let message = model.errorMessage {
@@ -43,5 +53,6 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear { updates.refresh() }
     }
 }

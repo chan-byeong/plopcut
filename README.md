@@ -108,7 +108,8 @@ See [docs/privacy.md](docs/privacy.md).
 ## Privacy
 
 All drops and settings stay on your Mac. Plopcut does not send data
-externally and contains no telemetry. Details and the basis for this claim:
+externally and contains no telemetry. Its only network request is the update
+check, which sends no data about you or your drops. Details and the basis for this claim:
 [docs/privacy.md](docs/privacy.md).
 
 ## Log file and reporting a problem
@@ -141,8 +142,12 @@ See [docs/release-scope.md](docs/release-scope.md).
 
 ## Updates
 
-This release has no automatic update check. Download new versions manually.
-See [docs/update-method.md](docs/update-method.md). Plopcut is distributed as a downloadable DMG, not through the Mac App Store.
+Plopcut updates itself with [Sparkle](https://sparkle-project.org/). It checks for updates automatically
+about once a day; you can turn this off in Settings › About, or choose
+**Check for Updates** in the app menu or the menu bar menu at any time. Each update is verified with an
+EdDSA signature before it is installed. Builds before this feature have no updater, so download one new
+version manually once. See [docs/update-method.md](docs/update-method.md). Plopcut is distributed as a
+downloadable DMG, not through the Mac App Store.
 
 ## License
 

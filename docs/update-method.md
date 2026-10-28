@@ -1,57 +1,51 @@
 # Update method and open decisions
 
-Status: **decided — manual download (owner, STA-75).**
+Status: **decided — Sparkle in-app updates (owner, PLO-118, 2026-10-27).** This replaces the
+manual-download decision of STA-75 (PLO-7).
 
-## Decision: manual download
+## Decision: Sparkle
 
-Plopcut checks for updates **never**. Users download the new `Plopcut.dmg`
-from the Releases page of the Plopcut repository (`github.com/chan-byeong/plopcut`) and replace the app.
+Plopcut checks for updates with [Sparkle](https://sparkle-project.org/) 2 and installs them in place.
+Users no longer have to notice a new version and replace the app by hand.
 
-Reasons:
+How it works:
 
-- It matches the privacy claim in [privacy.md](privacy.md). The app makes no
-  network calls, so it needs no update server, no appcast, and no
-  update-check telemetry.
-- It adds no dependency. The app's few open-source packages (Markdown
-  rendering and code highlighting, see [privacy.md](privacy.md)) make no
-  network calls, and an updater would be the first that does.
-- It needs no update signing keys to manage or lose.
+- **Feed.** A static appcast at `https://plopcut.com/appcast.xml`, served from `site/appcast.xml` by the
+  Pages workflow. Each item points at the versioned DMG of a GitHub Release
+  (`releases/download/v<version>/Plopcut-<version>.dmg`).
+- **Signing.** Each DMG is signed with an EdDSA key. The public key is in `scripts/app-config.sh`
+  (`SPARKLE_PUBLIC_KEY`) and written to `Info.plist` as `SUPublicEDKey`; the private key stays in the
+  release Mac's login keychain and is never committed. Sparkle also requires the new app to carry a
+  Developer ID signature from the same team.
+- **Schedule.** Automatic checks are on by default (owner, 2026-10-28): `SUEnableAutomaticChecks` is
+  `true` in `Info.plist`, so Sparkle does not ask on the second launch and checks about once a day. `Check for Updates` in the app menu, the
+  menu bar menu, and Settings › About checks right away. Settings › About also has the automatic-check
+  switch. Sparkle keeps these choices in the app's user defaults, not in `settings.json`.
+- **Privacy.** The check is a plain HTTPS request; system profiling is off. See
+  [privacy.md](privacy.md#update-checks).
+- **Builds without a key** (`swift run`, or `make-app.sh` with an empty `SPARKLE_PUBLIC_KEY`) get no
+  feed and start no updater, and the update items are hidden.
+- **Release.** `scripts/release.sh` runs `generate_appcast` after notarization and writes
+  `site/appcast.xml`. See [release.md](release.md).
 
-Trade-off: users must notice new versions themselves. There is no in-app prompt,
-so adoption of fixes may be slow.
+Why the change: with manual download, users did not learn about new versions, so fixes reached them
+slowly. The cost is accepted: one network request (documented in privacy.md), one more dependency
+(pinned exactly), and an EdDSA key to keep safe.
 
-## Alternative: Sparkle automatic updates (not chosen)
+Builds released before PLO-118 have no updater. Their users must download one new version by hand; the
+release notes of the first Sparkle release say so.
 
-[Sparkle](https://sparkle-project.org/) is the common macOS framework for
-in-app updates.
+## Previous decision: manual download (STA-75, replaced)
 
-What it would require:
-
-- An **appcast** feed hosted at a public HTTPS URL, and a signed update archive
-  for each release.
-- EdDSA signing keys, which must be generated, stored safely, and used for every
-  release.
-- A new third-party dependency, and a network request from the app on a schedule
-  or on demand.
-
-Trade-offs:
-
-- **Pro:** users receive updates without action, and fixes reach them faster.
-- **Con:** the app would make network requests, so the privacy document and the
-  README would need to change. The "no network calls" claim would no longer hold.
-- **Con:** key management and release automation become part of the release
-  process.
-- **Con:** Sparkle's own behavior (update checks, optional system profile reports)
-  must be reviewed and configured to match the privacy claim before use.
-
-If the owner chooses Sparkle, update [privacy.md](privacy.md) and the README
-first, then implement the update flow as its own issue.
+The app made no network calls and users downloaded each new DMG from GitHub Releases. It needed no
+update server, dependency, or signing keys, but users had to notice new versions themselves and there
+was no in-app prompt.
 
 ## Open decisions
 
 Each item below needs an owner decision. Items struck through are decided.
 
-1. ~~**Update method.**~~ Decided: manual download.
+1. ~~**Update method.**~~ Decided: Sparkle (PLO-118), replacing manual download (STA-75).
 2. ~~**License.**~~ Decided (owner, STA-86): MIT. `LICENSE` is added and both READMEs link to it.
 3. ~~**Minimum macOS version.**~~ Decided: macOS 14. `spec.md`, both `Package.swift` files and
    `make-app.sh` now agree.

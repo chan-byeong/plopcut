@@ -249,6 +249,20 @@ PLO-115(드롭 화면 버튼), PLO-116(메뉴 막대)으로 나눕니다.
 | F-11 | 메뉴 막대 "띄워 둔 드롭" 묶음: 띄운 패널이 있을 때만, 목록·`모두 숨기기`/`모두 보이기`·`모두 닫기`. 고르면 그 패널만 앞으로, 앱은 활성화하지 않음. | 스펙 2.1, 2.8, PLO-116 | 단위(`MenuBarTests` 메뉴 구성, `showingOnePanelFromTheListStillOffersShowAll`) + 수동 | ☑ |
 | F-12 | 라이트·다크, 투명도 줄이기, 대비 증가에서 읽을 수 있고 VoiceOver가 패널(`띄운 드롭`)과 제목 막대 버튼 이름을 읽는다. | 스펙 2.8, 5장 | 수동 | ☑ |
 
+## V. 앱 안 업데이트 (PLO-118)
+
+Sparkle로 업데이트를 확인하고 설치합니다. 기준은 [스펙](spec.md) 2.1·4장과 [update-method.md](../update-method.md)입니다.
+
+| ID | 동작 | 근거 | 확인 방법 | ☐ |
+| --- | --- | --- | --- | --- |
+| V-01 | `SUFeedURL`과 `SUPublicEDKey`가 둘 다 있을 때만 업데이터를 시작한다. 없으면(`swift run`, 공개 키 없는 빌드) 시작 알림 없이 업데이트 항목을 모두 숨긴다. | PLO-118 | 단위(`UpdateModelTests.sparkleStartsOnlyWithAFeedAndAKey`, `withoutAnUpdaterNothingIsOffered`) | ☑ |
+| V-02 | 메뉴 막대 메뉴: `Open Library` 뒤에 구분선과 `Check for Updates`(`check-for-updates`). 확인이 진행 중이면 비활성. 띄워 둔 드롭 묶음은 그 뒤 맨 끝. | 스펙 2.1, PLO-118 | 단위(`UpdateModelTests` 메뉴 구성) + 수동 | ☐ |
+| V-03 | 앱 메뉴의 About 아래 `Check for Updates`, Settings 정보 섹션의 `자동으로 업데이트 확인` 스위치(설명 포함)와 `업데이트 확인` 단추. 스위치는 Sparkle 설정에 쓰고 `settings.json`은 바뀌지 않는다. | 스펙 4, PLO-118 | 단위(`automaticChecksWriteThroughToTheUpdater`) + 수동 | ☐ |
+| V-04 | 이전 빌드가 appcast의 새 버전을 받아 EdDSA 서명을 확인하고 설치한다. | PLO-118 | 수동: 임시 키·로컬 appcast·다른 번들 ID로 1.0.0(3) → 1.0.1(4) 자동 다운로드 후 종료 시 설치, 설치본 `codesign --verify --deep --strict` 통과(2026-10-27, ad-hoc 디버그 빌드). Developer ID·공증 빌드의 실제 업데이트는 첫 릴리스 때 확인 | ☐ |
+| V-05 | 번들: `Contents/Frameworks/Sparkle.framework`(XPC 서비스 제거), rpath `@executable_path/../Frameworks`, Sparkle 부품을 안쪽부터 서명, `SUEnableSystemProfiling` 끔. | `make-app.sh`, PLO-118 | 수동(`codesign --verify --deep --strict`, `otool -l`, Info.plist) | ☑ |
+| V-06 | 자동 확인이 기본으로 켜져 있다: 첫 실행부터 Settings 스위치가 켜져 있고 두 번째 실행에서 묻는 창이 없다. 스위치를 끄면 재실행 후에도 꺼져 있다. | `SUEnableAutomaticChecks`, 2026-10-28 결정 | 수동 | ☐ |
+| V-07 | Developer ID 빌드끼리 업데이트한 뒤에도 손쉬운 사용·자동화 권한이 유지된다. | PLO-118 | 수동(첫 Sparkle 릴리스 이후 업데이트) | ☐ |
+
 ## D. 결정이 필요한 차이와 알려진 공백
 
 레거시에서 확인되지 않았거나 문서와 구현이 어긋난 곳입니다. 구현 전에 결정하거나 확인해 기록하세요.
