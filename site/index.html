@@ -181,7 +181,7 @@
           <p style="color:var(--muted);margin:0;font-size:17px">No database and no special format. Each drop is a folder you can read in any editor and back up with Time Machine.</p>
           <ul class="checks">
             <li><svg aria-hidden="true"><use href="#check"/></svg><div><b>No background monitoring</b><span>The clipboard and selection are read only when you save.</span></div></li>
-            <li><svg aria-hidden="true"><use href="#check"/></svg><div><b>No network code</b><span>Nothing is uploaded or synced, and there is no update check.</span></div></li>
+            <li><svg aria-hidden="true"><use href="#check"/></svg><div><b>Network only for update checks</b><span>Nothing is uploaded or synced. The update check asks plopcut.com for the latest version and sends only the app version, never your drops or notes.</span></div></li>
             <li><svg aria-hidden="true"><use href="#check"/></svg><div><b>No account, no analytics</b><span>No sign-in, crash reports, or usage tracking. This website has no analytics or cookies either.</span></div></li>
             <li><svg aria-hidden="true"><use href="#check"/></svg><div><b>MIT open source</b><span>Check the code yourself. <a href="https://github.com/chan-byeong/plopcut/blob/swift/main/docs/privacy.md">See how the privacy claim is checked</a></span></div></li>
           </ul>
@@ -218,7 +218,7 @@
         <li><b>Allow permissions</b><span>Allow Accessibility and Automation when macOS asks.</span></li>
       </ol>
       <div class="note">
-        <div><b>Updates.</b> <span>Plopcut never checks for updates. Download the new version here and replace the app. Your drops and settings stay where they are.</span></div>
+        <div><b>Updates.</b> <span>From 1.0.0, Plopcut checks for updates about once a day and installs them with one click. You can turn this off in Settings › About. Coming from 1.0.0 RC 1? Download the new version here once and replace the app. Your drops and settings stay where they are.</span></div>
         <div><b>Verify the download.</b> <span>Each release lists its SHA-256 checksum. Compare it with <code>shasum -a 256 Plopcut.dmg</code>.</span></div>
       </div>
     </section>
