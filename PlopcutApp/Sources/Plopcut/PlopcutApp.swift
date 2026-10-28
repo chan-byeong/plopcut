@@ -8,6 +8,7 @@ struct PlopcutApp: App {
     @State private var appearance: SettingsModel
     @State private var folder: StorageFolderModel
     @State private var floating: FloatingDrops
+    @State private var updates: UpdateModel
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 
     init() {
@@ -27,7 +28,10 @@ struct PlopcutApp: App {
                 floating.closeAll()
                 Task { await model.reload() }
             }))
-        let capture = CaptureRuntime(model: model, settings: settings, appearance: appearance, floating: floating)
+        let updates = UpdateModel(updater: SparkleUpdater())
+        _updates = State(initialValue: updates)
+        let capture = CaptureRuntime(
+            model: model, settings: settings, appearance: appearance, floating: floating, updates: updates)
         _capture = State(initialValue: capture)
         Self.connect(floating, to: model, capture: capture)
         // settings.json owns the column widths (spec L-15). AppKit's own split autosave would restore widths that a
@@ -61,6 +65,7 @@ struct PlopcutApp: App {
                 .environment(capture.shortcutModel)
                 .modifier(OpenMainWindowBinding(runtime: capture))
                 .environment(folder)
+                .environment(updates)
                 .modifier(FirstRunSheet(model: folder))
                 .frame(minWidth: LayoutMetrics.windowMin.width, minHeight: LayoutMetrics.windowMin.height)
                 .task {
@@ -79,6 +84,7 @@ struct PlopcutApp: App {
         .defaultSize(LayoutMetrics.windowDefault)
         .windowToolbarStyle(.unified)
         .commands {
+            CommandGroup(after: .appInfo) { CheckForUpdatesCommand(updates: updates) }
             CommandGroup(after: .pasteboard) {
                 PinCommand(model: model)
                 EditBodyCommand(model: model)

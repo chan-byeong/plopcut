@@ -1,6 +1,7 @@
 # Security policy
 
-Plopcut keeps your drops on your Mac and sends nothing over the network. Its
+Plopcut keeps your drops on your Mac and sends nothing about them over the network; its only
+network request is the signed update check ([docs/privacy.md](docs/privacy.md#update-checks)). Its
 permissions (Accessibility, Automation, clipboard) are still sensitive, so please
 report problems privately.
 

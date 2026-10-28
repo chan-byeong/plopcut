@@ -14,6 +14,8 @@ PLO-104에서 추가한 키(본문 편집): `editBody`, `editingBody`, `bodyChan
 
 PLO-113에서 추가한 키(띄운 드롭, PLO-112 전체): `floatingPanel`(패널 접근성 이름), `openInLibrary`, `collapsePanel`, `expandPanel`(패널 제목 막대 버튼), `floatDrop`, `closeFloating`(드롭 화면 버튼, PLO-115), `floatingDrops`, `hideAllFloating`, `showAllFloating`, `closeAllFloating`(메뉴 막대 묶음, PLO-116).
 
+PLO-118에서 추가한 키(앱 안 업데이트): `checkForUpdates`(앱 메뉴·메뉴 막대·Settings 정보 섹션의 단추), `checkUpdatesAutomatically`·`checkUpdatesAutomaticallyHelp`(Settings 정보 섹션의 자동 확인 스위치와 설명).
+
 | 키 | en | ko |
 | --- | --- | --- |
 | `collections` | Collections | 보관함 |
@@ -174,6 +176,9 @@ PLO-113에서 추가한 키(띄운 드롭, PLO-112 전체): `floatingPanel`(패�
 | `instant` | Save text instantly | 텍스트 즉시 저장 |
 | `aboutVersion` | Version {version} | 버전 {version} |
 | `showLogInFinder` | Show Log in Finder | Finder에서 로그 보기 |
+| `checkForUpdates` | Check for Updates | 업데이트 확인 |
+| `checkUpdatesAutomatically` | Check for updates automatically | 자동으로 업데이트 확인 |
+| `checkUpdatesAutomaticallyHelp` | Plopcut asks plopcut.com once a day whether a new version is out. No drops or usage data are sent. | 하루 한 번 plopcut.com에 새 버전이 있는지 묻습니다. 드롭이나 사용 정보는 보내지 않습니다. |
 | `permissionStatus` | Permission status | 권한 상태 |
 | `loadingPermissions` | Loading permissions | 권한 확인 중 |
 | `accessibility` | Accessibility | 손쉬운 사용 |

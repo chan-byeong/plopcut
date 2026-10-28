@@ -11,3 +11,8 @@ APP_BUILD="${APP_BUILD:-3}"
 # CFBundleShortVersionString must be dotted integers. Set it empty (APP_CHANNEL=) for the official release (STA-88).
 APP_CHANNEL="${APP_CHANNEL-rc.1}"
 MIN_MACOS="14.0"
+# In-app updates (PLO-118). The appcast is served with the download site (site/appcast.xml). The EdDSA public key is not
+# secret; its private key stays in the release Mac's login keychain (docs/release.md). Without a public key the build
+# has no feed and no updater, so make-app.sh writes neither key.
+SPARKLE_FEED_URL="${SPARKLE_FEED_URL:-https://plopcut.com/appcast.xml}"
+SPARKLE_PUBLIC_KEY="${SPARKLE_PUBLIC_KEY:-6jxXUAziHUBk/VwRTPRjwB41W0Pc08HhEd+CbCL2q5Q=}"

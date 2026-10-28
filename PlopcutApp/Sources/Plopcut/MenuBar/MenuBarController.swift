@@ -9,6 +9,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
     private let openSettings: () -> Void
     private let saveClipboard: () -> Void
     private let floating: FloatingDrops
+    private let updates: UpdateModel
     /// The drop's current title, for the Floating Drops list.
     private let dropTitle: (String) -> String
     private var feedback: MenuBarFeedback?
@@ -16,12 +17,13 @@ final class MenuBarController: NSObject, NSMenuDelegate {
 
     init(
         openMainWindow: @escaping () -> Void, openSettings: @escaping () -> Void, saveClipboard: @escaping () -> Void,
-        floating: FloatingDrops, dropTitle: @escaping (String) -> String
+        floating: FloatingDrops, updates: UpdateModel, dropTitle: @escaping (String) -> String
     ) {
         self.openMainWindow = openMainWindow
         self.openSettings = openSettings
         self.saveClipboard = saveClipboard
         self.floating = floating
+        self.updates = updates
         self.dropTitle = dropTitle
         super.init()
         feedback = MenuBarFeedback(
@@ -37,6 +39,8 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         statusItem.button?.imagePosition = .imageOnly
         // The status item opens its own menu on any click; the items are rebuilt each time it opens.
         menu.delegate = self
+        // Items set their own state: Check for Updates is off while a check runs.
+        menu.autoenablesItems = false
         statusItem.menu = menu
         show(.idle)
     }
@@ -50,9 +54,12 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         let title: String
     }
 
-    /// The menu, with the failure on top while the exclamation mark is up (checklist T-05), and the Floating Drops
-    /// section last while any panel floats (spec 2.8).
-    static func menuItems(failure: String?, floating: [FloatingEntry] = [], hasHidden: Bool = false) -> [NSMenuItem] {
+    /// The menu, with the failure on top while the exclamation mark is up (checklist T-05), `Check for Updates` after
+    /// the commands when the build has an updater (`canCheckForUpdates` is nil without one, PLO-118), and the
+    /// Floating Drops section last while any panel floats (spec 2.8).
+    static func menuItems(
+        failure: String?, canCheckForUpdates: Bool? = nil, floating: [FloatingEntry] = [], hasHidden: Bool = false
+    ) -> [NSMenuItem] {
         var items: [NSMenuItem] = []
         if let failure {
             items.append(NSMenuItem.sectionHeader(title: L10n.t("pendingFailed")))
@@ -64,6 +71,12 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         }
         items.append(item(.saveClipboard, "saveClipboard"))
         items.append(item(.openLibrary, "openLibrary"))
+        if let canCheckForUpdates {
+            items.append(.separator())
+            let check = item(.checkForUpdates, "checkForUpdates")
+            check.isEnabled = canCheckForUpdates
+            items.append(check)
+        }
         guard !floating.isEmpty else { return items }
         items.append(.separator())
         items.append(NSMenuItem.sectionHeader(title: L10n.t("floatingDrops")))
@@ -128,7 +141,10 @@ final class MenuBarController: NSObject, NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
         let entries = floating.ids.map { FloatingEntry(id: $0, title: dropTitle($0)) }
-        for item in Self.menuItems(failure: feedback?.menuWillOpen(), floating: entries, hasHidden: floating.hasHidden) {
+        let canCheck = updates.isAvailable ? updates.canCheck : nil
+        let items = Self.menuItems(
+            failure: feedback?.menuWillOpen(), canCheckForUpdates: canCheck, floating: entries, hasHidden: floating.hasHidden)
+        for item in items {
             if item.action != nil { item.target = self }
             menu.addItem(item)
         }
@@ -143,6 +159,7 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         case .hideAllFloating: floating.hideAll()
         case .showAllFloating: floating.showAll()
         case .closeAllFloating: floating.closeAll()
+        case .checkForUpdates: updates.check()
         }
     }
 
