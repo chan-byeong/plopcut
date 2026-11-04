@@ -9,10 +9,9 @@ in the Library. Every drop is stored as ordinary readable files on your Mac.
 Plopcut does not watch your clipboard in the background. It reads the
 clipboard or the selected text only when you ask it to capture.
 
-> **Beta.** Plopcut is in beta. The beta build is **not signed or notarized by
-> Apple**, so macOS blocks it the first time you open it (see
-> [Install](#install)). An official signed release will follow after testing.
-> Please report problems in [GitHub Issues](https://github.com/chan-byeong/plopcut/issues).
+Plopcut 1.0 is signed with a Developer ID and notarized by Apple.
+Please report bugs in [GitHub Issues](https://github.com/chan-byeong/plopcut/issues).
+For ideas, questions, and feedback, use [GitHub Discussions](https://github.com/chan-byeong/plopcut/discussions).
 
 ## What you can do
 
@@ -40,26 +39,23 @@ clipboard or the selected text only when you ask it to capture.
 
 Requirements: a Mac running macOS. The minimum supported macOS version is 14.
 
-1. Download the latest `Plopcut-<version>-beta.<n>.dmg` from the
-   [Releases page](https://github.com/chan-byeong/plopcut/releases) (beta builds are marked Pre-release).
-   *Added with the first beta.*
+1. Download `Plopcut.dmg` from the latest release on the
+   [Releases page](https://github.com/chan-byeong/plopcut/releases/latest) or from
+   [plopcut.com](https://plopcut.com).
 2. Open the disk image and drag **Plopcut** into **Applications**.
-3. Try to open Plopcut. macOS refuses because the beta is not notarized. Allow it once:
-   - Open **System Settings › Privacy & Security**, scroll to the message about
-     Plopcut, and choose **Open Anyway**. (On macOS 15 and later, right-click › Open
-     no longer works.)
-   - Or, in Terminal: `xattr -dr com.apple.quarantine /Applications/Plopcut.app`
+3. Open Plopcut. The app is notarized, so macOS opens it after the usual
+   "downloaded from the internet" confirmation.
 4. Allow **Accessibility** and **Automation** when Plopcut asks (see Permissions below).
 
 You can also build it yourself: `sh scripts/make-app.sh release`, then open
 `PlopcutApp/.build/Plopcut.app`. This needs Xcode and the Swift 6 toolchain.
 
-**Permissions after an update.** Beta builds are signed ad hoc, so the signature
-changes with every build and macOS may forget the Accessibility or Automation
-permission. If capture stops working after an update, run
-`tccutil reset Accessibility com.plopcut.app` and allow Plopcut again. You will
-need to allow it once more when the signed official release replaces the beta.
-Your drops and settings are not affected.
+**Coming from a beta?** Beta builds were signed ad hoc, so macOS may not carry
+their Accessibility or Automation permission over to the signed release. If
+capture does not work after installing 1.0, run
+`tccutil reset Accessibility com.plopcut.app` and allow Plopcut again. Beta
+builds have no updater, so install 1.0 from the DMG once. Your drops and
+settings are not affected.
 
 ## First run
 

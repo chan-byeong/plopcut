@@ -7,8 +7,9 @@ Plopcut은 로컬 우선(local-first) macOS 클립보드 앱입니다. 선택한
 
 Plopcut은 백그라운드에서 클립보드를 감시하지 않습니다. 사용자가 캡처를 요청할 때만 클립보드나 선택한 텍스트를 읽습니다.
 
-> **베타 버전입니다.** 베타 빌드는 Apple의 서명·공증을 받지 않아서, 처음 열 때 macOS가 막습니다([설치](#설치) 참고).
-> 테스트가 끝나면 서명된 정식 버전을 배포할 예정입니다. 문제는 [GitHub Issues](https://github.com/chan-byeong/plopcut/issues)로 알려 주세요.
+Plopcut 1.0은 Developer ID로 서명되었고 Apple의 공증을 받았습니다.
+버그는 [GitHub Issues](https://github.com/chan-byeong/plopcut/issues)로 알려 주세요.
+아이디어, 질문, 의견은 [GitHub Discussions](https://github.com/chan-byeong/plopcut/discussions)에 남겨 주세요.
 
 ## 할 수 있는 일
 
@@ -25,21 +26,18 @@ Plopcut은 백그라운드에서 클립보드를 감시하지 않습니다. 사�
 
 요구 사항: macOS 14 이상이 설치된 Mac.
 
-1. [Releases 페이지](https://github.com/chan-byeong/plopcut/releases)에서 최신 `Plopcut-<버전>-beta.<n>.dmg`를 내려받습니다
-   (베타는 Pre-release로 표시됩니다). *첫 베타와 함께 추가합니다.*
+1. [Releases 페이지](https://github.com/chan-byeong/plopcut/releases/latest)의 최신 릴리스나
+   [plopcut.com](https://plopcut.com)에서 `Plopcut.dmg`를 내려받습니다.
 2. 디스크 이미지를 열고 **Plopcut**을 **응용 프로그램(Applications)** 폴더로 끌어 놓습니다.
-3. Plopcut을 열어 봅니다. 베타는 공증되지 않아 macOS가 막습니다. 한 번만 허용하면 됩니다.
-   - **시스템 설정 › 개인정보 보호 및 보안**을 열어 Plopcut에 관한 안내가 보이면 **그래도 열기**를 누릅니다.
-     (macOS 15 이상에서는 우클릭 › 열기가 통하지 않습니다.)
-   - 또는 터미널에서 `xattr -dr com.apple.quarantine /Applications/Plopcut.app`을 실행합니다.
+3. Plopcut을 엽니다. 공증된 앱이라 "인터넷에서 다운로드한 앱" 확인 창만 거치면 열립니다.
 4. Plopcut이 요청하면 **손쉬운 사용**과 **자동화**를 허용합니다(아래 권한 참고).
 
 직접 빌드할 수도 있습니다. `sh scripts/make-app.sh release` 후 `PlopcutApp/.build/Plopcut.app`을 엽니다. Xcode와 Swift 6
 툴체인이 필요합니다.
 
-**업데이트 후 권한.** 베타 빌드는 ad-hoc 서명이라 빌드마다 서명이 달라져서 macOS가 손쉬운 사용·자동화 권한을 잊을 수 있습니다.
-업데이트 후 캡처가 안 되면 `tccutil reset Accessibility com.plopcut.app`을 실행하고 다시 허용하세요. 서명된 정식 버전으로 바꿀 때도
-한 번 더 허용해야 합니다. 드롭과 설정은 영향이 없습니다.
+**베타를 쓰던 경우.** 베타 빌드는 ad-hoc 서명이라 macOS가 손쉬운 사용·자동화 권한을 서명된 정식 버전으로 넘기지 못할 수 있습니다.
+1.0을 설치한 뒤 캡처가 안 되면 `tccutil reset Accessibility com.plopcut.app`을 실행하고 다시 허용하세요. 베타에는 업데이트 기능이
+없으므로 1.0은 DMG로 한 번 직접 설치해야 합니다. 드롭과 설정은 영향이 없습니다.
 
 ## 첫 실행
 
